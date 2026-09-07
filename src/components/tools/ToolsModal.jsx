@@ -363,6 +363,36 @@ export default function ToolsModal({
                 <span className="text-cyan-400 font-bold">Specialized Studio Engines</span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* Flagship: Google AI Studio */}
+                <div
+                  onClick={() => { onLaunchStudio('google-studio'); onClose(); }}
+                  className="p-5 rounded-2xl bg-gradient-to-br from-blue-950/50 via-cyan-950/40 to-[#0B0D19] border border-cyan-400/50 hover:border-cyan-300 cursor-pointer transition-all hover:scale-[1.01] shadow-xl group space-y-2.5 sm:col-span-2 lg:col-span-3"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="p-2.5 rounded-xl bg-gradient-to-tr from-cyan-500/25 via-blue-500/25 to-purple-500/25 text-cyan-300 border border-cyan-400/30">
+                      <Sparkles className="w-6 h-6 text-cyan-400" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-bold">1M+ Context</span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-bold">Flagship Studio</span>
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-white group-hover:text-cyan-300 flex items-center gap-2">
+                      <span>Google AI Studio</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 font-mono">aistudio.google.com parity</span>
+                    </h3>
+                    <div className="text-[11px] font-mono text-cyan-400 font-bold">✦ Model: Google Gemini 2.5 Pro & Flash Thinking Core</div>
+                  </div>
+                  <p className="text-xs text-gray-300 leading-relaxed max-w-2xl">
+                    Faithful Google AI Studio developer environment featuring Chat, Freeform, and Structured (Few-Shot) prompt workspaces, live in-browser code execution sandbox, KaTeX math rendering, and multi-language SDK code export (Python, JS, cURL, Swift, Kotlin).
+                  </p>
+                  <div className="pt-1 flex items-center gap-1.5 text-xs text-cyan-400 font-mono font-bold">
+                    <span>Launch Google AI Studio</span>
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </div>
+
                 {/* 1. Code Studio */}
                 <div
                   onClick={() => { onLaunchStudio('code'); onClose(); }}

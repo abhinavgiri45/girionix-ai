@@ -693,6 +693,15 @@ export default function ChatView({
           {/* Integrated AI Studio Canvas Dock (ChatGPT Canvas & Claude Artifacts style) */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs font-medium no-scrollbar">
             <button
+              onClick={() => onOpenStudioTab ? onOpenStudioTab('google-studio') : setInput('analyze in Google AI Studio: ')}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-500/20 via-cyan-500/20 to-purple-500/20 text-cyan-200 border border-cyan-400/40 transition-all whitespace-nowrap cursor-pointer hover:scale-105 shadow-glow-cyan/50"
+              title="Open Google AI Studio (Chat, Freeform, Structured Prompts & Sandbox Execution)"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+              <span className="font-bold">✦ AI Studio</span>
+            </button>
+
+            <button
               onClick={() => onOpenStudioTab ? onOpenStudioTab('code') : setInput('write a React 18 component with Tailwind CSS: ')}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 transition-all whitespace-nowrap cursor-pointer hover:scale-105 shadow-glow-cyan/50"
               title="Open React 18 Sandboxed Code Canvas"
@@ -790,7 +799,7 @@ export default function ChatView({
               onKeyDown={handleKeyDown}
               placeholder="Ask anything, write 'create a image of...', 'create a video of...', 'write code for...', or '/' for commands..."
               rows={1}
-              className="flex-1 bg-transparent text-xs sm:text-sm text-white placeholder-gray-500 px-3 py-1.5 focus:outline-none resize-none leading-relaxed max-h-44 overflow-y-auto"
+              className="flex-1 bg-transparent text-base sm:text-sm text-white placeholder-gray-500 px-3 py-1.5 focus:outline-none resize-none leading-relaxed max-h-44 overflow-y-auto"
             />
 
             <div className="flex items-center gap-1.5 mb-0.5">

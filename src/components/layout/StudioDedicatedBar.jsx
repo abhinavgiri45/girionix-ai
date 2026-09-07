@@ -35,6 +35,7 @@ export default function StudioDedicatedBar({
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   const tabs = [
+    { id: 'google-studio', label: 'Google AI Studio', icon: <Sparkles className="w-3.5 h-3.5" />, color: 'cyan' },
     { id: 'code', label: 'Dev Runner', icon: <Code2 className="w-3.5 h-3.5" />, color: 'cyan' },
     { id: 'script', label: 'Script Writer', icon: <ScrollText className="w-3.5 h-3.5" />, color: 'indigo' },
     { id: 'math', label: 'Math Lab', icon: <Sigma className="w-3.5 h-3.5" />, color: 'purple' },
@@ -50,7 +51,7 @@ export default function StudioDedicatedBar({
       {/* Primary Navigation & Dedicated AI Model Bar */}
       <div className="px-3 py-1.5 flex items-center justify-between gap-2.5 flex-wrap bg-gradient-to-r from-[#070915] via-[#0B0F22] to-[#070915]">
         {/* Left: Studio Domain Tabs */}
-        <div className="flex items-center gap-1 overflow-x-auto py-0.5 no-scrollbar touch-scroll">
+        <div className="flex items-center gap-1 overflow-x-auto py-0.5 no-scrollbar touch-scroll max-w-full">
           {tabs.map((tab) => {
             const isActive = activeStudioTab === tab.id;
             return (
@@ -59,7 +60,8 @@ export default function StudioDedicatedBar({
                 onClick={() => setActiveStudioTab(tab.id)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono transition-all whitespace-nowrap cursor-pointer ${
                   isActive
-                    ? tab.id === 'code' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-glow-cyan font-bold scale-[1.02]'
+                    ? tab.id === 'google-studio' ? 'bg-gradient-to-r from-blue-500/25 via-cyan-500/25 to-purple-500/25 text-cyan-200 border border-cyan-400/50 shadow-glow-cyan font-bold scale-[1.02]'
+                    : tab.id === 'code' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-glow-cyan font-bold scale-[1.02]'
                     : tab.id === 'script' ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 shadow-glow-cyan font-bold scale-[1.02]'
                     : tab.id === 'math' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-glow-purple font-bold scale-[1.02]'
                     : tab.id === 'image' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40 shadow-glow-rose font-bold scale-[1.02]'

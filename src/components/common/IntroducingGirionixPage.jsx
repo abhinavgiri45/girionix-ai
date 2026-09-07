@@ -106,7 +106,7 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
   }, [initialTab, isOpen]);
 
   // High-Trust & Interactive Playground State
-  const [interactiveStudio, setInteractiveStudio] = useState('code'); // 'code' | 'math' | 'image' | 'video' | 'audio'
+  const [interactiveStudio, setInteractiveStudio] = useState('google-studio'); // 'google-studio' | 'code' | 'math' | 'image' | 'video' | 'audio'
   const [openFaq, setOpenFaq] = useState(0);
   const [copiedCodeSnippet, setCopiedCodeSnippet] = useState(false);
   const [activeBenchmarkPill, setActiveBenchmarkPill] = useState('humaneval');
@@ -469,6 +469,7 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
             {/* Interactive Studio Switcher Pills */}
             <div className="p-1.5 rounded-2xl bg-[#090C16] border border-white/10 flex items-center justify-start sm:justify-center gap-1.5 overflow-x-auto shadow-2xl">
               {[
+                { id: 'google-studio', label: '✦ Google AI Studio', color: 'cyan', icon: Sparkles, desc: 'Flagship Developer Environment' },
                 { id: 'code', label: '💻 Dev Runner', color: 'cyan', icon: Code2, desc: 'React 18 & TypeScript AST' },
                 { id: 'script', label: '✍️ Script Writer', color: 'indigo', icon: ScrollText, desc: 'Fountain Screenplay & Story' },
                 { id: 'math', label: '📐 Olympiad Math', color: 'purple', icon: Sigma, desc: 'KaTeX & 3D Surfaces' },
@@ -493,6 +494,105 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
 
             {/* Interactive Studio Stage Card */}
             <div className="p-6 sm:p-8 rounded-3xl bg-[#070913] border border-cyan-500/30 shadow-2xl space-y-6">
+              {/* STAGE 0: GOOGLE AI STUDIO FLAGSHIP */}
+              {interactiveStudio === 'google-studio' && (
+                <div className="space-y-5 animate-fadeIn">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 rounded-xl bg-gradient-to-tr from-cyan-500/25 via-blue-500/25 to-purple-500/25 text-cyan-400 border border-cyan-400/40">
+                        <Sparkles className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-base font-bold text-white flex items-center gap-2">
+                          <span>Google AI Studio Environment</span>
+                          <span className="px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 text-[10px] font-mono border border-cyan-500/30 font-bold">
+                            1M+ Context Parity
+                          </span>
+                        </h3>
+                        <p className="text-xs text-gray-400 font-mono">Chat, Freeform & Structured Prompts • Live Sandbox Execution • KaTeX Math</p>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => handleLaunch('google-studio')}
+                      className="px-4 py-2 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black font-bold text-xs flex items-center gap-1.5 shadow-glow-cyan cursor-pointer transition-all hover:scale-105"
+                    >
+                      <span>Launch Google AI Studio</span>
+                      <ArrowUpRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                    {/* Prompt Workspace Preview */}
+                    <div className="lg:col-span-7 p-4 rounded-2xl bg-[#050711] border border-cyan-500/20 font-mono text-xs text-gray-300 space-y-3 shadow-xl">
+                      <div className="flex items-center justify-between text-[11px] text-gray-400 pb-2 border-b border-white/10">
+                        <span className="text-cyan-400 font-bold flex items-center gap-1.5">
+                          <Sparkles className="w-3.5 h-3.5" />
+                          <span>Gemini 2.5 Pro Output with Code Execution</span>
+                        </span>
+                        <div className="flex items-center gap-2 text-[10px]">
+                          <span className="text-cyan-300">⏱ 640ms</span>
+                          <span className="text-purple-300">📊 268 tokens</span>
+                          <span className="text-emerald-400">⚡ 74 tok/s</span>
+                        </div>
+                      </div>
+
+                      <div className="p-3 rounded-xl bg-black/50 border border-white/5 space-y-2 text-[11px]">
+                        <div className="text-cyan-300 font-bold">▼ Thinking Process (1,240 tokens)</div>
+                        <div className="text-gray-400 text-[10px]">Formulating matrix exponentiation $O(\\log N)$ and formal Binet closed-form derivation...</div>
+                      </div>
+
+                      <pre className="text-cyan-200 leading-relaxed overflow-x-auto text-[11px] bg-black/40 p-3 rounded-xl border border-white/5">
+{`def fibonacci_sequence(n: int) -> list[int]:
+    """Generates first n Fibonacci numbers."""
+    seq = [0, 1]
+    while len(seq) < n:
+        seq.append(seq[-1] + seq[-2])
+    return seq
+
+# Execution Output: [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]`}
+                      </pre>
+                    </div>
+
+                    {/* Run Settings Preview */}
+                    <div className="lg:col-span-5 p-4 rounded-2xl bg-black/60 border border-white/10 space-y-3 font-mono text-xs shadow-xl">
+                      <div className="font-bold text-white flex items-center justify-between pb-2 border-b border-white/10">
+                        <span>Run Settings</span>
+                        <span className="text-cyan-400 text-[10px]">Gemini 2.5 Pro</span>
+                      </div>
+                      <div className="space-y-2 text-[11px]">
+                        <div className="flex justify-between text-gray-300">
+                          <span>Temperature</span>
+                          <span className="text-cyan-300 font-bold">1.00</span>
+                        </div>
+                        <div className="flex justify-between text-gray-300">
+                          <span>Top P</span>
+                          <span className="text-cyan-300 font-bold">0.95</span>
+                        </div>
+                        <div className="flex justify-between text-gray-300">
+                          <span>Thinking Budget</span>
+                          <span className="text-purple-300 font-bold">2,048 tokens</span>
+                        </div>
+                        <div className="flex justify-between text-gray-300">
+                          <span>Search Grounding</span>
+                          <span className="text-emerald-400 font-bold">✓ Active</span>
+                        </div>
+                        <div className="flex justify-between text-gray-300">
+                          <span>Code Execution</span>
+                          <span className="text-emerald-400 font-bold">✓ In-Browser Sandbox</span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleLaunch('google-studio')}
+                        className="w-full py-2 rounded-xl bg-gradient-to-r from-blue-500 via-cyan-400 to-purple-500 text-black font-bold text-xs shadow-glow-cyan cursor-pointer"
+                      >
+                        Enter Google AI Studio
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* STAGE 1: CODE STUDIO */}
               {interactiveStudio === 'code' && (
                 <div className="space-y-5 animate-fadeIn">

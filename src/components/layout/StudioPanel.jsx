@@ -1,5 +1,6 @@
 import React from 'react';
 import StudioDedicatedBar from './StudioDedicatedBar';
+import GoogleAIStudio from '../studio/GoogleAIStudio';
 import CodeStudio from '../code/CodeStudio';
 import ScriptStudio from '../script/ScriptStudio';
 import MathLab from '../math/MathLab';
@@ -31,6 +32,12 @@ export default function StudioPanel({
 
       {/* Main Studio Viewport */}
       <div className="flex-1 overflow-hidden relative">
+        {activeStudioTab === 'google-studio' && (
+          <GoogleAIStudio 
+            activeModel={activeModel}
+            isTitanMode={isTitanMode}
+          />
+        )}
         {activeStudioTab === 'code' && (
           <CodeStudio 
             activeModel={activeModel} 

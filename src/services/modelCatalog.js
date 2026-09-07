@@ -175,6 +175,14 @@ export const AI_MODELS = [
 
 export const STUDIO_MODES = [
   {
+    id: "google-studio",
+    name: "Google AI Studio Flagship",
+    shortName: "AI Studio",
+    icon: "Sparkles",
+    color: "cyan",
+    description: "Flagship Google AI Studio environment matching aistudio.google.com with Chat, Freeform, Structured few-shot prompts, and live sandbox execution."
+  },
+  {
     id: "chat",
     name: "Omni Reasoning Chat",
     shortName: "Chat",
@@ -225,6 +233,26 @@ export const STUDIO_MODES = [
 ];
 
 export const STUDIO_DEDICATED_MODELS = {
+  'google-studio': {
+    id: "google-gemini-2.5-pro",
+    name: "Google Gemini 2.5 Pro (AI Studio Flagship)",
+    provider: "Google DeepMind Tensor Core",
+    workDomain: "Google AI Studio Developer Environment",
+    badgeColor: "cyan",
+    tag: "Gemini 2.5 Pro Multi-Modal Reasoning Engine",
+    speed: "⚡ 85-120 tok/s (Google TPU v5e)",
+    contextWindow: 1048576,
+    openRouterModel: "google/gemini-2.5-pro",
+    titanModelId: "girionix-titan-70b",
+    languages: ["Python 3.12", "TypeScript", "JSON Schema", "KaTeX Math", "cURL", "Swift", "Kotlin"],
+    capabilities: [
+      "Collapsible Thinking Process & Chain-of-Thought",
+      "Interactive In-Browser Code Execution Sandbox",
+      "Google Search Grounding & Dynamic Citations",
+      "Few-Shot Structured & Freeform Prompt Modes"
+    ],
+    benchmark: "Flagship Reasoning & 1M+ Context Window"
+  },
   code: {
     id: "girionix-codemaster-ultra",
     name: "Girionix CodeMaster Ultra (70B Coder)",

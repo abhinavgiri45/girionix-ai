@@ -124,6 +124,7 @@ export default function Header({
       </div>
 
       {/* Center: Clean Layout & Studio Mode Switcher */}
+      {/* Desktop Mode Switcher */}
       <div className="hidden sm:flex items-center p-0.5 rounded-xl bg-black/60 border border-white/[0.08] text-xs font-medium">
         <button
           onClick={() => setLayoutMode('chat')}
@@ -164,7 +165,40 @@ export default function Header({
                 : 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30 shadow-sm'
               : 'text-gray-400 hover:text-white'
           }`}
-          title="AI Studio (Code, Math, Vision & Motion)"
+          title="AI Studio (Google AI Studio, Code, Math & Media)"
+        >
+          <Sparkles className="w-3.5 h-3.5" />
+          <span>Studio</span>
+        </button>
+      </div>
+
+      {/* Mobile Mode Switcher (< sm) */}
+      <div className="flex sm:hidden items-center p-0.5 rounded-xl bg-black/60 border border-white/10 text-xs font-medium">
+        <button
+          onClick={() => setLayoutMode('chat')}
+          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all ${
+            layoutMode === 'chat'
+              ? isTitanMode 
+                ? 'bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30' 
+                : 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30'
+              : 'text-gray-400 hover:text-white'
+          }`}
+          title="Chat Focus"
+        >
+          <MessageSquare className="w-3.5 h-3.5" />
+          <span>Chat</span>
+        </button>
+
+        <button
+          onClick={() => setLayoutMode('studio')}
+          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all ${
+            layoutMode === 'studio'
+              ? isTitanMode 
+                ? 'bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30' 
+                : 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-cyan-300 font-bold border border-cyan-500/30'
+              : 'text-gray-400 hover:text-white'
+          }`}
+          title="Google AI Studio"
         >
           <Sparkles className="w-3.5 h-3.5" />
           <span>Studio</span>

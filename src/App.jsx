@@ -16,6 +16,7 @@ import LocalNeuralModal from './components/common/LocalNeuralModal';
 import TitanWorkstationModal from './components/common/TitanWorkstationModal';
 import TitanWorkstationView from './components/titan/TitanWorkstationView';
 import ChatView from './components/chat/ChatView';
+import MobileBottomNav from './components/layout/MobileBottomNav';
 
 import { AI_MODELS, TITAN_AI_MODELS } from './services/modelCatalog';
 import { storage } from './services/storage';
@@ -36,7 +37,7 @@ export default function App() {
     return AI_MODELS[0]; // Full Pro Flagship Universal Model available seamlessly on both web and app
   });
   const [layoutMode, setLayoutMode] = useState('chat'); // 'chat' | 'split' | 'studio'
-  const [activeStudioTab, setActiveStudioTab] = useState('code'); // 'code' | 'math' | 'image' | 'video'
+  const [activeStudioTab, setActiveStudioTab] = useState('google-studio'); // Flagship Google AI Studio by default
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isToolsOpen, setIsToolsOpen] = useState(false);
   const [introTab, setIntroTab] = useState('overview');
@@ -315,7 +316,7 @@ export default function App() {
                   : 'text-gray-400 hover:text-white bg-white/[0.03]'
               }`}
             >
-              <span>💻 Studio ({activeStudioTab.toUpperCase()})</span>
+              <span>{activeStudioTab === 'google-studio' ? '✦ Google AI Studio' : `💻 Studio (${activeStudioTab.toUpperCase()})`}</span>
             </button>
           </div>
         )}
@@ -383,6 +384,19 @@ export default function App() {
             </div>
           )}
         </main>
+
+        {/* Dedicated Mobile Bottom Navigation Bar (md:hidden) */}
+        <MobileBottomNav
+          layoutMode={layoutMode}
+          setLayoutMode={setLayoutMode}
+          mobileActivePane={mobileActivePane}
+          setMobileActivePane={setMobileActivePane}
+          onOpenTools={() => setIsToolsOpen(true)}
+          onOpenDownload={() => setIsDownloadOpen(true)}
+          onOpenProStatus={() => setIsProStatusOpen(true)}
+          isAppInstalled={isAppInstalled}
+          isTitanMode={isTitanMode}
+        />
       </div>
 
       {/* Tools & AI Studio Hub Modal */}
