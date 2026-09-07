@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Image as ImageIcon, 
   Sparkles, 
@@ -17,13 +17,14 @@ import {
   Camera,
   X,
   Upload,
-  FileDown
+  FileDown,
+  Film
 } from 'lucide-react';
 import { DEMO_IMAGE_PROMPTS } from '../../data/demoData';
 import { openrouter } from '../../services/openrouter';
 import { imageGenerator } from '../../services/imageGenerator';
 
-export default function ImageStudio({ activeModel, isTitanMode = false }) {
+export default function ImageStudio({ activeModel, isTitanMode = false, onOpenVideoStudio }) {
   const [prompt, setPrompt] = useState(DEMO_IMAGE_PROMPTS[0].prompt);
   const [negativePrompt, setNegativePrompt] = useState('');
   const [showNegative, setShowNegative] = useState(false);
@@ -38,26 +39,35 @@ export default function ImageStudio({ activeModel, isTitanMode = false }) {
   const [selectedImage, setSelectedImage] = useState(null);
   const [activeTab, setActiveTab] = useState('create'); // 'create' | 'gallery'
 
-  const [gallery, setGallery] = useState([
-    {
-      id: 'img-1',
-      title: DEMO_IMAGE_PROMPTS[0].title,
-      prompt: DEMO_IMAGE_PROMPTS[0].prompt,
-      url: DEMO_IMAGE_PROMPTS[0].thumbnail,
-      style: DEMO_IMAGE_PROMPTS[0].style,
-      aspect: DEMO_IMAGE_PROMPTS[0].aspect,
-      engine: 'FLUX.1 Cinema 8K'
-    },
-    {
-      id: 'img-2',
-      title: DEMO_IMAGE_PROMPTS[1].title,
-      prompt: DEMO_IMAGE_PROMPTS[1].prompt,
-      url: DEMO_IMAGE_PROMPTS[1].thumbnail,
-      style: DEMO_IMAGE_PROMPTS[1].style,
-      aspect: DEMO_IMAGE_PROMPTS[1].aspect,
-      engine: 'FLUX.1 Cinema 8K'
-    }
-  ]);
+  const [gallery, setGallery] = useState(() => {
+    try {
+      const saved = localStorage.getItem('girionix_image_gallery');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (_) {}
+    return [
+      {
+        id: 'img-1',
+        title: DEMO_IMAGE_PROMPTS[0].title,
+        prompt: DEMO_IMAGE_PROMPTS[0].prompt,
+        url: DEMO_IMAGE_PROMPTS[0].thumbnail,
+        style: DEMO_IMAGE_PROMPTS[0].style,
+        aspect: DEMO_IMAGE_PROMPTS[0].aspect,
+        engine: 'FLUX.1 Cinema 8K'
+      },
+      {
+        id: 'img-2',
+        title: DEMO_IMAGE_PROMPTS[1].title,
+        prompt: DEMO_IMAGE_PROMPTS[1].prompt,
+        url: DEMO_IMAGE_PROMPTS[1].thumbnail,
+        style: DEMO_IMAGE_PROMPTS[1].style,
+        aspect: DEMO_IMAGE_PROMPTS[1].aspect,
+        engine: 'FLUX.1 Cinema 8K'
+      }
+    ];
+  });
 
   const stylePresets = [
     { name: 'Photorealistic 8K', icon: '📸', desc: '85mm f/1.4 natural human skin, pores & realistic HDR' },
@@ -83,6 +93,14 @@ export default function ImageStudio({ activeModel, isTitanMode = false }) {
     { id: 'flux-anime', name: '🎨 Anime Master', desc: 'Studio Ghibli aesthetic' },
     { id: 'flux-3d', name: '🧸 3D Pixar', desc: 'Octane subsurface scattering' }
   ];
+
+  useEffect(() => {
+    try {
+      if (gallery && gallery.length > 0) {
+        localStorage.setItem('girionix_image_gallery', JSON.stringify(gallery.slice(0, 40)));
+      }
+    } catch (_) {}
+  }, [gallery]);
 
   const handleMagicEnhance = async () => {
     if (!prompt.trim()) return;
@@ -485,16 +503,30 @@ export default function ImageStudio({ activeModel, isTitanMode = false }) {
                     <span className="px-2 py-0.5 rounded-md bg-black/60 text-cyan-300 text-[10px] font-mono border border-cyan-500/30">
                       {img.style}
                     </span>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDownloadImage(img.url, img.title);
-                      }}
-                      className="p-1.5 rounded-lg bg-black/60 hover:bg-cyan-500/20 text-white hover:text-cyan-300 transition-colors"
-                      title="Download 8K Image"
-                    >
-                      <Download className="w-3.5 h-3.5" />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      {onOpenVideoStudio && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onOpenVideoStudio(img.url, img.prompt);
+                          }}
+                          className="p-1.5 rounded-lg bg-black/60 hover:bg-amber-500/20 text-white hover:text-amber-300 transition-colors"
+                          title="Animate in MotionLab Video Studio"
+                        >
+                          <Film className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDownloadImage(img.url, img.title);
+                        }}
+                        className="p-1.5 rounded-lg bg-black/60 hover:bg-cyan-500/20 text-white hover:text-cyan-300 transition-colors"
+                        title="Download 8K Image"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
 
                   <p className="text-xs text-white line-clamp-2 font-medium">
@@ -529,6 +561,20 @@ export default function ImageStudio({ activeModel, isTitanMode = false }) {
               </div>
 
               <div className="flex items-center gap-2">
+                {onOpenVideoStudio && (
+                  <button
+                    onClick={() => {
+                      onOpenVideoStudio(selectedImage.url, selectedImage.prompt);
+                      setSelectedImage(null);
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer"
+                    title="Animate this Artwork in MotionLab Video Studio"
+                  >
+                    <Film className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Animate in Video</span>
+                  </button>
+                )}
+
                 <button
                   onClick={() => handleCopyPrompt(selectedImage.prompt, 'modal')}
                   className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs text-gray-300 flex items-center gap-1.5 transition-all cursor-pointer"

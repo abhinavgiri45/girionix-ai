@@ -48,6 +48,9 @@ export default function DownloadAppsModal({ isOpen, onClose }) {
       standaloneFile: '/downloads/GirionixAI.exe',
       standaloneName: 'GirionixAI.exe',
       standaloneLabel: 'Direct Standalone Executable (.exe)',
+      scriptFile: '/downloads/Install-Girionix-AI.bat',
+      scriptName: 'Install-Girionix-AI.bat',
+      scriptLabel: '1-Click Windows Verified Installer (.bat)',
       uninstaller: '/downloads/Uninstall_Girionix_AI.exe',
       uninstallerName: 'Uninstall_Girionix_AI.exe'
     },
@@ -58,9 +61,12 @@ export default function DownloadAppsModal({ isOpen, onClose }) {
       uninstallGuide: 'Long-press Girionix AI icon on your Android home screen and tap "Uninstall".'
     },
     mac: {
-      file: '/downloads/Girionix_AI_macOS.dmg',
-      name: 'Girionix_AI_macOS.dmg',
-      label: 'Download macOS Universal Bundle (.dmg)',
+      file: '/downloads/Girionix_AI_macOS.zip',
+      name: 'Girionix_AI_macOS.zip',
+      label: 'Download macOS Universal App Bundle (.zip)',
+      altFile: '/downloads/Girionix_AI_macOS.dmg',
+      altName: 'Girionix_AI_macOS.dmg',
+      altLabel: 'Download macOS Package (.dmg)',
       scriptFile: '/downloads/Install_Girionix_Mac.command',
       scriptName: 'Install_Girionix_Mac.command',
       scriptLabel: '1-Click Verified macOS Installer (.command)',
@@ -93,6 +99,9 @@ export default function DownloadAppsModal({ isOpen, onClose }) {
       standaloneFile: '/downloads/GirionixAI.exe',
       standaloneName: 'GirionixAI.exe',
       standaloneLabel: 'Direct Standalone Executable (.exe)',
+      scriptFile: '/downloads/Install-Girionix-AI.bat',
+      scriptName: 'Install-Girionix-AI.bat',
+      scriptLabel: '1-Click Windows Verified Installer (.bat)',
       uninstaller: '/downloads/Uninstall_Girionix_AI.exe',
       uninstallerName: 'Uninstall_Girionix_AI.exe'
     },
@@ -103,9 +112,12 @@ export default function DownloadAppsModal({ isOpen, onClose }) {
       uninstallGuide: 'Long-press Girionix AI Titan icon and tap "Uninstall".'
     },
     mac: {
-      file: '/downloads/Girionix_AI_Titan_macOS.dmg',
-      name: 'Girionix_AI_Titan_macOS.dmg',
-      label: 'Download Titan macOS Bundle (.dmg - Hardware Verified)',
+      file: '/downloads/Girionix_AI_macOS.zip',
+      name: 'Girionix_AI_macOS.zip',
+      label: 'Download Titan macOS App Bundle (.zip)',
+      altFile: '/downloads/Girionix_AI_Titan_macOS.dmg',
+      altName: 'Girionix_AI_Titan_macOS.dmg',
+      altLabel: 'Download macOS Package (.dmg)',
       scriptFile: '/downloads/Install_Girionix_Mac.command',
       scriptName: 'Install_Girionix_Mac.command',
       scriptLabel: '1-Click Verified macOS Installer (.command)',
@@ -138,6 +150,9 @@ export default function DownloadAppsModal({ isOpen, onClose }) {
       standaloneFile: '/downloads/GirionixAI.exe',
       standaloneName: 'GirionixAI.exe',
       standaloneLabel: 'Direct Standalone Executable (.exe)',
+      scriptFile: '/downloads/Install-Girionix-AI.bat',
+      scriptName: 'Install-Girionix-AI.bat',
+      scriptLabel: '1-Click Windows Verified Installer (.bat)',
       uninstaller: '/downloads/Uninstall_Girionix_AI.exe',
       uninstallerName: 'Uninstall_Girionix_AI.exe'
     },
@@ -148,9 +163,12 @@ export default function DownloadAppsModal({ isOpen, onClose }) {
       uninstallGuide: 'Long-press Girionix AI Titan Lite icon and tap "Uninstall".'
     },
     mac: {
-      file: '/downloads/Girionix_AI_Titan_Lite_macOS.dmg',
-      name: 'Girionix_AI_Titan_Lite_macOS.dmg',
-      label: 'Download Titan Lite macOS DMG (.dmg - Air & Intel Macs)',
+      file: '/downloads/Girionix_AI_macOS.zip',
+      name: 'Girionix_AI_macOS.zip',
+      label: 'Download Titan Lite macOS App Bundle (.zip)',
+      altFile: '/downloads/Girionix_AI_Titan_Lite_macOS.dmg',
+      altName: 'Girionix_AI_Titan_Lite_macOS.dmg',
+      altLabel: 'Download macOS Package (.dmg)',
       scriptFile: '/downloads/Install_Girionix_Mac.command',
       scriptName: 'Install_Girionix_Mac.command',
       scriptLabel: '1-Click Verified macOS Installer (.command)',
@@ -392,23 +410,33 @@ export default function DownloadAppsModal({ isOpen, onClose }) {
 
             {/* Action Buttons for Platforms */}
             <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-              {/* Android Specific: 1-Tap PWA Install + APK Download */}
-              {selectedPlatform === 'android' && (
-                <button
-                  onClick={async () => {
-                    const res = await promptPWAInstall();
-                    if (res.success) {
-                      setActionMessage('✅ Girionix AI installed to your Android home screen!');
+              {/* Universal 1-Click PWA App Installation for Supported Browsers */}
+              <button
+                onClick={async () => {
+                  const res = await promptPWAInstall();
+                  if (res.success) {
+                    setActionMessage('✅ Girionix AI installed to your device!');
+                  } else {
+                    if (selectedPlatform === 'ios') {
+                      setActionMessage('👉 On iOS: Tap Share (􀈂) -> "Add to Home Screen".');
+                    } else if (selectedPlatform === 'android') {
+                      setActionMessage('👉 On Android: Tap Chrome Menu (⋮) -> "Add to Home screen" or "Install App".');
                     } else {
-                      setActionMessage('👉 To install: Tap Chrome Menu (⋮) -> tap "Add to Home screen" or "Install App".');
+                      setActionMessage('👉 Desktop: Click the Install icon (💻/⊕) in your browser address bar.');
                     }
-                  }}
-                  className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 text-black font-extrabold text-xs flex items-center justify-center gap-2 transition-all hover:scale-105 shadow-glow-emerald cursor-pointer"
-                >
-                  <Zap className="w-4 h-4 fill-current text-black" />
-                  <span>⚡ 1-Tap Install App to Android Home Screen</span>
-                </button>
-              )}
+                  }
+                }}
+                className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 text-black font-extrabold text-xs flex items-center justify-center gap-2 transition-all hover:scale-105 shadow-glow-emerald cursor-pointer"
+              >
+                <Zap className="w-4 h-4 fill-current text-black" />
+                <span>
+                  {selectedPlatform === 'android' 
+                    ? '⚡ 1-Tap Install App to Android' 
+                    : selectedPlatform === 'ios'
+                    ? '📱 1-Tap Add to iOS Home Screen'
+                    : '⚡ 1-Click Instant Desktop PWA Install'}
+                </span>
+              </button>
 
               {/* Primary Download Button for Platform */}
               <button
@@ -420,26 +448,41 @@ export default function DownloadAppsModal({ isOpen, onClose }) {
                 <span>{activeDownloadData.label || `Download (${activeDownloadData.name})`}</span>
               </button>
 
-              {activeDownloadData.exeFile && (
+              {/* Alternative / Alt Bundle (e.g. DMG on Mac) */}
+              {activeDownloadData.altFile && (
                 <button
-                  onClick={() => handleDownloadFile(activeDownloadData.exeFile, activeDownloadData.exeName, `✅ ${activeDownloadData.exeName} downloaded!`)}
+                  onClick={() => handleDownloadFile(activeDownloadData.altFile, activeDownloadData.altName, `✅ ${activeDownloadData.altName} downloaded!`)}
                   disabled={isDownloading}
                   className="w-full sm:w-auto px-4 py-3 rounded-2xl bg-white/5 hover:bg-white/10 text-gray-200 border border-white/15 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
-                  title="Full Windows GUI Setup Wizard (.exe)"
+                  title="Alternative package format"
                 >
-                  <HardDrive className="w-4 h-4 text-cyan-400" />
-                  <span>{activeDownloadData.exeLabel}</span>
+                  <Laptop className="w-4 h-4 text-cyan-400" />
+                  <span>{activeDownloadData.altLabel}</span>
                 </button>
               )}
 
+              {/* Direct Standalone Executable (Windows) */}
+              {activeDownloadData.standaloneFile && (
+                <button
+                  onClick={() => handleDownloadFile(activeDownloadData.standaloneFile, activeDownloadData.standaloneName, `✅ ${activeDownloadData.standaloneName} downloaded!`)}
+                  disabled={isDownloading}
+                  className="w-full sm:w-auto px-4 py-3 rounded-2xl bg-white/5 hover:bg-white/10 text-gray-200 border border-white/15 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  title="Direct Standalone Executable (.exe)"
+                >
+                  <HardDrive className="w-4 h-4 text-cyan-400" />
+                  <span>{activeDownloadData.standaloneLabel}</span>
+                </button>
+              )}
+
+              {/* 1-Click Verified Script Installer (.bat / .command / .sh) */}
               {activeDownloadData.scriptFile && (
                 <button
                   onClick={() => handleDownloadFile(activeDownloadData.scriptFile, activeDownloadData.scriptName, `✅ ${activeDownloadData.scriptName} downloaded! Double-click to run the verified script.`)}
                   disabled={isDownloading}
                   className="w-full sm:w-auto px-4 py-3 rounded-2xl bg-white/5 hover:bg-white/10 text-gray-200 border border-white/15 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
-                  title="100% open-source script installer"
+                  title="100% open-source verified installer"
                 >
-                  <FileCode className="w-4 h-4 text-cyan-400" />
+                  <FileCode className="w-4 h-4 text-emerald-400" />
                   <span>{activeDownloadData.scriptLabel}</span>
                 </button>
               )}

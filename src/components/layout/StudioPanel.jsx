@@ -54,6 +54,7 @@ export default function StudioPanel({
           <ImageStudio 
             activeModel={activeModel} 
             isTitanMode={isTitanMode}
+            onOpenVideoStudio={() => setActiveStudioTab('video')}
           />
         )}
         {activeStudioTab === 'video' && (

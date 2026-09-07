@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Film, 
   Sparkles, 
@@ -28,31 +28,45 @@ import {
   Clock,
   Upload,
   FileDown,
-  FolderOpen
+  FolderOpen,
+  Wand2,
+  ImageIcon,
+  History,
+  Trash2
 } from 'lucide-react';
-import { imageGenerator } from '../../services/imageGenerator';
+import { imageGenerator, VIDEO_MODELS } from '../../services/imageGenerator';
 import CinematicVideoPlayer from './CinematicVideoPlayer';
 
 export default function VideoStudio({ activeModel, isAppInstalled = false, isTitanMode = false, onOpenDownload }) {
+  const [generationMode, setGenerationMode] = useState('text'); // 'text' | 'image'
   const [customPrompt, setCustomPrompt] = useState('a majestic cybernetic dragon soaring above futuristic neo-Tokyo skyscrapers at midnight with volumetric rain reflections');
+  const [referenceImage, setReferenceImage] = useState(null);
   const [cameraMotion, setCameraMotion] = useState('Orbit 360° Counter-Clockwise');
   const [cinematicStyle, setCinematicStyle] = useState('Hollywood Blockbuster Sci-Fi');
   const [resolution, setResolution] = useState('4k'); // '1080p' | '4k' | '8k'
   const [aspectRatio, setAspectRatio] = useState('2.39:1 Anamorphic Cinema');
   const [audioGenre, setAudioGenre] = useState('epic');
   const [fps, setFps] = useState('60 FPS');
-  const [duration, setDuration] = useState(60); // 12 | 60 | 300 | 900 | 1800 | 3600
+  const [duration, setDuration] = useState(12); // 12 | 30 | 60 | 120
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isEnhancing, setIsEnhancing] = useState(false);
   const [activeVideoData, setActiveVideoData] = useState(null);
   const [showDirectorSettings, setShowDirectorSettings] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+
+  // Video Generation History from localStorage
+  const [videoHistory, setVideoHistory] = useState(() => {
+    try {
+      const saved = localStorage.getItem('girionix_video_history');
+      return saved ? JSON.parse(saved) : [];
+    } catch (_) { return []; }
+  });
 
   const durationOptions = [
-    { value: 12, label: '12s (Teaser)' },
-    { value: 60, label: '60s (Cinema Trailer)' },
-    { value: 300, label: '5 Min (Short Film)' },
-    { value: 900, label: '15 Min (Documentary)' },
-    { value: 1800, label: '30 Min (Featurette)' },
-    { value: 3600, label: '1 Hour (Long-Form Master 🔥)' }
+    { value: 12, label: '12s (Cinema Teaser)' },
+    { value: 30, label: '30s (Short Film)' },
+    { value: 60, label: '60s (Master Trailer)' },
+    { value: 120, label: '2 Min (Extended Cinematic)' }
   ];
 
   const motions = [
@@ -83,7 +97,7 @@ export default function VideoStudio({ activeModel, isAppInstalled = false, isTit
   const aspectRatios = [
     { label: '2.39:1 Cinema', value: '2.39:1 Anamorphic Cinema' },
     { label: '16:9 4K Wide', value: '16:9 4K Widescreen' },
-    { label: '9:16 Vertical', value: '9:16 Vertical' },
+    { label: '9:16 Vertical Reel', value: '9:16 Vertical' },
     { label: '1:1 Square', value: '1:1 Square' },
     { label: '21:9 Ultra-Wide', value: '21:9 Ultra-Wide IMAX' }
   ];
@@ -102,10 +116,10 @@ export default function VideoStudio({ activeModel, isAppInstalled = false, isTit
   ];
 
   const inspirationPrompts = [
-    'a cybernetic samurai duel in rain-soaked Neo-Tokyo neon alleyway',
-    'a running golden retriever dog sprinting across sunset meadow with barking effect',
-    'interstellar spaceship warping through purple black hole accretion disk',
-    'ancient mythical golden dragon emerging from misty mountain sunrise'
+    'a cybernetic samurai duel in rain-soaked Neo-Tokyo neon alleyway with volumetric steam reflections',
+    'golden retriever sprinting across sunset flower meadow with cinematic slow motion tracking',
+    'interstellar spaceship warping through purple black hole accretion disk with lens flare streaks',
+    'ancient mythical golden dragon emerging from misty mountain sunrise in 8k IMAX'
   ];
 
   // Initialize with initial storyboard on mount
@@ -128,6 +142,25 @@ export default function VideoStudio({ activeModel, isAppInstalled = false, isTit
     }
   }, []);
 
+  const saveToVideoHistory = (videoItem) => {
+    try {
+      const updated = [videoItem, ...videoHistory.filter(v => v.id !== videoItem.id)].slice(0, 20);
+      setVideoHistory(updated);
+      localStorage.setItem('girionix_video_history', JSON.stringify(updated));
+    } catch (_) {}
+  };
+
+  const handleMagicEnhancePrompt = () => {
+    if (!customPrompt.trim()) return;
+    setIsEnhancing(true);
+    setTimeout(() => {
+      const clean = customPrompt.replace(/^(create a video of|make a video of|generate a video of)/i, '').trim();
+      const enhanced = `${clean}, shot on 35mm anamorphic prime lens f/1.4, cinematic volumetric haze, high-dynamic-range HDR color grading, natural motion blur, photorealistic textures, 8k resolution`;
+      setCustomPrompt(enhanced);
+      setIsEnhancing(false);
+    }, 600);
+  };
+
   const handleGenerateScript = async () => {
     if (!customPrompt.trim() || isGenerating) return;
     setIsGenerating(true);
@@ -135,6 +168,7 @@ export default function VideoStudio({ activeModel, isAppInstalled = false, isTit
     try {
       const storyboard = await imageGenerator.generateVideoStoryboard({ 
         prompt: customPrompt,
+        referenceImage: generationMode === 'image' ? referenceImage : null,
         audioTheme: audioGenre,
         stylePreset: cinematicStyle,
         resolution,
@@ -144,11 +178,33 @@ export default function VideoStudio({ activeModel, isAppInstalled = false, isTit
       });
       storyboard.duration = duration;
       setActiveVideoData(storyboard);
+
+      saveToVideoHistory({
+        id: `vid-${Date.now()}`,
+        title: customPrompt.slice(0, 48) + '...',
+        prompt: customPrompt,
+        thumbnail: storyboard.shots?.[0]?.image,
+        storyboard,
+        createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        resolution,
+        fps
+      });
     } catch (err) {
       console.error('Video generation error:', err);
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      setReferenceImage(evt.target.result);
+      setGenerationMode('image');
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleExportProject = () => {
@@ -204,8 +260,8 @@ export default function VideoStudio({ activeModel, isAppInstalled = false, isTit
   return (
     <div className="flex-1 flex flex-col h-full bg-[#06070D] overflow-y-auto p-3 sm:p-5 space-y-3 font-sans">
       {/* Clean, Streamlined Header & Command Bar */}
-      <div className="p-4 rounded-2xl bg-[#0A0D1B]/80 backdrop-blur-xl border border-white/10 space-y-3 shadow-xl">
-        <div className="flex items-center justify-between gap-3">
+      <div className="p-4 rounded-2xl bg-[#0A0D1B]/90 backdrop-blur-xl border border-white/10 space-y-3 shadow-xl">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30">
               <Film className="w-4 h-4" />
@@ -221,7 +277,28 @@ export default function VideoStudio({ activeModel, isAppInstalled = false, isTit
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Mode Switcher: Text-to-Video vs Image-to-Video */}
+            <div className="flex items-center gap-1 bg-black/60 p-1 rounded-xl border border-white/10 text-xs font-mono">
+              <button
+                onClick={() => setGenerationMode('text')}
+                className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                  generationMode === 'text' ? 'bg-amber-500 text-black font-bold shadow-sm' : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                Text-to-Video
+              </button>
+              <button
+                onClick={() => setGenerationMode('image')}
+                className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+                  generationMode === 'image' ? 'bg-amber-500 text-black font-bold shadow-sm' : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                <ImageIcon className="w-3 h-3" />
+                <span>Image-to-Video</span>
+              </button>
+            </div>
+
             <button
               onClick={() => setShowDirectorSettings(!showDirectorSettings)}
               className={`px-3 py-1.5 rounded-xl border text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer ${
@@ -231,7 +308,20 @@ export default function VideoStudio({ activeModel, isAppInstalled = false, isTit
               }`}
             >
               <SlidersHorizontal className="w-3.5 h-3.5" />
-              <span>Director Settings</span>
+              <span>Director</span>
+            </button>
+
+            <button
+              onClick={() => setShowHistory(!showHistory)}
+              className={`px-2.5 py-1.5 rounded-xl border text-xs font-mono flex items-center gap-1 transition-all cursor-pointer ${
+                showHistory 
+                  ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' 
+                  : 'bg-white/5 hover:bg-white/10 text-gray-300 border-white/10'
+              }`}
+              title="View Video Creation History"
+            >
+              <History className="w-3.5 h-3.5 text-cyan-400" />
+              <span className="hidden sm:inline">History ({videoHistory.length})</span>
             </button>
 
             <button
@@ -251,6 +341,45 @@ export default function VideoStudio({ activeModel, isAppInstalled = false, isTit
           </div>
         </div>
 
+        {/* Image Reference Uploader (for Image-to-Video mode) */}
+        {generationMode === 'image' && (
+          <div className="p-3 rounded-xl bg-black/50 border border-cyan-500/30 flex items-center justify-between gap-3 text-xs font-mono">
+            <div className="flex items-center gap-3">
+              {referenceImage ? (
+                <img src={referenceImage} alt="Reference" className="w-12 h-12 object-cover rounded-lg border border-cyan-500/40" />
+              ) : (
+                <div className="w-12 h-12 rounded-lg bg-white/5 border border-dashed border-white/20 flex items-center justify-center text-gray-400">
+                  <ImageIcon className="w-5 h-5" />
+                </div>
+              )}
+              <div>
+                <span className="text-cyan-300 font-bold block">
+                  {referenceImage ? 'Reference Image Attached' : 'Upload Keyframe Image to Animate:'}
+                </span>
+                <span className="text-[10px] text-gray-400">
+                  {referenceImage ? 'MotionLab will synthesize 3D dynamic camera movement over your image.' : 'PNG, JPG or WebP up to 8K resolution'}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <label className="px-3 py-1.5 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/30 cursor-pointer transition-all">
+                <span>{referenceImage ? 'Change Image' : 'Browse File...'}</span>
+                <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+              </label>
+              {referenceImage && (
+                <button
+                  onClick={() => setReferenceImage(null)}
+                  className="p-1.5 rounded-lg bg-white/5 text-gray-400 hover:text-rose-400"
+                  title="Remove reference"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Clean Input & Generate Bar */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
           <div className="relative flex-1">
@@ -259,10 +388,20 @@ export default function VideoStudio({ activeModel, isAppInstalled = false, isTit
               value={customPrompt}
               onChange={(e) => setCustomPrompt(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleGenerateScript()}
-              placeholder="Describe your video scene (e.g., a running dog with barking effect, cybernetic samurai duel)..."
-              className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-black/60 border border-white/15 text-white text-xs placeholder-gray-500 focus:outline-none focus:border-amber-500/50 shadow-inner"
+              placeholder="Describe your video scene (e.g., cybernetic dragon soaring above Neo-Tokyo, running dog in meadow)..."
+              className="w-full pl-9 pr-20 py-2.5 rounded-xl bg-black/60 border border-white/15 text-white text-xs placeholder-gray-500 focus:outline-none focus:border-amber-500/50 shadow-inner"
             />
             <Video className="w-4 h-4 text-amber-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            
+            <button
+              onClick={handleMagicEnhancePrompt}
+              disabled={isEnhancing || !customPrompt.trim()}
+              className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 rounded-lg bg-white/10 hover:bg-amber-500/20 text-[10px] font-mono text-gray-300 hover:text-amber-300 flex items-center gap-1 transition-colors cursor-pointer"
+              title="Enhance with Director Optics"
+            >
+              <Wand2 className="w-3 h-3 text-amber-400" />
+              <span>{isEnhancing ? '...' : 'Enhance'}</span>
+            </button>
           </div>
 
           <button
@@ -273,7 +412,7 @@ export default function VideoStudio({ activeModel, isAppInstalled = false, isTit
             {isGenerating ? (
               <>
                 <RefreshCw className="w-3.5 h-3.5 animate-spin text-black" />
-                <span>Rendering {resolution.toUpperCase()} Shots...</span>
+                <span>Synthesizing Video...</span>
               </>
             ) : (
               <>
@@ -299,6 +438,49 @@ export default function VideoStudio({ activeModel, isAppInstalled = false, isTit
             </button>
           ))}
         </div>
+
+        {/* Video History Drawer */}
+        {showHistory && (
+          <div className="p-3 rounded-2xl bg-black/60 border border-white/10 space-y-2 animate-fadeIn text-xs font-mono">
+            <div className="flex items-center justify-between text-gray-400">
+              <span>Past Video Creations ({videoHistory.length}):</span>
+              {videoHistory.length > 0 && (
+                <button
+                  onClick={() => { setVideoHistory([]); localStorage.removeItem('girionix_video_history'); }}
+                  className="text-[10px] text-rose-400 hover:text-rose-300"
+                >
+                  Clear History
+                </button>
+              )}
+            </div>
+
+            {videoHistory.length === 0 ? (
+              <p className="text-[11px] text-gray-500 italic">No previous video creations saved yet.</p>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {videoHistory.map(v => (
+                  <div
+                    key={v.id}
+                    onClick={() => { setActiveVideoData(v.storyboard); setCustomPrompt(v.prompt); }}
+                    className="p-2 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/5 hover:border-amber-500/40 transition-all cursor-pointer space-y-1.5 group"
+                  >
+                    <div className="aspect-video bg-black rounded-lg overflow-hidden relative">
+                      <img src={v.thumbnail} alt={v.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                        <Play className="w-5 h-5 text-amber-300 fill-current" />
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-white truncate font-medium">{v.title}</p>
+                    <div className="flex items-center justify-between text-[9px] text-gray-500">
+                      <span>{v.resolution?.toUpperCase()}</span>
+                      <span>{v.createdAt}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Collapsible Director Settings Drawer */}
         {showDirectorSettings && (
@@ -394,3 +576,4 @@ export default function VideoStudio({ activeModel, isAppInstalled = false, isTit
     </div>
   );
 }
+

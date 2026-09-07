@@ -155,6 +155,29 @@ export default function CinematicVideoPlayer({
           loadedImagesRef.current[idx] = retryImg;
           setLoadedImagesMap(prev => ({ ...prev, [idx]: true }));
         };
+        retryImg.onerror = () => {
+          // Instant procedural aesthetic canvas frame fallback so playback never hangs
+          const fallbackCanvas = document.createElement('canvas');
+          fallbackCanvas.width = 1280;
+          fallbackCanvas.height = 720;
+          const fctx = fallbackCanvas.getContext('2d');
+          const fgrad = fctx.createLinearGradient(0, 0, 1280, 720);
+          fgrad.addColorStop(0, idx % 2 === 0 ? '#0B132B' : '#1C0A35');
+          fgrad.addColorStop(0.5, '#070914');
+          fgrad.addColorStop(1, '#05070E');
+          fctx.fillStyle = fgrad;
+          fctx.fillRect(0, 0, 1280, 720);
+          fctx.fillStyle = 'rgba(0, 240, 255, 0.8)';
+          fctx.font = 'bold 36px sans-serif';
+          fctx.textAlign = 'center';
+          fctx.fillText(shot.name || `Shot ${idx + 1}`, 640, 340);
+          fctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+          fctx.font = '20px monospace';
+          fctx.fillText(cleanSubject.slice(0, 60), 640, 400);
+
+          loadedImagesRef.current[idx] = fallbackCanvas;
+          setLoadedImagesMap(prev => ({ ...prev, [idx]: true }));
+        };
       };
     });
   }, [videoData]);
@@ -222,7 +245,9 @@ export default function CinematicVideoPlayer({
       ctx.fillStyle = '#04060F';
       ctx.fillRect(0, 0, width, height);
 
-      if (img && img.complete && img.naturalWidth > 0) {
+      const isImgReady = img && (img instanceof HTMLCanvasElement || (img.complete && img.naturalWidth > 0) || img.width > 0);
+
+      if (isImgReady) {
         ctx.save();
 
         // 3D Camera Physics & Motion Matrix (Customized per Shot for Dynamic Movement)
@@ -266,7 +291,9 @@ export default function CinematicVideoPlayer({
         ctx.scale(zoom, zoom);
 
         // Aspect fit image
-        const imgAspect = img.naturalWidth / img.naturalHeight;
+        const naturalW = img.naturalWidth || img.width || 1280;
+        const naturalH = img.naturalHeight || img.height || 720;
+        const imgAspect = naturalW / naturalH;
         const canvasAspect = width / height;
         let drawW, drawH;
 
@@ -285,7 +312,7 @@ export default function CinematicVideoPlayer({
         if (shotProgress > 0.80) {
           const nextShotIndex = (currentShotIndex + 1) % shotCount;
           const nextImg = loadedImagesRef.current[nextShotIndex];
-          if (nextImg && nextImg.complete && nextImg.naturalWidth > 0) {
+          if (nextImg && (nextImg instanceof HTMLCanvasElement || (nextImg.complete && nextImg.naturalWidth > 0) || nextImg.width > 0)) {
             const alpha = (shotProgress - 0.80) / 0.20;
             ctx.globalAlpha = Math.min(1.0, Math.max(0.0, alpha));
             ctx.drawImage(nextImg, -drawW / 2, -drawH / 2, drawW, drawH);
@@ -533,8 +560,18 @@ export default function CinematicVideoPlayer({
       }, 12000);
 
     } catch (err) {
-      console.error('Export error:', err);
+      console.warn('MediaRecorder export notice, exporting cinema master frame:', err);
+      try {
+        const dataUrl = canvas.toDataURL('image/png');
+        const a = document.createElement('a');
+        a.href = dataUrl;
+        a.download = `Girionix_${resolution.toUpperCase()}_Cinema_Master_${Date.now()}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } catch (_) {}
       setIsExporting(false);
+      setExportProgress(0);
     }
   };
 

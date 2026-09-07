@@ -17,6 +17,13 @@ export const IMAGE_MODELS = [
   { id: 'turbo', name: 'Turbo Instant 4K', desc: 'Sub-second real-time rendering' }
 ];
 
+export const VIDEO_MODELS = [
+  { id: 'motion-v3', name: 'MotionLab V3 Cinema (60 FPS)', desc: 'Hollywood multi-shot continuity & dynamic camera trajectories' },
+  { id: 'luma-neural', name: 'Luma Dream Neural (4K)', desc: 'Photorealistic physics & fluid motion synthesis' },
+  { id: 'kling-motion', name: 'Kling-AI Motion Engine', desc: 'High-action tracking & complex character movement' },
+  { id: 'cogvideo-hd', name: 'CogVideoX 8K Ultra', desc: 'Anamorphic cinema optics & deep atmosphere' }
+];
+
 export const imageGenerator = {
   /**
    * Intelligently detects the most anatomically correct aspect ratio based on subject matter
@@ -187,6 +194,7 @@ export const imageGenerator = {
    */
   async generateVideoStoryboard({ 
     prompt, 
+    referenceImage = null,
     audioTheme = 'epic',
     stylePreset = 'Hollywood Blockbuster Sci-Fi',
     resolution = '4k',
@@ -194,7 +202,7 @@ export const imageGenerator = {
     aspectRatio = '2.39:1 Anamorphic Cinema',
     cameraMotion = 'Orbit 360° Counter-Clockwise'
   }) {
-    const cleanSubject = prompt
+    const cleanSubject = (prompt || 'cinematic motion scene')
       .replace(/^(create a cinematic 3d multi-shot video scene for:|generate a video of|generate video of|create a video of|create video of|make a video of|video of|create video for|video scene for:?)/i, '')
       .replace(/\b(with barking effect|with bark effect|barking effect|barking sound|barking|with sound effect|sound effect|audio effect|sound effects|with audio)\b/gi, '')
       .trim() || prompt;
@@ -225,7 +233,7 @@ export const imageGenerator = {
     const shot4Prompt = `masterpiece cinematic movie ascending drone grand reveal finale shot of ${cleanSubject}, twilight dusk sky, epic scale, ${styleTags}`;
 
     const [shot1, shot2, shot3, shot4] = await Promise.all([
-      this.generate({ prompt: shot1Prompt, width: resWidth, height: resHeight, seed: baseSeed + 111, model: 'flux', stylePreset }),
+      referenceImage ? { url: referenceImage } : this.generate({ prompt: shot1Prompt, width: resWidth, height: resHeight, seed: baseSeed + 111, model: 'flux', stylePreset }),
       this.generate({ prompt: shot2Prompt, width: resWidth, height: resHeight, seed: baseSeed + 3333, model: 'flux', stylePreset }),
       this.generate({ prompt: shot3Prompt, width: resWidth, height: resHeight, seed: baseSeed + 5555, model: 'flux', stylePreset }),
       this.generate({ prompt: shot4Prompt, width: resWidth, height: resHeight, seed: baseSeed + 7777, model: 'flux', stylePreset })
@@ -233,6 +241,7 @@ export const imageGenerator = {
 
     return {
       title: cleanSubject,
+      referenceImage: referenceImage || null,
       fps: fps === '120 FPS' ? 120 : (fps === '24 FPS' ? 24 : 60),
       resolution: resolution === '8k' ? '8K IMAX Master (4320p)' : (resolution === '4k' ? '4K UHD Cinema (2160p)' : '1080p Full HD'),
       aspectRatio,

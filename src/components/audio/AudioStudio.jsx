@@ -1016,7 +1016,7 @@ export default function AudioStudio({ activeModel, isTitanMode = false }) {
               </button>
 
               <button
-                onClick={() => handleDownloadFullScore(selectedScoreTheme, 'Master_5Stem_Mix')}
+                onClick={() => handleDownloadScore(selectedScoreTheme, 'Master_5Stem_Mix')}
                 disabled={isRenderingDownload}
                 className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white border border-white/20 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer"
               >
