@@ -176,11 +176,11 @@ export const AI_MODELS = [
 export const STUDIO_MODES = [
   {
     id: "google-studio",
-    name: "Google AI Studio Flagship",
+    name: "AI Studio Flagship",
     shortName: "AI Studio",
     icon: "Sparkles",
     color: "cyan",
-    description: "Flagship Google AI Studio environment matching aistudio.google.com with Chat, Freeform, Structured few-shot prompts, and live sandbox execution."
+    description: "Flagship AI Studio environment with Chat, Freeform, Structured few-shot prompts, and live sandbox execution."
   },
   {
     id: "chat",
@@ -237,7 +237,7 @@ export const STUDIO_DEDICATED_MODELS = {
     id: "google-gemini-2.5-pro",
     name: "Google Gemini 2.5 Pro (AI Studio Flagship)",
     provider: "Google DeepMind Tensor Core",
-    workDomain: "Google AI Studio Developer Environment",
+    workDomain: "AI Studio Developer Environment",
     badgeColor: "cyan",
     tag: "Gemini 2.5 Pro Multi-Modal Reasoning Engine",
     speed: "⚡ 85-120 tok/s (Google TPU v5e)",

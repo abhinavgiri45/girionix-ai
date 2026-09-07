@@ -628,7 +628,7 @@ println(response.text)
                 </linearGradient>
               </defs>
             </svg>
-            <span className="text-sm font-medium text-[#e3e3e3] tracking-tight hidden sm:inline">Google AI Studio</span>
+            <span className="text-sm font-medium text-[#e3e3e3] tracking-tight hidden sm:inline">AI Studio</span>
           </div>
 
           <div className="h-4 w-px bg-[#444746] hidden sm:block" />
@@ -701,7 +701,7 @@ println(response.text)
           <div className="relative group">
             <button
               className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#282a2c] hover:bg-[#3c4043] text-[#c4c7c5] hover:text-white border border-[#444746] text-xs font-medium transition-all cursor-pointer"
-              title="Load Google AI Studio Sample Prompts"
+              title="Load AI Studio Sample Prompts"
             >
               <BookOpen className="w-3.5 h-3.5 text-[#a8c7fa]" />
               <span className="hidden md:inline">Samples</span>
@@ -837,7 +837,7 @@ println(response.text)
                       </svg>
                     </div>
                     <div className="space-y-1">
-                      <h3 className="font-medium text-[#e3e3e3] text-base">Google AI Studio Chat Prompt</h3>
+                      <h3 className="font-medium text-[#e3e3e3] text-base">AI Studio Chat Prompt</h3>
                       <p className="text-xs text-[#8e918f] max-w-sm">
                         Type a user prompt below or pick from the sample library. Includes step-by-step thinking tokens, syntax-highlighted code with in-browser execution sandbox, and KaTeX LaTeX formulas.
                       </p>

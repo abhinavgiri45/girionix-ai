@@ -704,9 +704,9 @@ export default function ChatView({
           {/* Integrated AI Studio Canvas Dock (ChatGPT Canvas & Claude Artifacts style) */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs font-medium no-scrollbar">
             <button
-              onClick={() => onOpenStudioTab ? onOpenStudioTab('google-studio') : setInput('analyze in Google AI Studio: ')}
+              onClick={() => onOpenStudioTab ? onOpenStudioTab('google-studio') : setInput('analyze in AI Studio: ')}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-500/20 via-cyan-500/20 to-purple-500/20 text-cyan-200 border border-cyan-400/40 transition-all whitespace-nowrap cursor-pointer hover:scale-105 shadow-glow-cyan/50"
-              title="Open Google AI Studio (Chat, Freeform, Structured Prompts & Sandbox Execution)"
+              title="Open AI Studio (Chat, Freeform, Structured Prompts & Sandbox Execution)"
             >
               <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
               <span className="font-bold">✦ AI Studio</span>

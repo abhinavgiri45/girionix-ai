@@ -165,7 +165,7 @@ export default function Header({
                 : 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30 shadow-sm'
               : 'text-gray-400 hover:text-white'
           }`}
-          title="AI Studio (Google AI Studio, Code, Math & Media)"
+          title="AI Studio (Prompt Lab, Code, Math & Media)"
         >
           <Sparkles className="w-3.5 h-3.5" />
           <span>Studio</span>
@@ -198,7 +198,7 @@ export default function Header({
                 : 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-cyan-300 font-bold border border-cyan-500/30'
               : 'text-gray-400 hover:text-white'
           }`}
-          title="Google AI Studio"
+          title="AI Studio"
         >
           <Sparkles className="w-3.5 h-3.5" />
           <span>Studio</span>

@@ -35,7 +35,7 @@ export default function StudioDedicatedBar({
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   const tabs = [
-    { id: 'google-studio', label: 'Google AI Studio', icon: <Sparkles className="w-3.5 h-3.5" />, color: 'cyan' },
+    { id: 'google-studio', label: 'AI Studio', icon: <Sparkles className="w-3.5 h-3.5" />, color: 'cyan' },
     { id: 'code', label: 'Dev Runner', icon: <Code2 className="w-3.5 h-3.5" />, color: 'cyan' },
     { id: 'script', label: 'Script Writer', icon: <ScrollText className="w-3.5 h-3.5" />, color: 'indigo' },
     { id: 'math', label: 'Math Lab', icon: <Sigma className="w-3.5 h-3.5" />, color: 'purple' },

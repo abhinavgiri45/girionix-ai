@@ -533,9 +533,9 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
             </div>
 
             {/* Interactive Studio Switcher Pills */}
-            <div className="p-1.5 rounded-2xl bg-[#090C16] border border-white/10 flex items-center justify-start sm:justify-center gap-1.5 overflow-x-auto shadow-2xl">
+            <div className="p-1.5 rounded-2xl bg-[#090C16] border border-white/10 flex items-center justify-start sm:justify-center gap-1.5 overflow-x-auto shadow-2xl no-scrollbar scroll-smooth">
               {[
-                { id: 'google-studio', label: '✦ Google AI Studio', color: 'cyan', icon: Sparkles, desc: 'Flagship Developer Environment' },
+                { id: 'google-studio', label: '✦ AI Studio', color: 'cyan', icon: Sparkles, desc: 'Flagship Developer Environment' },
                 { id: 'code', label: '💻 Dev Runner', color: 'cyan', icon: Code2, desc: 'React 18 & TypeScript AST' },
                 { id: 'script', label: '✍️ Script Writer', color: 'indigo', icon: ScrollText, desc: 'Fountain Screenplay & Story' },
                 { id: 'math', label: '📐 Olympiad Math', color: 'purple', icon: Sigma, desc: 'KaTeX & 3D Surfaces' },
@@ -560,7 +560,7 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
 
             {/* Interactive Studio Stage Card */}
             <div className="p-6 sm:p-8 rounded-3xl bg-[#070913] border border-cyan-500/30 shadow-2xl space-y-6">
-              {/* STAGE 0: GOOGLE AI STUDIO FLAGSHIP */}
+              {/* STAGE 0: AI STUDIO FLAGSHIP */}
               {interactiveStudio === 'google-studio' && (
                 <div className="space-y-5 animate-fadeIn">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
@@ -570,7 +570,7 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
                       </div>
                       <div>
                         <h3 className="text-base font-bold text-white flex items-center gap-2">
-                          <span>Google AI Studio Environment</span>
+                          <span>AI Studio Environment</span>
                           <span className="px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 text-[10px] font-mono border border-cyan-500/30 font-bold">
                             1M+ Context Parity
                           </span>
@@ -583,7 +583,7 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
                       onClick={() => handleLaunch('google-studio')}
                       className="px-4 py-2 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black font-bold text-xs flex items-center gap-1.5 shadow-glow-cyan cursor-pointer transition-all hover:scale-105"
                     >
-                      <span>Launch Google AI Studio</span>
+                      <span>Launch AI Studio</span>
                       <ArrowUpRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -652,7 +652,7 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
                         onClick={() => handleLaunch('google-studio')}
                         className="w-full py-2 rounded-xl bg-gradient-to-r from-blue-500 via-cyan-400 to-purple-500 text-black font-bold text-xs shadow-glow-cyan cursor-pointer"
                       >
-                        Enter Google AI Studio
+                        Enter AI Studio
                       </button>
                     </div>
                   </div>

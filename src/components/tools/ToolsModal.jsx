@@ -379,16 +379,16 @@ export default function ToolsModal({
                   </div>
                   <div>
                     <h3 className="text-base font-bold text-white group-hover:text-cyan-300 flex items-center gap-2">
-                      <span>Google AI Studio</span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 font-mono">aistudio.google.com parity</span>
+                      <span>AI Studio</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 font-mono">Developer Studio</span>
                     </h3>
                     <div className="text-[11px] font-mono text-cyan-400 font-bold">✦ Model: Google Gemini 2.5 Pro & Flash Thinking Core</div>
                   </div>
                   <p className="text-xs text-gray-300 leading-relaxed max-w-2xl">
-                    Faithful Google AI Studio developer environment featuring Chat, Freeform, and Structured (Few-Shot) prompt workspaces, live in-browser code execution sandbox, KaTeX math rendering, and multi-language SDK code export (Python, JS, cURL, Swift, Kotlin).
+                    Faithful AI Studio developer environment featuring Chat, Freeform, and Structured (Few-Shot) prompt workspaces, live in-browser code execution sandbox, KaTeX math rendering, and multi-language SDK code export (Python, JS, cURL, Swift, Kotlin).
                   </p>
                   <div className="pt-1 flex items-center gap-1.5 text-xs text-cyan-400 font-mono font-bold">
-                    <span>Launch Google AI Studio</span>
+                    <span>Launch AI Studio</span>
                     <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                   </div>
                 </div>

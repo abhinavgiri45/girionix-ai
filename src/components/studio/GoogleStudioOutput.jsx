@@ -537,7 +537,7 @@ export default function GoogleStudioOutput({
         </div>
 
         <div className="text-[10px] text-[#8e918f] font-mono">
-          Google AI Studio Environment
+          AI Studio Environment
         </div>
       </div>
     </div>
