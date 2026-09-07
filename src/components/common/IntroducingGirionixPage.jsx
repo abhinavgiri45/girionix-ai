@@ -195,7 +195,7 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
       os: 'Windows 10 / 11 / 12',
       format: '.EXE Setup Wizard',
       file: 'Girionix_AI_Setup.exe',
-      size: '2.99 MB',
+      size: '5.66 MB',
       architecture: 'x64 / Snapdragon X ARM64',
       storagePath: '%LocalAppData%\\Girionix AI\\Data',
       uninstaller: 'Start Menu & Windows Control Panel Add/Remove Programs'
@@ -204,7 +204,7 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
       os: 'Android 10 to 15+',
       format: '.APK Standalone Package',
       file: 'Girionix_AI.apk',
-      size: '714 KB',
+      size: '5.01 MB',
       architecture: 'Universal ARM64-v8a / armeabi-v7a / x86_64',
       storagePath: 'Isolated Android App Sandbox Data',
       uninstaller: '1-Tap Android App Settings / Long-press Home Screen'
@@ -1617,9 +1617,9 @@ export default function NeuralPulseSphere() {
                     </tr>
                     <tr className="hover:bg-white/[0.02]">
                       <td className="py-3 px-4 font-bold text-white font-mono">📦 Standalone Installer Size</td>
-                      <td className="py-3 px-4 text-purple-300 font-mono font-bold">~2.99 MB</td>
-                      <td className="py-3 px-4 text-purple-300 font-mono font-bold">~3.45 MB</td>
-                      <td className="py-3 px-4 text-purple-300 font-mono font-bold">~2.85 MB</td>
+                      <td className="py-3 px-4 text-purple-300 font-mono font-bold">~5.66 MB</td>
+                      <td className="py-3 px-4 text-purple-300 font-mono font-bold">~5.66 MB</td>
+                      <td className="py-3 px-4 text-purple-300 font-mono font-bold">~5.66 MB</td>
                     </tr>
                     <tr className="hover:bg-white/[0.02]">
                       <td className="py-3 px-4 font-bold text-white font-mono">⚡ Universal Model Auto-Upgrade</td>
@@ -1666,8 +1666,8 @@ export default function NeuralPulseSphere() {
               {/* Synchronized Platform Quick Tabs */}
               <div className="flex items-center gap-2 overflow-x-auto pb-2 pt-1">
                 {[
-                  { id: 'windows', label: 'Windows (PC & Surface)', icon: '🪟', size: '2.99 MB' },
-                  { id: 'android', label: 'Android (Phones & Tablets)', icon: '🤖', size: '714 KB' },
+                  { id: 'windows', label: 'Windows (PC & Surface)', icon: '🪟', size: '5.66 MB' },
+                  { id: 'android', label: 'Android (Phones & Tablets)', icon: '🤖', size: '5.01 MB' },
                   { id: 'mac', label: 'macOS (Apple Silicon & Intel)', icon: '🍏', size: '715 KB' },
                   { id: 'linux', label: 'Linux (Ubuntu, Debian, Arch)', icon: '🐧', size: '714 KB' },
                   { id: 'ios', label: 'iOS & iPadOS (iPhone & iPad)', icon: '📱', size: '1.2 KB' },

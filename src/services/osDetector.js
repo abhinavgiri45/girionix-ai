@@ -40,10 +40,10 @@ export const PLATFORM_INFO = {
     tag: '🖥️ NATIVE WINDOWS POWERHOUSE',
     fileType: '.EXE Setup Wizard',
     fileName: 'Girionix_AI_Setup.exe',
-    fileSize: '2.99 MB',
+    fileSize: '5.66 MB',
     downloadUrl: '/downloads/Girionix_AI_Setup.exe',
     headline: 'Experience Girionix AI on Windows (100% Standalone App)',
-    description: 'Download the native Windows setup installer (2.99 MB) with embedded local background server and private %LocalAppData% vault.',
+    description: 'Download the native Windows setup installer (5.66 MB) with embedded local background server and private %LocalAppData% vault.',
     buttonText: 'Download for Windows (.exe Setup)',
     features: [
       { title: '90-Day Local Vault', desc: 'Saved directly to %LocalAppData%\\Girionix AI\\Data with zero cloud tracking.' },
@@ -58,10 +58,10 @@ export const PLATFORM_INFO = {
     tag: '🤖 NATIVE ANDROID POWERHOUSE',
     fileType: '.APK Installer Package',
     fileName: 'Girionix_AI.apk',
-    fileSize: '714 KB',
+    fileSize: '5.01 MB',
     downloadUrl: '/downloads/Girionix_AI.apk',
     headline: 'Experience Girionix AI on Android (100% Standalone APK)',
-    description: 'Download the lightweight Android APK package (714 KB) with hardware-accelerated local WebView and 90-day offline sandbox storage.',
+    description: 'Download the lightweight Android APK package (5.01 MB) with hardware-accelerated local WebView and 90-day offline sandbox storage.',
     buttonText: 'Download for Android (.apk Package)',
     features: [
       { title: '90-Day Local Sandbox', desc: 'All chats, 8K art, and math sessions isolated in private Android storage.' },
@@ -197,7 +197,7 @@ export const TITAN_PLATFORM_INFO = {
     tag: '⚡ 100% ON-DEVICE TITAN EDITION (FOR HIGH-END PCs)',
     fileType: '.EXE Setup Wizard (Hardware Verified)',
     fileName: 'Girionix_AI_Titan_Setup.exe',
-    fileSize: '3.45 MB (Pre-Flight Verified)',
+    fileSize: '5.66 MB (Pre-Flight Verified)',
     downloadUrl: '/downloads/Girionix_AI_Titan_Setup.exe',
     headline: 'Girionix AI Titan Edition for Windows (100% Offline Physical Execution)',
     description: 'Specialized High-End edition with pre-flight hardware verification at installation time. Runs 100% offline utilizing your physical 16GB+ RAM, 8+ CPU cores, and NVIDIA RTX GPU.',
@@ -215,7 +215,7 @@ export const TITAN_PLATFORM_INFO = {
     tag: '⚡ 100% ON-DEVICE TITAN EDITION (FLAGSHIP ANDROID)',
     fileType: '.APK Package (Hardware Verified)',
     fileName: 'Girionix_AI_Titan.apk',
-    fileSize: '725 KB',
+    fileSize: '5.01 MB',
     downloadUrl: '/downloads/Girionix_AI_Titan.apk',
     headline: 'Girionix AI Titan Edition for Android Flagships',
     description: 'Designed for Snapdragon 8 Gen 2/3 and 12GB–16GB RAM flagships with on-device hardware verification.',
@@ -290,7 +290,7 @@ export const TITAN_LITE_PLATFORM_INFO = {
     tag: '🌱 100% OFFLINE TITAN LITE (FOR LOW-END & BUDGET PCs)',
     fileType: '.EXE Setup Wizard (Lightweight)',
     fileName: 'Girionix_AI_Titan_Lite_Setup.exe',
-    fileSize: '2.85 MB (Ultra-Lightweight)',
+    fileSize: '5.66 MB (Ultra-Lightweight)',
     downloadUrl: '/downloads/Girionix_AI_Titan_Lite_Setup.exe',
     headline: 'Girionix AI Titan Lite for Low-End Windows PCs (100% Offline)',
     description: 'Designed for budget laptops, older PCs (2GB–8GB RAM, Dual/Quad-Core), and battery-saving offline computing with zero lag.',
@@ -308,7 +308,7 @@ export const TITAN_LITE_PLATFORM_INFO = {
     tag: '🌱 100% OFFLINE TITAN LITE (BUDGET ANDROID)',
     fileType: '.APK Package (Ultra-Lean)',
     fileName: 'Girionix_AI_Titan_Lite.apk',
-    fileSize: '690 KB',
+    fileSize: '5.01 MB',
     downloadUrl: '/downloads/Girionix_AI_Titan_Lite.apk',
     headline: 'Girionix AI Titan Lite for Budget Android Phones',
     description: 'Ultra-compact offline APK package for Android devices with 2GB–4GB RAM. Battery-saver mode enabled.',
@@ -316,7 +316,7 @@ export const TITAN_LITE_PLATFORM_INFO = {
     features: [
       { title: 'Battery-Saving Optimization', desc: 'Minimal CPU cycles and low power consumption.' },
       { title: '100% Airplane Mode Ready', desc: 'Generates code and answers without Wi-Fi or cellular data.' },
-      { title: '690 KB Lightweight APK', desc: 'Instant 1-second install with minimal storage footprint.' }
+      { title: '5.01 MB Lightweight APK', desc: 'Instant 1-second install with minimal storage footprint.' }
     ]
   },
   mac: {
@@ -402,7 +402,7 @@ export const PLATFORM_DETAILED_SPECS = {
       },
       {
         category: 'Storage & Vault Path',
-        minimum: '15 MB free disk space for Setup Wizard (~2.99 MB Installer)',
+        minimum: '25 MB free disk space for Setup Wizard (~5.66 MB Installer)',
         recommended: '500 MB – 5.0 GB NVMe PCIe 4.0/5.0 SSD (Sequential Read ≥ 3,500 to 7,500 MB/s)',
         girionixOptimization: 'Isolated physical directory at %LocalAppData%\\Girionix AI\\Data with atomic journal transactions and 1-click Start Menu uninstaller purge.'
       },
@@ -449,7 +449,7 @@ export const PLATFORM_DETAILED_SPECS = {
         category: 'Operating System',
         minimum: 'Android 8.0 (Oreo / API Level 26) through Android 11',
         recommended: 'Android 14 – Android 15 / 16 (API Level 34–35). Optimized for Samsung One UI 6+, Google Pixel OS, Xiaomi HyperOS, OxygenOS, and Nothing OS',
-        girionixOptimization: 'Standalone signed .APK package (714 KB). Zero Google Play Services hard dependency; runs on Huawei HarmonyOS, GrapheneOS, and deGoogled ROMs.'
+        girionixOptimization: 'Standalone signed .APK package (5.01 MB). Zero Google Play Services hard dependency; runs on Huawei HarmonyOS, GrapheneOS, and deGoogled ROMs.'
       },
       {
         category: 'Processor (CPU)',
@@ -465,7 +465,7 @@ export const PLATFORM_DETAILED_SPECS = {
       },
       {
         category: 'Storage & Vault Path',
-        minimum: '80 MB free internal flash storage (APK Download: ~714 KB)',
+        minimum: '80 MB free internal flash storage (APK Download: ~5.01 MB)',
         recommended: '500 MB – 2 GB high-speed UFS 3.1 / UFS 4.0 internal storage (Sequential Read ≥ 2,100 to 4,200 MB/s)',
         girionixOptimization: 'Sandboxed app-private directory at /data/data/com.girionix.ai/files with AES-256 encrypted local cache and zero permission leaks.'
       },

@@ -1,4 +1,4 @@
-﻿const fs = require('fs');
+const fs = require('fs');
 
 const code = \import React, { useState } from 'react';
 import { 
@@ -59,8 +59,8 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
   };
 
   const platforms = [
-    { name: 'Windows 10 / 11 / 12', icon: <Monitor className='w-5 h-5 text-cyan-400' />, badge: 'Portable ZIP & Setup (.exe)', size: '2.99 MB' },
-    { name: 'Android 8.0 to 16+', icon: <Smartphone className='w-5 h-5 text-emerald-400' />, badge: 'Standalone Package (.apk)', size: '714 KB' },
+    { name: 'Windows 10 / 11 / 12', icon: <Monitor className='w-5 h-5 text-cyan-400' />, badge: 'Portable ZIP & Setup (.exe)', size: '5.66 MB' },
+    { name: 'Android 8.0 to 16+', icon: <Smartphone className='w-5 h-5 text-emerald-400' />, badge: 'Standalone Package (.apk)', size: '5.01 MB' },
     { name: 'macOS (M1-M4 & Intel)', icon: <Laptop className='w-5 h-5 text-rose-400' />, badge: 'Universal Bundle (.dmg)', size: '715 KB' },
     { name: 'Linux (Ubuntu, Arch, Fedora)', icon: <Terminal className='w-5 h-5 text-amber-400' />, badge: 'Standalone (.AppImage & .sh)', size: '1.2 MB' }
   ];

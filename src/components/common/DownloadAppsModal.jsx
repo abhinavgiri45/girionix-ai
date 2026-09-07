@@ -222,7 +222,7 @@ export default function DownloadAppsModal({ isOpen, onClose }) {
       fileName: 'Girionix_AI_Setup.exe',
       uninstallerName: 'Uninstall_Girionix_AI.exe',
       icon: <Monitor className="w-5 h-5 text-cyan-400" />,
-      size: '7.25 MB Verified Setup',
+      size: '5.66 MB Verified Setup',
       localPath: '%LocalAppData%\\Girionix AI',
       compatibility: 'Windows 11, 10, 8.1, 7 SP1 (x64 / ARM64)',
       features: [
@@ -240,7 +240,7 @@ export default function DownloadAppsModal({ isOpen, onClose }) {
       format: '.APK Standalone Package',
       fileName: 'Girionix_AI.apk',
       icon: <Smartphone className="w-5 h-5 text-emerald-400" />,
-      size: '6.95 MB Standalone APK',
+      size: '5.01 MB Standalone APK',
       localPath: 'Android Internal Sandbox Storage',
       compatibility: 'All Android smartphones, foldables, and tablets (Android 8.0+)',
       features: [
