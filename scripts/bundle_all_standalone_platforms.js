@@ -436,9 +436,42 @@ namespace GirionixAI
             catch { }
         }
 
-        private void LaunchChromiumApp()
+        private string GetTargetUrl(bool forceLocal = false)
         {
-            string url = "http://127.0.0.1:" + port + "/?app=true" + editionArgs;
+            if (forceLocal)
+            {
+                if (httpListener != null && httpListener.IsListening && File.Exists(Path.Combine(appDir, "index.html")))
+                {
+                    return "http://127.0.0.1:" + port + "/?app=true" + editionArgs;
+                }
+            }
+
+            try
+            {
+                HttpWebRequest req = (HttpWebRequest)WebRequest.Create("https://girionix-ai.pages.dev/favicon.ico");
+                req.Method = "HEAD";
+                req.Timeout = 2000;
+                using (HttpWebResponse resp = (HttpWebResponse)req.GetResponse())
+                {
+                    if (resp.StatusCode == HttpStatusCode.OK)
+                    {
+                        return "https://girionix-ai.pages.dev/?app=true" + editionArgs;
+                    }
+                }
+            }
+            catch { }
+
+            if (httpListener != null && httpListener.IsListening && File.Exists(Path.Combine(appDir, "index.html")))
+            {
+                return "http://127.0.0.1:" + port + "/?app=true" + editionArgs;
+            }
+
+            return "https://girionix-ai.pages.dev/?app=true" + editionArgs;
+        }
+
+        private void LaunchChromiumApp(bool forceLocal = false)
+        {
+            string url = GetTargetUrl(forceLocal);
 
             string[] chromePaths = new string[]
             {
@@ -456,6 +489,9 @@ namespace GirionixAI
                 if (File.Exists(p)) { foundBrowser = p; break; }
             }
 
+            string dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Girionix AI\\Data");
+            if (!Directory.Exists(dataDir)) Directory.CreateDirectory(dataDir);
+
             bool launched = false;
             if (foundBrowser != null)
             {
@@ -463,7 +499,7 @@ namespace GirionixAI
                 {
                     ProcessStartInfo psi = new ProcessStartInfo();
                     psi.FileName = foundBrowser;
-                    psi.Arguments = "--app=" + url + " --window-size=1400,900 --no-first-run --no-default-browser-check";
+                    psi.Arguments = "--app=\\\"" + url + "\\\" --user-data-dir=\\\"" + dataDir + "\\\" --window-size=1400,900 --no-first-run --no-default-browser-check";
                     psi.UseShellExecute = true;
                     browserProcess = Process.Start(psi);
                     launched = true;
@@ -503,11 +539,13 @@ namespace GirionixAI
             }
 
             ContextMenu menu = new ContextMenu();
-            menu.MenuItems.Add("Open Girionix AI", (s, e) => LaunchChromiumApp());
+            menu.MenuItems.Add("Open Girionix AI (Cloud Live)", (s, e) => LaunchChromiumApp(false));
+            menu.MenuItems.Add("Open Girionix AI (Local Offline)", (s, e) => LaunchChromiumApp(true));
             menu.MenuItems.Add("-");
             menu.MenuItems.Add("Exit", (s, e) => Shutdown());
 
             trayIcon.ContextMenu = menu;
+            trayIcon.DoubleClick += (s, e) => LaunchChromiumApp(false);
             trayIcon.Visible = true;
         }
 
@@ -1289,8 +1327,9 @@ console.log('\n📦 [5/6] Packaging 100% Standalone macOS Universal App & DMG...
 function generateMacLauncher(title, urlParams) {
   return `#!/bin/bash
 # ==========================================================
-# ${title} - macOS Native Standalone Offline Launcher
+# ${title} - macOS Native Standalone Launcher
 # Envisioned & Engineered by Abhinav Giri (@abhinavgiri45)
+# Official Cloud Mirror: https://girionix-ai.pages.dev/
 # ==========================================================
 DIR="$(cd "$(dirname "$0")/../Resources/app" && pwd)"
 PORT=3456
@@ -1298,13 +1337,22 @@ while lsof -i:$PORT >/dev/null 2>&1; do
   PORT=$((PORT + 1))
 done
 
-# Start local loopback HTTP server
-python3 -m http.server $PORT --directory "$DIR" >/dev/null 2>&1 &
-SERVER_PID=$!
-trap "kill $SERVER_PID 2>/dev/null" EXIT
+# Start local loopback HTTP server in background for offline support
+if command -v python3 >/dev/null 2>&1 && [ -f "$DIR/index.html" ]; then
+  python3 -m http.server $PORT --directory "$DIR" >/dev/null 2>&1 &
+  SERVER_PID=$!
+  trap "kill $SERVER_PID 2>/dev/null" EXIT
+fi
 
-TARGET_URL="http://127.0.0.1:$PORT/?app=true${urlParams}"
-sleep 0.4
+# Connect to the official website link https://girionix-ai.pages.dev/
+TARGET_URL="https://girionix-ai.pages.dev/?app=true${urlParams}"
+
+# Fallback to local loopback server if internet is disconnected
+if ! curl -s --connect-timeout 2 -I "https://girionix-ai.pages.dev" >/dev/null 2>&1; then
+  if [ -n "$SERVER_PID" ]; then
+    TARGET_URL="http://127.0.0.1:$PORT/?app=true${urlParams}"
+  fi
+fi
 
 DATA_DIR="$HOME/Library/Application Support/Girionix AI/Data"
 mkdir -p "$DATA_DIR"
@@ -1318,7 +1366,7 @@ elif [ -d "/Applications/Brave Browser.app" ]; then
 else
   open "$TARGET_URL"
 fi
-wait $SERVER_PID
+wait $SERVER_PID 2>/dev/null || true
 `;
 }
 
@@ -1458,12 +1506,23 @@ while lsof -i:$PORT >/dev/null 2>&1 || ss -tuln 2>/dev/null | grep -q ":$PORT ";
   PORT=$((PORT + 1))
 done
 
-python3 -m http.server $PORT --directory "$APP_DIR" >/dev/null 2>&1 &
-SERVER_PID=$!
-trap "kill $SERVER_PID 2>/dev/null" EXIT
+# Start local loopback HTTP server in background for offline fallback
+if command -v python3 >/dev/null 2>&1 && [ -f "$APP_DIR/index.html" ]; then
+  python3 -m http.server $PORT --directory "$APP_DIR" >/dev/null 2>&1 &
+  SERVER_PID=$!
+  trap "kill $SERVER_PID 2>/dev/null" EXIT
+fi
 
-TARGET_URL="http://127.0.0.1:$PORT/?app=true${urlParams}"
-sleep 0.4
+# Connect to the official website link https://girionix-ai.pages.dev/
+TARGET_URL="https://girionix-ai.pages.dev/?app=true${urlParams}"
+
+# Fallback to local loopback server if offline or unreachable
+if ! curl -s --connect-timeout 2 -I "https://girionix-ai.pages.dev" >/dev/null 2>&1; then
+  if [ -n "$SERVER_PID" ]; then
+    TARGET_URL="http://127.0.0.1:$PORT/?app=true${urlParams}"
+  fi
+fi
+sleep 0.3
 
 if command -v google-chrome &>/dev/null; then
   google-chrome --app="$TARGET_URL" --user-data-dir="$DATA_DIR" --window-size=1400,900
@@ -1480,7 +1539,7 @@ elif command -v brave-browser &>/dev/null; then
 else
   xdg-open "$TARGET_URL"
 fi
-wait $SERVER_PID
+wait $SERVER_PID 2>/dev/null || true
 `;
 }
 
@@ -1512,12 +1571,23 @@ while lsof -i:$PORT >/dev/null 2>&1 || ss -tuln 2>/dev/null | grep -q ":$PORT ";
   PORT=$((PORT + 1))
 done
 
-python3 -m http.server $PORT --directory "$APP_DIR" >/dev/null 2>&1 &
-SERVER_PID=$!
-trap "kill $SERVER_PID 2>/dev/null" EXIT
+# Start local loopback HTTP server in background for offline support
+if command -v python3 >/dev/null 2>&1 && [ -f "$APP_DIR/index.html" ]; then
+  python3 -m http.server $PORT --directory "$APP_DIR" >/dev/null 2>&1 &
+  SERVER_PID=$!
+  trap "kill $SERVER_PID 2>/dev/null" EXIT
+fi
 
-TARGET_URL="http://127.0.0.1:$PORT/?app=true"
-sleep 0.4
+# Connect to the official website link https://girionix-ai.pages.dev/
+TARGET_URL="https://girionix-ai.pages.dev/?app=true"
+
+# Fallback to local loopback server if offline or unreachable
+if ! curl -s --connect-timeout 2 -I "https://girionix-ai.pages.dev" >/dev/null 2>&1; then
+  if [ -n "$SERVER_PID" ]; then
+    TARGET_URL="http://127.0.0.1:$PORT/?app=true"
+  fi
+fi
+sleep 0.3
 
 if command -v google-chrome &>/dev/null; then
   google-chrome --app="$TARGET_URL" --user-data-dir="$DATA_DIR" --window-size=1400,900
@@ -1534,7 +1604,7 @@ elif command -v brave-browser &>/dev/null; then
 else
   xdg-open "$TARGET_URL"
 fi
-wait $SERVER_PID
+wait $SERVER_PID 2>/dev/null || true
 EOF
 chmod +x "$RUNNER"
 
@@ -1579,14 +1649,15 @@ echo "✅ Girionix AI has been completely removed from your Linux system."
 fs.writeFileSync(path.join(downloadsDir, 'uninstall_girionix_linux.sh'), linuxUninstallerScript, 'utf8');
 
 // iOS MobileConfig
-const iosConfig = `<?xml version="1.0" encoding="UTF-8"?>
+function generateIosConfig(title, urlParams = '') {
+  return `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
     <key>PayloadDisplayName</key>
-    <string>Girionix AI</string>
+    <string>${title}</string>
     <key>PayloadIdentifier</key>
-    <string>ai.girionix.app</string>
+    <string>ai.girionix.${title.toLowerCase().replace(/[^a-z0-9]/g, '')}.app</string>
     <key>PayloadType</key>
     <string>Configuration</string>
     <key>PayloadUUID</key>
@@ -1601,15 +1672,15 @@ const iosConfig = `<?xml version="1.0" encoding="UTF-8"?>
             <key>PayloadVersion</key>
             <integer>1</integer>
             <key>PayloadIdentifier</key>
-            <string>ai.girionix.app.webclip</string>
+            <string>ai.girionix.${title.toLowerCase().replace(/[^a-z0-9]/g, '')}.webclip</string>
             <key>PayloadUUID</key>
             <string>4C3D2E1F-0A9B-8C7D-6E5F-4A3B2C1D0E9F</string>
             <key>PayloadDisplayName</key>
-            <string>Girionix AI</string>
+            <string>${title}</string>
             <key>URL</key>
-            <string>https://girionix.ai/?app=true</string>
+            <string>https://girionix-ai.pages.dev/?app=true${urlParams.replace(/&/g, '&amp;')}</string>
             <key>Label</key>
-            <string>Girionix AI</string>
+            <string>${title}</string>
             <key>IsRemovable</key>
             <true/>
             <key>FullScreen</key>
@@ -1618,9 +1689,10 @@ const iosConfig = `<?xml version="1.0" encoding="UTF-8"?>
     </array>
 </dict>
 </plist>`;
-fs.writeFileSync(path.join(downloadsDir, 'Girionix_AI_iOS.mobileconfig'), iosConfig, 'utf8');
-fs.writeFileSync(path.join(downloadsDir, 'Girionix_AI_Titan_iOS.mobileconfig'), iosConfig, 'utf8');
-fs.writeFileSync(path.join(downloadsDir, 'Girionix_AI_Titan_Lite_iOS.mobileconfig'), iosConfig, 'utf8');
+}
+fs.writeFileSync(path.join(downloadsDir, 'Girionix_AI_iOS.mobileconfig'), generateIosConfig('Girionix AI', ''), 'utf8');
+fs.writeFileSync(path.join(downloadsDir, 'Girionix_AI_Titan_iOS.mobileconfig'), generateIosConfig('Girionix AI Titan', '&titan=true'), 'utf8');
+fs.writeFileSync(path.join(downloadsDir, 'Girionix_AI_Titan_Lite_iOS.mobileconfig'), generateIosConfig('Girionix AI Titan Lite', '&titan=true&lite=true'), 'utf8');
 
 // Clean up temporary compilation files
 const tempFiles = ['GirionixApp.cs', 'GirionixUninstaller.cs', 'GirionixSetupStandard.cs', 'GirionixSetupTitan.cs', 'GirionixSetupTitanLite.cs', 'app.manifest', 'payload.dat', 'web_payload.dat'];

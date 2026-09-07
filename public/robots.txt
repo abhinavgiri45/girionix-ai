@@ -1,7 +1,6 @@
 # ========================================================
 # GIRIONIX AI - ROBOTS.TXT (SEARCH ENGINE CRAWLER DIRECTIVES)
 # Primary Production: https://girionix-ai.pages.dev/
-# Global Mirror: https://girionix.ai/
 # ========================================================
 
 User-agent: *
@@ -38,4 +37,3 @@ Allow: /
 
 # Canonical Sitemap Locations
 Sitemap: https://girionix-ai.pages.dev/sitemap.xml
-Sitemap: https://girionix.ai/sitemap.xml

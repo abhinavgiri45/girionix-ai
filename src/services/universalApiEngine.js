@@ -182,7 +182,7 @@ export const universalApiEngine = {
   async syncLatestModels() {
     const config = this.getProviderConfig();
     const headers = {
-      'HTTP-Referer': typeof window !== 'undefined' ? window.location.origin : 'https://girionix.ai',
+      'HTTP-Referer': typeof window !== 'undefined' ? window.location.origin : 'https://girionix-ai.pages.dev',
       'X-Title': 'Girionix AI Universal Engine'
     };
 

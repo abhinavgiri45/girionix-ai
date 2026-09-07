@@ -5,7 +5,7 @@
     <key>PayloadDisplayName</key>
     <string>Girionix AI</string>
     <key>PayloadIdentifier</key>
-    <string>ai.girionix.app</string>
+    <string>ai.girionix.girionixai.app</string>
     <key>PayloadType</key>
     <string>Configuration</string>
     <key>PayloadUUID</key>
@@ -20,13 +20,13 @@
             <key>PayloadVersion</key>
             <integer>1</integer>
             <key>PayloadIdentifier</key>
-            <string>ai.girionix.app.webclip</string>
+            <string>ai.girionix.girionixai.webclip</string>
             <key>PayloadUUID</key>
             <string>4C3D2E1F-0A9B-8C7D-6E5F-4A3B2C1D0E9F</string>
             <key>PayloadDisplayName</key>
             <string>Girionix AI</string>
             <key>URL</key>
-            <string>https://girionix.ai/?app=true</string>
+            <string>https://girionix-ai.pages.dev/?app=true</string>
             <key>Label</key>
             <string>Girionix AI</string>
             <key>IsRemovable</key>
