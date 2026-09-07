@@ -113,9 +113,43 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
   const [simPlayingAudio, setSimPlayingAudio] = useState(false);
   const [simAudioFreq, setSimAudioFreq] = useState([20, 45, 75, 90, 60, 40, 85, 95, 70, 50, 30, 65, 80, 55, 35, 90]);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [videoLoaded, setVideoLoaded] = useState(false);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(true);
 
+  const videoRef = useRef(null);
   const simCanvasRef = useRef(null);
   const scrollContainerRef = useRef(null);
+
+  // Background Video Autoplay & Responsive Device Synchronization
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const vid = videoRef.current;
+    if (vid) {
+      vid.defaultMuted = true;
+      vid.muted = true;
+      const playPromise = vid.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => setIsVideoPlaying(true))
+          .catch(() => {
+            // Autoplay blocked by device low battery or strict browser policies
+            setIsVideoPlaying(false);
+          });
+      }
+    }
+  }, [isOpen]);
+
+  const toggleVideoPlayback = () => {
+    const vid = videoRef.current;
+    if (!vid) return;
+    if (vid.paused) {
+      vid.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+    } else {
+      vid.pause();
+      setIsVideoPlaying(false);
+    }
+  };
 
   const handleScroll = (e) => {
     const top = e?.currentTarget?.scrollTop || 0;
@@ -249,8 +283,40 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
         WebkitOverflowScrolling: 'touch'
       }}
     >
+      {/* ========================================================================= */}
+      {/* CINEMATIC AMBIENT BACKGROUND VIDEO (MUTED, AUTOPLAY, MULTI-DEVICE OPTIMIZED) */}
+      {/* ========================================================================= */}
+      <div 
+        className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none"
+        aria-hidden="true"
+      >
+        <video
+          ref={videoRef}
+          autoPlay
+          loop
+          muted
+          playsInline
+          webkit-playsinline="true"
+          preload="auto"
+          poster="/videos/hero_background_poster.jpg"
+          onLoadedData={() => setVideoLoaded(true)}
+          className={`w-full h-full object-cover object-center transition-opacity duration-1000 scale-[1.02] ${
+            videoLoaded ? 'opacity-35 md:opacity-45' : 'opacity-20'
+          }`}
+        >
+          {/* Desktop & Tablet source (720p HD 60fps) */}
+          <source src="/videos/hero_background.mp4" type="video/mp4" media="(min-width: 768px)" />
+          {/* Mobile phone source (Ultra-lightweight 360p, fast loading, low battery/data) */}
+          <source src="/videos/hero_background_mobile.mp4" type="video/mp4" />
+        </video>
+
+        {/* Ambient Dark Gradient & Vignette Overlay (Guarantees 100% text readability & contrast across all devices) */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/55 to-black/95 pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-black/40 to-black pointer-events-none" />
+      </div>
+
       {/* Top Minimalist Navbar */}
-      <nav className="h-14 sm:h-16 px-3 sm:px-10 flex items-center justify-between border-b border-white/[0.08] bg-black/90 sticky top-0 z-50 backdrop-blur-md">
+      <nav className="h-14 sm:h-16 px-3 sm:px-10 flex items-center justify-between border-b border-white/[0.08] bg-black/85 sticky top-0 z-50 backdrop-blur-md">
         <div className="flex items-center gap-2 sm:gap-6">
           <div className="flex items-center gap-2 cursor-pointer shrink-0" onClick={onClose}>
             <img
@@ -361,7 +427,7 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
       {/* TAB 1: OVERVIEW & STUDIOS (HIGH-TRUST & INTERACTIVE PLAYGROUND)            */}
       {/* ========================================================================= */}
       {activeTab === 'overview' && (
-        <div className="space-y-20 animate-fadeIn pb-24">
+        <div className="relative z-10 space-y-20 animate-fadeIn pb-24">
           {/* Top Floating Trust Badge Banner */}
           <div className="bg-gradient-to-r from-cyan-950/40 via-purple-950/30 to-emerald-950/40 border-b border-white/10 py-2.5 px-4 text-center">
             <div className="max-w-6xl mx-auto flex items-center justify-center gap-3 sm:gap-6 flex-wrap text-[11px] font-mono text-gray-300">
@@ -1386,7 +1452,7 @@ export default function NeuralPulseSphere() {
       {/* TAB 2: DEDICATED INSTALLERS & SYSTEM REQUIREMENTS MATRIX                  */}
       {/* ========================================================================= */}
       {activeTab === 'requirements' && (
-        <div className="max-w-6xl mx-auto px-6 py-12 space-y-12 animate-fadeIn">
+        <div className="relative z-10 max-w-6xl mx-auto px-6 py-12 space-y-12 animate-fadeIn">
           {/* DEDICATED STANDALONE DOWNLOADS SECTION */}
           <div className="p-8 rounded-3xl bg-gradient-to-r from-cyan-950/50 via-slate-900 to-purple-950/40 border border-cyan-500/40 space-y-6 shadow-2xl">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-5">
@@ -1950,7 +2016,7 @@ export default function NeuralPulseSphere() {
       {/* TAB 3: EXPANDED COMPARISON MATRIX & STRATEGIC VALUE PROPOSITION           */}
       {/* ========================================================================= */}
       {activeTab === 'comparison' && (
-        <div className="max-w-6xl mx-auto px-6 py-12 space-y-12 animate-fadeIn">
+        <div className="relative z-10 max-w-6xl mx-auto px-6 py-12 space-y-12 animate-fadeIn">
           {/* Header Section */}
           <section id="comparison" className="space-y-4 text-center">
             <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-purple-500/15 text-purple-300 text-xs font-mono font-bold border border-purple-500/30">
@@ -2357,13 +2423,23 @@ export default function NeuralPulseSphere() {
       )}
 
       {/* Footer */}
-      <footer className="border-t border-white/[0.08] py-8 text-center text-xs text-gray-500 space-y-2">
+      <footer className="relative z-10 border-t border-white/[0.08] py-8 text-center text-xs text-gray-500 space-y-2">
         <div className="flex items-center justify-center gap-2">
           <img src="/logo.png" alt="Girionix AI" className="w-5 h-5 rounded" />
           <span className="font-extrabold text-white">Girionix AI</span>
         </div>
         <p>© 2026 Abhinav Giri • Think • Create • Explore • All Rights Reserved</p>
       </footer>
+
+      {/* Floating Ambient Motion Pause/Play Toggle Button (Bottom Left) */}
+      <button
+        onClick={toggleVideoPlayback}
+        className="fixed bottom-6 left-6 z-50 px-3 py-1.5 rounded-full bg-black/60 hover:bg-black/90 text-gray-400 hover:text-cyan-300 border border-white/10 hover:border-cyan-500/40 backdrop-blur-md text-[11px] font-mono transition-all flex items-center gap-1.5 shadow-lg cursor-pointer"
+        title={isVideoPlaying ? "Pause ambient background video" : "Play ambient background video"}
+      >
+        {isVideoPlaying ? <Pause className="w-3 h-3 text-cyan-400" /> : <Play className="w-3 h-3 text-cyan-400" />}
+        <span className="hidden sm:inline">{isVideoPlaying ? "Ambient Motion" : "Motion Paused"}</span>
+      </button>
 
       {/* Floating Scroll to Top Action Button */}
       {showScrollTop && (
