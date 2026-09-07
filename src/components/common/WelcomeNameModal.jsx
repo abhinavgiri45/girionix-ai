@@ -1,22 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, ArrowRight, User, Award, X, Check, Users, UserPlus } from 'lucide-react';
+import { ArrowRight, User, X } from 'lucide-react';
 import { storage } from '../../services/storage';
 
 export default function WelcomeNameModal({ isOpen, onSaveName, onClose, currentUserName = '' }) {
   const [name, setName] = useState('');
-  const [savedUsers, setSavedUsers] = useState(['Abhinav', 'Guest Creator', 'Research Scholar']);
 
   useEffect(() => {
     if (isOpen) {
       const existing = currentUserName || storage.getUserName() || '';
       setName(existing);
       try {
-        const storedList = JSON.parse(localStorage.getItem('girionix_saved_profiles') || '[]');
-        if (Array.isArray(storedList) && storedList.length > 0) {
-          setSavedUsers(Array.from(new Set([existing, ...storedList, 'Abhinav', 'Guest Creator'])).filter(Boolean));
-        } else if (existing) {
-          setSavedUsers(Array.from(new Set([existing, 'Abhinav', 'Guest Creator'])).filter(Boolean));
-        }
+        localStorage.removeItem('girionix_saved_profiles');
       } catch (_) {}
     }
   }, [isOpen, currentUserName]);
@@ -28,20 +22,9 @@ export default function WelcomeNameModal({ isOpen, onSaveName, onClose, currentU
     const finalName = name.trim() || 'Abhinav';
     storage.setUserName(finalName);
     try {
-      const updated = Array.from(new Set([finalName, ...savedUsers])).filter(Boolean);
-      localStorage.setItem('girionix_saved_profiles', JSON.stringify(updated));
+      localStorage.removeItem('girionix_saved_profiles');
     } catch (_) {}
     onSaveName(finalName);
-  };
-
-  const handleSelectExistingUser = (userNameToSelect) => {
-    setName(userNameToSelect);
-    storage.setUserName(userNameToSelect);
-    try {
-      const updated = Array.from(new Set([userNameToSelect, ...savedUsers])).filter(Boolean);
-      localStorage.setItem('girionix_saved_profiles', JSON.stringify(updated));
-    } catch (_) {}
-    onSaveName(userNameToSelect);
   };
 
   return (
@@ -70,7 +53,7 @@ export default function WelcomeNameModal({ isOpen, onSaveName, onClose, currentU
         />
 
         <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight mb-1">
-          Switch User Profile
+          {currentUserName ? 'Edit Profile Name' : 'Welcome to Girionix AI'}
         </h2>
 
         {/* Tagline */}
@@ -79,43 +62,15 @@ export default function WelcomeNameModal({ isOpen, onSaveName, onClose, currentU
             GIRIONIX AI WORKSPACE
           </span>
           <span className="text-[10px] text-gray-400 font-mono">
-            Select or enter a custom identity for this session
+            Enter your custom identity for this neural workstation session
           </span>
         </div>
-
-        {/* Quick User Profiles Picker */}
-        {savedUsers.length > 0 && (
-          <div className="w-full space-y-1.5 mb-4 text-left">
-            <span className="text-[11px] font-mono text-gray-400 font-semibold flex items-center gap-1.5">
-              <Users className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Saved Profiles:</span>
-            </span>
-            <div className="flex flex-wrap gap-2">
-              {savedUsers.map((usr) => (
-                <button
-                  key={usr}
-                  type="button"
-                  onClick={() => handleSelectExistingUser(usr)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer ${
-                    (name || currentUserName) === usr
-                      ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-glow-cyan font-bold'
-                      : 'bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10'
-                  }`}
-                >
-                  <User className="w-3 h-3" />
-                  <span>{usr}</span>
-                  {(name || currentUserName) === usr && <Check className="w-3 h-3 text-cyan-400" />}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="w-full space-y-3.5 text-left">
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-gray-300 flex items-center gap-1.5 font-mono">
-              <UserPlus className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Create or Edit Name:</span>
+              <User className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Enter Your Name:</span>
             </label>
             <input
               type="text"

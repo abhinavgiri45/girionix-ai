@@ -505,6 +505,8 @@ export default function App() {
       {/* Welcome Name Onboarding Modal */}
       <WelcomeNameModal
         isOpen={isNameModalOpen}
+        currentUserName={userName}
+        onClose={() => setIsNameModalOpen(false)}
         onSaveName={(name) => {
           setUserName(name);
           setIsNameModalOpen(false);
