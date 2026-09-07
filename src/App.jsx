@@ -116,6 +116,17 @@ export default function App() {
 
     checkAppMode();
 
+    // Signal Native App Bridge (Android / Desktop) that workspace is ready
+    try {
+      if (typeof window !== 'undefined') {
+        if (window.GirionixBridge?.onWebsiteReady) {
+          window.GirionixBridge.onWebsiteReady();
+        } else if (window.GirionixAndroid?.onWebsiteReady) {
+          window.GirionixAndroid.onWebsiteReady();
+        }
+      }
+    } catch (_) {}
+
     // Background Over-The-Air (OTA) Code Update Check
     const runUpdateCheck = async () => {
       try {

@@ -1,0 +1,6 @@
+{
+  "name": "Girionix AI",
+  "description": "Sovereign AI Workspace for Girionix AI with operator authentication, live website synchronization, and 90-day local chat retention.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

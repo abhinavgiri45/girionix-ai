@@ -86,6 +86,22 @@ npm run build
 
 ---
 
+## 📱 Android App (`/android`)
+
+The native Android app version is fully integrated in the [`/android`](./android) directory:
+* **Architecture:** Jetpack Compose, Room SQLite Database, WebKit Android Bridge (`GirionixAppBridge`), Material 3.
+* **Open in Android Studio:** Open the `./android` directory in Android Studio (Giraffe / Hedgehog / Iguana / Jellyfish / Ladybug).
+* **Build APK via Gradle:**
+  ```bash
+  cd android
+  ./gradlew assembleRelease
+  # Or assembleDebug for immediate device testing
+  ./gradlew assembleDebug
+  ```
+* Output APK is generated at: `android/app/build/outputs/apk/release/app-release.apk` (or `app-debug.apk`).
+
+---
+
 ## 🌐 Deploy to Cloudflare Pages
 
 1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com/) > **Workers & Pages** > **Create application** > **Pages** > **Connect to Git**.

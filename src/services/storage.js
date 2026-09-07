@@ -121,7 +121,20 @@ const safeRemoveItem = (key) => {
 };
 
 export const storage = {
-  getUserName: () => safeGetItem(KEYS.USER_NAME) || '',
+  getUserName: () => {
+    const saved = safeGetItem(KEYS.USER_NAME);
+    if (saved) return saved;
+    try {
+      if (typeof window !== 'undefined') {
+        const bridgeName = window.GirionixBridge?.getOperatorName?.() || window.GirionixAndroid?.getOperatorName?.();
+        if (bridgeName && typeof bridgeName === 'string') {
+          safeSetItem(KEYS.USER_NAME, bridgeName);
+          return bridgeName;
+        }
+      }
+    } catch (_) {}
+    return '';
+  },
   setUserName: (name) => safeSetItem(KEYS.USER_NAME, (name || '').trim()),
 
   getApiKey: () => safeGetItem(KEYS.API_KEY) || DEFAULT_OPENROUTER_KEY,
@@ -151,6 +164,12 @@ export const storage = {
   },
 
   getRetentionDays: () => {
+    try {
+      if (typeof window !== 'undefined') {
+        const bridgeDays = window.GirionixBridge?.getRetentionPeriodDays?.() || window.GirionixAndroid?.getRetentionPeriodDays?.();
+        if (typeof bridgeDays === 'number' && bridgeDays > 0) return bridgeDays;
+      }
+    } catch (_) {}
     return storage.isAppInstalled() ? 90 : 45;
   },
 
@@ -192,7 +211,17 @@ export const storage = {
   saveSessions: (sessions) => {
     try {
       const cleaned = storage.cleanExpiredSessions(sessions);
-      safeSetItem(KEYS.SESSIONS, JSON.stringify(cleaned));
+      const jsonStr = JSON.stringify(cleaned);
+      safeSetItem(KEYS.SESSIONS, jsonStr);
+      if (typeof window !== 'undefined') {
+        try {
+          if (window.GirionixBridge?.syncChatSessions) {
+            window.GirionixBridge.syncChatSessions(jsonStr);
+          } else if (window.GirionixAndroid?.syncChatSessions) {
+            window.GirionixAndroid.syncChatSessions(jsonStr);
+          }
+        } catch (_) {}
+      }
     } catch (_) {
       safeSetItem(KEYS.SESSIONS, JSON.stringify(sessions));
     }
@@ -227,8 +256,12 @@ export const storage = {
       const isNativeAppRuntime = Boolean(
         window.electronAPI || 
         window.girionixNativeApp || 
+        window.GirionixBridge ||
+        window.GirionixAndroid ||
         window.__TAURI__ || 
-        window.Capacitor?.isNativePlatform?.()
+        window.Capacitor?.isNativePlatform?.() ||
+        (typeof window.GirionixBridge?.isAppInstalled === 'function' && window.GirionixBridge.isAppInstalled()) ||
+        (typeof window.GirionixAndroid?.isAppInstalled === 'function' && window.GirionixAndroid.isAppInstalled())
       );
       return Boolean(isExplicitAppParam || isNativeAppRuntime);
     } catch (_) { return false; }
