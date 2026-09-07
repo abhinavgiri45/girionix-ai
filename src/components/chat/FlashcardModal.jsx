@@ -33,13 +33,27 @@ export default function FlashcardModal({ isOpen, onClose, activeModel }) {
         onChunk: (chunk, acc) => { fullContent = acc; }
       });
 
-      const match = fullContent.match(/\[[\s\S]*\]/);
+      const cleanJson = fullContent
+        .replace(/```json/gi, '')
+        .replace(/```/g, '')
+        .trim();
+      const match = cleanJson.match(/\[[\s\S]*\]/);
       if (match) {
-        const parsed = JSON.parse(match[0]);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setFlashcards(parsed);
-          setCurrentIdx(0);
-          setIsFlipped(false);
+        try {
+          const parsed = JSON.parse(match[0]);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const validCards = parsed.filter(c => c && (c.q || c.question) && (c.a || c.answer)).map(c => ({
+              q: c.q || c.question,
+              a: c.a || c.answer
+            }));
+            if (validCards.length > 0) {
+              setFlashcards(validCards);
+              setCurrentIdx(0);
+              setIsFlipped(false);
+            }
+          }
+        } catch (innerErr) {
+          console.warn('Inner Flashcard JSON parse error:', innerErr);
         }
       }
     } catch (err) {

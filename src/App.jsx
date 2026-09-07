@@ -25,12 +25,12 @@ export default function App() {
   const [isAppInstalled, setIsAppInstalled] = useState(() => storage.isAppInstalled());
   const [isTitanMode, setIsTitanMode] = useState(() => {
     try {
-      return localStorage.getItem('girionix_titan_mode') === 'true' || localStorage.getItem('girionix_titan_mode') === 'true' || (typeof window !== 'undefined' && window.location.search.includes('titan=true'));
+      return localStorage.getItem('girionix_titan_mode') === 'true' || (typeof window !== 'undefined' && window.location.search.includes('titan=true'));
     } catch (_) { return false; }
   });
   const [isTitanWorkstationOpen, setIsTitanWorkstationOpen] = useState(false);
   const [activeModel, setActiveModel] = useState(() => {
-    const isTitan = typeof window !== 'undefined' && (localStorage.getItem('girionix_titan_mode') === 'true' || localStorage.getItem('girionix_titan_mode') === 'true' || window.location.search.includes('titan=true'));
+    const isTitan = typeof window !== 'undefined' && (localStorage.getItem('girionix_titan_mode') === 'true' || window.location.search.includes('titan=true'));
     const isLite = typeof window !== 'undefined' && window.location.search.includes('profile=lite');
     if (isTitan) return isLite ? TITAN_AI_MODELS[1] : TITAN_AI_MODELS[0];
     return AI_MODELS[0]; // Full Pro Flagship Universal Model available seamlessly on both web and app

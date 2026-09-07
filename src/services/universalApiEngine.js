@@ -121,17 +121,19 @@ export const universalApiEngine = {
    * Save provider configuration
    */
   saveProviderConfig({ providerId, baseUrl, apiKey, autoUpgradeEnabled }) {
-    if (providerId) localStorage.setItem(STORAGE_KEYS.UNIVERSAL_PROVIDER, providerId);
-    if (baseUrl !== undefined) localStorage.setItem(STORAGE_KEYS.CUSTOM_BASE_URL, baseUrl.trim());
-    if (apiKey !== undefined) {
-      localStorage.setItem(STORAGE_KEYS.CUSTOM_API_KEY, apiKey.trim());
-      if (providerId === 'openrouter') {
-        storage.setApiKey(apiKey.trim());
+    try {
+      if (providerId) localStorage.setItem(STORAGE_KEYS.UNIVERSAL_PROVIDER, providerId);
+      if (baseUrl !== undefined) localStorage.setItem(STORAGE_KEYS.CUSTOM_BASE_URL, baseUrl.trim());
+      if (apiKey !== undefined) {
+        localStorage.setItem(STORAGE_KEYS.CUSTOM_API_KEY, apiKey.trim());
+        if (providerId === 'openrouter') {
+          storage.setApiKey(apiKey.trim());
+        }
       }
-    }
-    if (autoUpgradeEnabled !== undefined) {
-      localStorage.setItem(STORAGE_KEYS.AUTO_UPGRADE_ENABLED, autoUpgradeEnabled ? 'true' : 'false');
-    }
+      if (autoUpgradeEnabled !== undefined) {
+        localStorage.setItem(STORAGE_KEYS.AUTO_UPGRADE_ENABLED, autoUpgradeEnabled ? 'true' : 'false');
+      }
+    } catch (_) {}
   },
 
   /**

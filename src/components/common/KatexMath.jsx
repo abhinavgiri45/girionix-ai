@@ -1,15 +1,16 @@
 import React, { useMemo } from 'react';
 import katex from 'katex';
 
-export default function KatexMath({ math, block = false }) {
+export default function KatexMath({ math = '', block = false }) {
   const html = useMemo(() => {
+    if (!math || typeof math !== 'string') return '';
     try {
       return katex.renderToString(math, {
         displayMode: block,
         throwOnError: false
       });
     } catch (e) {
-      return math;
+      return String(math || '');
     }
   }, [math, block]);
 
