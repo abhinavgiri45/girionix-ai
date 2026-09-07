@@ -210,12 +210,12 @@ function GoogleCodeBlock({ language = 'text', code = '', blockId }) {
   const isExecutable = ['javascript', 'js', 'typescript', 'ts', 'python', 'py', 'json', 'sql', 'bash', 'sh'].includes((language || '').toLowerCase().trim());
 
   return (
-    <div className="my-3 rounded-2xl overflow-hidden border border-white/10 bg-[#0B0F19] shadow-xl text-left">
+    <div className="my-3 rounded-2xl overflow-hidden border border-[#3c4043] bg-[#1e1f20] shadow-md text-left">
       {/* Code Header in Google AI Studio Style */}
-      <div className="px-4 py-2 bg-[#0E1322] border-b border-white/[0.08] flex items-center justify-between text-xs font-mono">
+      <div className="px-4 py-2 bg-[#282a2c] border-b border-[#3c4043] flex items-center justify-between text-xs font-mono">
         <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-cyan-400/30 border border-cyan-400/50" />
-          <span className="text-cyan-300 font-bold uppercase tracking-wider text-[11px]">{language || 'text'}</span>
+          <span className="w-2.5 h-2.5 rounded-full bg-[#a8c7fa]/60" />
+          <span className="text-[#a8c7fa] font-bold uppercase tracking-wider text-[11px]">{language || 'text'}</span>
         </div>
 
         <div className="flex items-center gap-1.5">
@@ -223,10 +223,10 @@ function GoogleCodeBlock({ language = 'text', code = '', blockId }) {
             <button
               onClick={handleRunCode}
               disabled={isRunning}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${
                 isRunning 
-                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse'
-                  : 'bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 hover:scale-105'
+                  ? 'bg-[#0b57d0]/60 text-white animate-pulse'
+                  : 'bg-[#0b57d0] hover:bg-[#1a73e8] text-white shadow-sm'
               }`}
               title="Run code in isolated browser sandbox"
             >
@@ -237,17 +237,17 @@ function GoogleCodeBlock({ language = 'text', code = '', blockId }) {
 
           <button
             onClick={handleCopy}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] text-gray-300 hover:text-white border border-white/10 transition-colors"
+            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#131314] hover:bg-[#3c4043] text-[#c4c7c5] hover:text-white border border-[#444746] transition-colors"
             title="Copy code"
           >
-            {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+            {copied ? <Check className="w-3 h-3 text-[#7adaa2]" /> : <Copy className="w-3 h-3" />}
             <span>{copied ? 'Copied' : 'Copy'}</span>
           </button>
         </div>
       </div>
 
       {/* Code Text */}
-      <div className="p-4 overflow-x-auto text-xs font-mono leading-relaxed bg-[#070A12] text-gray-200 selection:bg-cyan-500/30">
+      <div className="p-4 overflow-x-auto text-xs font-mono leading-relaxed bg-[#131314] text-[#e3e3e3] selection:bg-[#004a77]">
         <pre className="m-0 font-mono">
           <code>{code}</code>
         </pre>
@@ -255,30 +255,30 @@ function GoogleCodeBlock({ language = 'text', code = '', blockId }) {
 
       {/* Google AI Studio Interactive Terminal Execution Output Sandbox */}
       {executionOutput && (
-        <div className="border-t border-white/10 bg-[#060810]">
+        <div className="border-t border-[#3c4043] bg-[#1e1f20]">
           <div 
             onClick={() => setIsOutputOpen(!isOutputOpen)}
-            className="px-4 py-1.5 flex items-center justify-between bg-black/40 text-[11px] font-mono cursor-pointer border-b border-white/5"
+            className="px-4 py-1.5 flex items-center justify-between bg-[#282a2c] text-[11px] font-mono cursor-pointer border-b border-[#3c4043]"
           >
             <div className="flex items-center gap-2">
-              <Terminal className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="font-bold text-white">Execution Output</span>
+              <Terminal className="w-3.5 h-3.5 text-[#7adaa2]" />
+              <span className="font-medium text-[#e3e3e3]">Execution Output</span>
               {executionTime && (
-                <span className="text-[10px] text-gray-400 font-normal">⏱ {executionTime}</span>
+                <span className="text-[10px] text-[#8e918f] font-normal">⏱ {executionTime}</span>
               )}
             </div>
             <div className="flex items-center gap-2">
-              <span className={`px-1.5 py-0.2 rounded text-[10px] uppercase font-bold ${
-                executionOutput.status === 'success' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'
+              <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase font-bold ${
+                executionOutput.status === 'success' ? 'bg-[#7adaa2]/20 text-[#7adaa2]' : 'bg-[#ff897d]/20 text-[#ff897d]'
               }`}>
                 {executionOutput.status === 'success' ? 'Success' : 'Failed'}
               </span>
-              {isOutputOpen ? <ChevronDown className="w-3 h-3 text-gray-400" /> : <ChevronRight className="w-3 h-3 text-gray-400" />}
+              {isOutputOpen ? <ChevronDown className="w-3 h-3 text-[#8e918f]" /> : <ChevronRight className="w-3 h-3 text-[#8e918f]" />}
             </div>
           </div>
 
           {isOutputOpen && (
-            <div className="p-3 text-xs font-mono bg-black/70 overflow-x-auto text-emerald-300/90 whitespace-pre-wrap leading-relaxed max-h-48">
+            <div className="p-3 text-xs font-mono bg-[#131314] overflow-x-auto text-[#7adaa2] whitespace-pre-wrap leading-relaxed max-h-48">
               {executionOutput.text}
             </div>
           )}
@@ -352,41 +352,50 @@ export default function GoogleStudioOutput({
   return (
     <div className="w-full flex flex-col space-y-3 font-sans text-left">
       {/* 1. Google AI Studio Header Metadata Bar */}
-      <div className="flex items-center justify-between flex-wrap gap-2 px-3 py-1.5 rounded-xl bg-[#090C16] border border-white/[0.08] text-xs font-mono">
+      <div className="flex items-center justify-between flex-wrap gap-2 px-3 py-2 rounded-xl bg-[#1e1f20] border border-[#3c4043] text-xs font-sans">
         {/* Model Sparkle Identity */}
         <div className="flex items-center gap-2">
-          <div className="p-1 rounded-lg bg-gradient-to-tr from-cyan-500/20 via-blue-500/20 to-purple-500/20 border border-cyan-500/30">
-            <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+          <div className="p-1 rounded-lg bg-[#282a2c] flex items-center justify-center">
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2C12 7.52285 7.52285 12 2 12C7.52285 12 12 16.4772 12 22C12 16.4772 16.4772 12 22 12C16.4772 12 12 7.52285 12 2Z" fill="url(#gemini_out_logo)" />
+              <defs>
+                <linearGradient id="gemini_out_logo" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                  <stop stopColor="#4285F4" />
+                  <stop offset="0.5" stopColor="#9B72CF" />
+                  <stop offset="1" stopColor="#D96570" />
+                </linearGradient>
+              </defs>
+            </svg>
           </div>
-          <span className="font-bold text-white tracking-wide text-xs">{modelName}</span>
+          <span className="font-medium text-[#e3e3e3] text-xs">{modelName}</span>
         </div>
 
         {/* Studio Performance Badges: Latency, Tokens, Speed, Stop */}
-        <div className="flex items-center gap-2 text-[11px] text-gray-300 flex-wrap">
+        <div className="flex items-center gap-2 text-[11px] text-[#c4c7c5] flex-wrap">
           {latencyMs && (
-            <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/10" title="Latency">
-              <Clock className="w-3 h-3 text-cyan-400" />
+            <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#282a2c] border border-[#444746]" title="Latency">
+              <Clock className="w-3 h-3 text-[#a8c7fa]" />
               <span>{latencyMs} ms</span>
             </div>
           )}
 
           {tokenCount && (
-            <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/10" title="Output Tokens">
-              <Gauge className="w-3 h-3 text-purple-400" />
+            <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#282a2c] border border-[#444746]" title="Output Tokens">
+              <Gauge className="w-3 h-3 text-[#d0bcff]" />
               <span>{tokenCount} tokens</span>
             </div>
           )}
 
           {speedTokensPerSec && (
-            <div className="hidden sm:flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/10" title="Generation Speed">
-              <Cpu className="w-3 h-3 text-emerald-400" />
+            <div className="hidden sm:flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#282a2c] border border-[#444746]" title="Generation Speed">
+              <Cpu className="w-3 h-3 text-[#7adaa2]" />
               <span>{speedTokensPerSec} tok/s</span>
             </div>
           )}
 
           {finishReason && (
-            <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-300 border border-emerald-500/20" title="Finish Reason">
-              <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+            <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#7adaa2]/15 text-[#7adaa2] border border-[#7adaa2]/30" title="Finish Reason">
+              <CheckCircle2 className="w-3 h-3 text-[#7adaa2]" />
               <span className="font-mono lowercase">{finishReason}</span>
             </div>
           )}
@@ -395,26 +404,26 @@ export default function GoogleStudioOutput({
 
       {/* 2. Collapsible Thinking Process Drawer (Google AI Studio Flash Thinking & Chain-of-Thought) */}
       {thinking && thinking.trim().length > 0 && (
-        <div className="rounded-2xl border border-cyan-500/25 bg-gradient-to-r from-cyan-950/20 to-blue-950/10 overflow-hidden">
+        <div className="rounded-2xl border border-[#3c4043] bg-[#1e1f20] overflow-hidden">
           <button
             onClick={() => setIsThinkingOpen(!isThinkingOpen)}
-            className="w-full px-4 py-2.5 flex items-center justify-between text-xs font-mono text-cyan-300 hover:text-white transition-colors cursor-pointer"
+            className="w-full px-4 py-2.5 flex items-center justify-between text-xs font-mono text-[#a8c7fa] hover:text-white transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-2">
-              <BrainCircuit className="w-4 h-4 text-cyan-400 animate-pulse" />
+              <BrainCircuit className="w-4 h-4 text-[#a8c7fa]" />
               <span className="font-bold">Thinking Process</span>
-              <span className="text-[10px] text-cyan-400/70 font-normal">
+              <span className="text-[10px] text-[#8e918f] font-normal">
                 ({Math.round(thinking.length / 4)} tokens reasoning)
               </span>
             </div>
-            <div className="flex items-center gap-1 text-[11px] text-cyan-400">
+            <div className="flex items-center gap-1 text-[11px] text-[#a8c7fa]">
               <span>{isThinkingOpen ? 'Hide thoughts' : 'Show thoughts'}</span>
               {isThinkingOpen ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
             </div>
           </button>
 
           {isThinkingOpen && (
-            <div className="px-4 pb-3 pt-1 text-xs font-mono text-gray-300/90 whitespace-pre-wrap leading-relaxed border-t border-cyan-500/15 bg-black/30">
+            <div className="px-4 pb-3 pt-2 text-xs font-mono text-[#c4c7c5] whitespace-pre-wrap leading-relaxed border-t border-[#3c4043] bg-[#131314]">
               {thinking}
             </div>
           )}
@@ -422,7 +431,7 @@ export default function GoogleStudioOutput({
       )}
 
       {/* 3. Output Body: Structured Markdown, KaTeX Math & Live Sandbox Code Blocks */}
-      <div className="text-gray-100 text-[13px] sm:text-sm leading-relaxed space-y-2.5 selection:bg-cyan-500/30">
+      <div className="text-[#e3e3e3] text-[13px] sm:text-sm leading-relaxed space-y-2.5 selection:bg-[#004a77]">
         {parsedSections.map((section, idx) => {
           if (section.type === 'code') {
             return (
@@ -448,7 +457,7 @@ export default function GoogleStudioOutput({
                 if (part.startsWith('$$') && part.endsWith('$$')) {
                   const math = part.slice(2, -2).trim();
                   return (
-                    <div key={`math-block-${mIdx}`} className="my-3 p-3 rounded-2xl bg-black/50 border border-purple-500/30 overflow-x-auto text-center shadow-lg">
+                    <div key={`math-block-${mIdx}`} className="my-3 p-3 rounded-2xl bg-[#1e1f20] border border-[#3c4043] overflow-x-auto text-center shadow-md">
                       <KatexMath math={math} block={true} />
                     </div>
                   );
@@ -465,7 +474,7 @@ export default function GoogleStudioOutput({
                 return paragraphs.map((p, pIdx) => {
                   if (!p.trim()) return null;
                   return (
-                    <p key={`p-${mIdx}-${pIdx}`} className="leading-relaxed text-gray-200">
+                    <p key={`p-${mIdx}-${pIdx}`} className="leading-relaxed text-[#e3e3e3]">
                       {formatInlineMarkdown(p)}
                     </p>
                   );
@@ -478,9 +487,9 @@ export default function GoogleStudioOutput({
 
       {/* 4. Google Search Grounding Sources / Citations */}
       {groundingSources && groundingSources.length > 0 && (
-        <div className="mt-3 p-3 rounded-xl bg-white/[0.02] border border-white/10 space-y-2">
-          <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-gray-300">
-            <Search className="w-3.5 h-3.5 text-cyan-400" />
+        <div className="mt-3 p-3 rounded-xl bg-[#1e1f20] border border-[#3c4043] space-y-2">
+          <div className="flex items-center gap-1.5 text-xs font-medium text-[#c4c7c5]">
+            <Search className="w-3.5 h-3.5 text-[#a8c7fa]" />
             <span>Search Grounding Sources:</span>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -490,9 +499,9 @@ export default function GoogleStudioOutput({
                 href={source.url || '#'}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-xs text-cyan-300 hover:text-white transition-colors"
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#131314] hover:bg-[#282a2c] border border-[#444746] text-xs text-[#a8c7fa] hover:text-white transition-colors"
               >
-                <span className="w-4 h-4 rounded-full bg-cyan-500/20 text-cyan-300 flex items-center justify-center text-[10px] font-bold">
+                <span className="w-4 h-4 rounded-full bg-[#a8c7fa]/20 text-[#a8c7fa] flex items-center justify-center text-[10px] font-bold">
                   {sIdx + 1}
                 </span>
                 <span className="truncate max-w-[200px]">{source.title || source.url}</span>
@@ -504,21 +513,21 @@ export default function GoogleStudioOutput({
       )}
 
       {/* 5. Footer Quick Actions (Copy, Regenerate) */}
-      <div className="pt-2 flex items-center justify-between border-t border-white/[0.06] text-xs font-mono text-gray-400">
+      <div className="pt-2 flex items-center justify-between border-t border-[#3c4043] text-xs font-sans text-[#8e918f]">
         <div className="flex items-center gap-2">
           <button
             onClick={handleCopyFull}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-white/[0.06] text-gray-400 hover:text-white transition-colors cursor-pointer"
+            className="flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-[#282a2c] text-[#8e918f] hover:text-[#e3e3e3] transition-colors cursor-pointer"
             title="Copy response"
           >
-            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-            <span>{copied ? 'Copied Full Output' : 'Copy'}</span>
+            {copied ? <Check className="w-3.5 h-3.5 text-[#7adaa2]" /> : <Copy className="w-3.5 h-3.5" />}
+            <span>{copied ? 'Copied full output' : 'Copy'}</span>
           </button>
 
           {onRegenerate && (
             <button
               onClick={onRegenerate}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-white/[0.06] text-gray-400 hover:text-white transition-colors cursor-pointer"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-[#282a2c] text-[#8e918f] hover:text-[#e3e3e3] transition-colors cursor-pointer"
               title="Regenerate model output"
             >
               <RotateCcw className="w-3.5 h-3.5" />
@@ -527,8 +536,8 @@ export default function GoogleStudioOutput({
           )}
         </div>
 
-        <div className="text-[10px] text-gray-500 font-mono">
-          Girionix Google AI Studio Environment
+        <div className="text-[10px] text-[#8e918f] font-mono">
+          Google AI Studio Environment
         </div>
       </div>
     </div>

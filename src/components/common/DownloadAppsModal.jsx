@@ -222,7 +222,7 @@ export default function DownloadAppsModal({ isOpen, onClose }) {
       fileName: 'Girionix_AI_Setup.exe',
       uninstallerName: 'Uninstall_Girionix_AI.exe',
       icon: <Monitor className="w-5 h-5 text-cyan-400" />,
-      size: '5.66 MB Verified Setup',
+      size: '10.63 MB Verified Setup',
       localPath: '%LocalAppData%\\Girionix AI',
       compatibility: 'Windows 11, 10, 8.1, 7 SP1 (x64 / ARM64)',
       features: [
@@ -259,7 +259,7 @@ export default function DownloadAppsModal({ isOpen, onClose }) {
       fileName: 'Girionix_AI_macOS.dmg',
       uninstallerName: 'Uninstall_Girionix_Mac.command',
       icon: <Laptop className="w-5 h-5 text-rose-400" />,
-      size: 'Universal Bundle',
+      size: '5.13 MB Universal Bundle',
       localPath: '~/Library/Application Support/Girionix AI',
       compatibility: 'macOS Sequoia 15, Sonoma, Ventura, Monterey & Intel',
       features: [
@@ -277,7 +277,7 @@ export default function DownloadAppsModal({ isOpen, onClose }) {
       fileName: 'Girionix_AI_Linux.AppImage',
       uninstallerName: 'uninstall_girionix_linux.sh',
       icon: <Terminal className="w-5 h-5 text-amber-400" />,
-      size: 'Native Standalone',
+      size: '6.63 MB Native Standalone',
       localPath: '~/.local/share/girionix-ai',
       compatibility: 'All modern Linux distributions (GLIBC 2.27+, Wayland & X11)',
       features: [
@@ -294,7 +294,7 @@ export default function DownloadAppsModal({ isOpen, onClose }) {
       format: '.mobileconfig Profile',
       fileName: 'Girionix_AI_iOS.mobileconfig',
       icon: <Smartphone className="w-5 h-5 text-purple-400" />,
-      size: 'Apple WebClip',
+      size: '1.3 KB Apple WebClip',
       localPath: 'Safari Local Storage Sandbox',
       compatibility: 'iOS 15.0+, iPadOS 15.0+, all iPhone & iPad models',
       features: [

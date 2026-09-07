@@ -40,10 +40,10 @@ export const PLATFORM_INFO = {
     tag: '🖥️ NATIVE WINDOWS POWERHOUSE',
     fileType: '.EXE Setup Wizard',
     fileName: 'Girionix_AI_Setup.exe',
-    fileSize: '5.66 MB',
+    fileSize: '10.63 MB',
     downloadUrl: '/downloads/Girionix_AI_Setup.exe',
     headline: 'Experience Girionix AI on Windows (100% Standalone App)',
-    description: 'Download the native Windows setup installer (5.66 MB) with embedded local background server and private %LocalAppData% vault.',
+    description: 'Download the native Windows setup installer (10.63 MB) with embedded local background server and private %LocalAppData% vault.',
     buttonText: 'Download for Windows (.exe Setup)',
     features: [
       { title: '90-Day Local Vault', desc: 'Saved directly to %LocalAppData%\\Girionix AI\\Data with zero cloud tracking.' },
@@ -76,10 +76,10 @@ export const PLATFORM_INFO = {
     tag: '🍏 NATIVE MACOS POWERHOUSE',
     fileType: '.DMG Universal Bundle',
     fileName: 'Girionix_AI_macOS.dmg',
-    fileSize: '715 KB',
+    fileSize: '5.13 MB',
     downloadUrl: '/downloads/Girionix_AI_macOS.dmg',
     headline: 'Experience Girionix AI on macOS (Universal DMG Bundle)',
-    description: 'Download the native macOS disk image (715 KB) with embedded background server and Application Support storage vault.',
+    description: 'Download the native macOS disk image (5.13 MB) with embedded background server and Application Support storage vault.',
     buttonText: 'Download for macOS (.dmg Bundle)',
     features: [
       { title: 'Apple Silicon & Intel', desc: 'Optimized for M1/M2/M3/M4 Apple Silicon and Intel Macs.' },
@@ -94,7 +94,7 @@ export const PLATFORM_INFO = {
     tag: '📱 NATIVE IOS / IPADOS POWERHOUSE',
     fileType: '.MobileConfig / WebClip',
     fileName: 'Girionix_AI_iOS.mobileconfig',
-    fileSize: '1.2 KB',
+    fileSize: '1.3 KB',
     downloadUrl: '/downloads/Girionix_AI_iOS.mobileconfig',
     headline: 'Experience Girionix AI on iOS & iPadOS',
     description: 'Install the Apple WebClip container profile with offline asset caching and home-screen native container launch.',
@@ -112,10 +112,10 @@ export const PLATFORM_INFO = {
     tag: '🐧 NATIVE LINUX POWERHOUSE',
     fileType: '.AppImage Standalone',
     fileName: 'Girionix_AI_Linux.AppImage',
-    fileSize: '714 KB',
+    fileSize: '6.63 MB',
     downloadUrl: '/downloads/Girionix_AI_Linux.AppImage',
     headline: 'Experience Girionix AI on Linux (.AppImage Standalone)',
-    description: 'Download the standalone Linux AppImage executable (714 KB) with embedded local background server and ~/.local/share vault.',
+    description: 'Download the standalone Linux AppImage executable (6.63 MB) with embedded local background server and ~/.local/share vault.',
     buttonText: 'Download for Linux (.AppImage)',
     features: [
       { title: 'Universal AppImage', desc: 'Runs seamlessly across Ubuntu, Debian, Arch, Fedora, and openSUSE.' },
@@ -197,7 +197,7 @@ export const TITAN_PLATFORM_INFO = {
     tag: '⚡ 100% ON-DEVICE TITAN EDITION (FOR HIGH-END PCs)',
     fileType: '.EXE Setup Wizard (Hardware Verified)',
     fileName: 'Girionix_AI_Titan_Setup.exe',
-    fileSize: '5.66 MB (Pre-Flight Verified)',
+    fileSize: '10.63 MB (Pre-Flight Verified)',
     downloadUrl: '/downloads/Girionix_AI_Titan_Setup.exe',
     headline: 'Girionix AI Titan Edition for Windows (100% Offline Physical Execution)',
     description: 'Specialized High-End edition with pre-flight hardware verification at installation time. Runs 100% offline utilizing your physical 16GB+ RAM, 8+ CPU cores, and NVIDIA RTX GPU.',
@@ -233,7 +233,7 @@ export const TITAN_PLATFORM_INFO = {
     tag: '⚡ 100% ON-DEVICE TITAN EDITION (APPLE SILICON)',
     fileType: '.DMG Universal Bundle (Hardware Verified)',
     fileName: 'Girionix_AI_Titan_macOS.dmg',
-    fileSize: '720 KB',
+    fileSize: '5.13 MB',
     downloadUrl: '/downloads/Girionix_AI_Titan_macOS.dmg',
     headline: 'Girionix AI Titan Edition for macOS Apple Silicon',
     description: 'Optimized for Apple M2/M3/M4 Pro, Max, and Ultra with 16GB–128GB Unified Memory and Metal 3 shaders.',
@@ -251,7 +251,7 @@ export const TITAN_PLATFORM_INFO = {
     tag: '⚡ 100% ON-DEVICE TITAN EDITION (LINUX WORKSTATION)',
     fileType: '.AppImage (Hardware Verified)',
     fileName: 'Girionix_AI_Titan_Linux.AppImage',
-    fileSize: '720 KB',
+    fileSize: '6.63 MB',
     downloadUrl: '/downloads/Girionix_AI_Titan_Linux.AppImage',
     headline: 'Girionix AI Titan Edition for Linux Workstations',
     description: 'Engineered for high-end multi-core Linux workstations with NVIDIA CUDA / Vulkan hardware acceleration.',
@@ -269,7 +269,7 @@ export const TITAN_PLATFORM_INFO = {
     tag: '⚡ 100% ON-DEVICE TITAN PROFILE (M-SERIES IPAD PRO)',
     fileType: '.MobileConfig (Hardware Verified)',
     fileName: 'Girionix_AI_Titan_iOS.mobileconfig',
-    fileSize: '1.2 KB',
+    fileSize: '1.3 KB',
     downloadUrl: '/downloads/Girionix_AI_Titan_iOS.mobileconfig',
     headline: 'Girionix AI Titan Edition for iPad Pro (M-Series)',
     description: 'High-end offline container profile for M1/M2/M4 iPad Pro and iPhone 15/16 Pro series.',
@@ -290,7 +290,7 @@ export const TITAN_LITE_PLATFORM_INFO = {
     tag: '🌱 100% OFFLINE TITAN LITE (FOR LOW-END & BUDGET PCs)',
     fileType: '.EXE Setup Wizard (Lightweight)',
     fileName: 'Girionix_AI_Titan_Lite_Setup.exe',
-    fileSize: '5.66 MB (Ultra-Lightweight)',
+    fileSize: '10.63 MB (Ultra-Lightweight)',
     downloadUrl: '/downloads/Girionix_AI_Titan_Lite_Setup.exe',
     headline: 'Girionix AI Titan Lite for Low-End Windows PCs (100% Offline)',
     description: 'Designed for budget laptops, older PCs (2GB–8GB RAM, Dual/Quad-Core), and battery-saving offline computing with zero lag.',
@@ -326,7 +326,7 @@ export const TITAN_LITE_PLATFORM_INFO = {
     tag: '🌱 100% OFFLINE TITAN LITE (LEGACY & AIR MACS)',
     fileType: '.DMG Bundle (Lightweight)',
     fileName: 'Girionix_AI_Titan_Lite_macOS.dmg',
-    fileSize: '695 KB',
+    fileSize: '5.13 MB',
     downloadUrl: '/downloads/Girionix_AI_Titan_Lite_macOS.dmg',
     headline: 'Girionix AI Titan Lite for Older Intel & MacBook Air',
     description: 'Ultra-efficient offline bundle for older MacBooks (4GB–8GB RAM) and battery-conscious travel.',
@@ -344,7 +344,7 @@ export const TITAN_LITE_PLATFORM_INFO = {
     tag: '🌱 100% OFFLINE TITAN LITE (LOW-SPEC LINUX)',
     fileType: '.AppImage (Lightweight)',
     fileName: 'Girionix_AI_Titan_Lite_Linux.AppImage',
-    fileSize: '695 KB',
+    fileSize: '6.63 MB',
     downloadUrl: '/downloads/Girionix_AI_Titan_Lite_Linux.AppImage',
     headline: 'Girionix AI Titan Lite for Lightweight Linux & Netbooks',
     description: 'Self-contained AppImage optimized for older Linux laptops, netbooks, and resource-constrained VMs.',
@@ -362,7 +362,7 @@ export const TITAN_LITE_PLATFORM_INFO = {
     tag: '🌱 100% OFFLINE TITAN LITE (STANDARD IPHONE/IPAD)',
     fileType: '.MobileConfig Profile',
     fileName: 'Girionix_AI_Titan_Lite_iOS.mobileconfig',
-    fileSize: '1.2 KB',
+    fileSize: '1.3 KB',
     downloadUrl: '/downloads/Girionix_AI_Titan_Lite_iOS.mobileconfig',
     headline: 'Girionix AI Titan Lite for iPhone & iPad',
     description: 'Lightweight offline WebClip container profile for all standard iPhones and iPads.',
@@ -402,7 +402,7 @@ export const PLATFORM_DETAILED_SPECS = {
       },
       {
         category: 'Storage & Vault Path',
-        minimum: '25 MB free disk space for Setup Wizard (~5.66 MB Installer)',
+        minimum: '35 MB free disk space for Setup Wizard (~10.63 MB Installer)',
         recommended: '500 MB – 5.0 GB NVMe PCIe 4.0/5.0 SSD (Sequential Read ≥ 3,500 to 7,500 MB/s)',
         girionixOptimization: 'Isolated physical directory at %LocalAppData%\\Girionix AI\\Data with atomic journal transactions and 1-click Start Menu uninstaller purge.'
       },
@@ -512,7 +512,7 @@ export const PLATFORM_DETAILED_SPECS = {
         category: 'Operating System',
         minimum: 'macOS 11.0 (Big Sur) / macOS 12 (Monterey) / macOS 13 (Ventura)',
         recommended: 'macOS 14 (Sonoma) / macOS 15 (Sequoia). Universal Binary for Apple Silicon (arm64) & Intel (x86_64)',
-        girionixOptimization: 'Native macOS DMG bundle (715 KB) with Apple Notarization compatibility, Dock status badges, and macOS Dark Mode vibrancy.'
+        girionixOptimization: 'Native macOS DMG bundle (5.13 MB) with Apple Notarization compatibility, Dock status badges, and macOS Dark Mode vibrancy.'
       },
       {
         category: 'Processor (CPU)',
@@ -528,7 +528,7 @@ export const PLATFORM_DETAILED_SPECS = {
       },
       {
         category: 'Storage & Vault Path',
-        minimum: '120 MB free APFS storage space (DMG Package: ~715 KB)',
+        minimum: '120 MB free APFS storage space (DMG Package: ~5.13 MB)',
         recommended: '1.0 GB – 10.0 GB Apple PCIe NVMe SSD (Sequential Read ≥ 5,000 to 7,400 MB/s)',
         girionixOptimization: 'APFS containerized storage at ~/Library/Application Support/Girionix AI/Data with instant snapshotting and clone-on-write integrity.'
       },
@@ -575,7 +575,7 @@ export const PLATFORM_DETAILED_SPECS = {
         category: 'Operating System',
         minimum: 'Ubuntu 20.04 LTS, Debian 11, Fedora 36, Arch Linux, RHEL 8 (Kernel 5.4+)',
         recommended: 'Ubuntu 24.04 LTS, Debian 12 (Bookworm), Fedora 40/41, Arch Linux, Manjaro, Pop!_OS 22.04+, Linux Mint 21+, openSUSE Tumbleweed (Kernel 6.8+)',
-        girionixOptimization: 'Single-file standalone .AppImage (714 KB) with zero shared library dependencies. Compatible with glibc 2.31+ and musl libc.'
+        girionixOptimization: 'Single-file standalone .AppImage (6.63 MB) with zero shared library dependencies. Compatible with glibc 2.31+ and musl libc.'
       },
       {
         category: 'Processor (CPU)',
@@ -591,7 +591,7 @@ export const PLATFORM_DETAILED_SPECS = {
       },
       {
         category: 'Storage & Vault Path',
-        minimum: '100 MB free storage space (.AppImage: ~714 KB)',
+        minimum: '100 MB free storage space (.AppImage: ~6.63 MB)',
         recommended: '1.0 GB – 10.0 GB Ext4 / Btrfs (with Zstandard compression) / ZFS on NVMe SSD',
         girionixOptimization: 'XDG Base Directory standard storage at ~/.local/share/girionix-ai/data and ~/.config/girionix-ai.'
       },
@@ -638,7 +638,7 @@ export const PLATFORM_DETAILED_SPECS = {
         category: 'Operating System',
         minimum: 'iOS 15.0 / iPadOS 15.0 through iOS 17',
         recommended: 'iOS 18.0 / iPadOS 18.x. Compatible with iPhone 11, 12, 13, 14, 15, 16 Series, iPad Pro (M1–M4), iPad Air (M1–M2), iPad mini 6/7',
-        girionixOptimization: 'Standalone signed Apple MobileConfig / WebClip container profile (1.2 KB) with full-screen WebKit container and home screen icon.'
+        girionixOptimization: 'Standalone signed Apple MobileConfig / WebClip container profile (1.3 KB) with full-screen WebKit container and home screen icon.'
       },
       {
         category: 'Processor (CPU)',
@@ -654,7 +654,7 @@ export const PLATFORM_DETAILED_SPECS = {
       },
       {
         category: 'Storage & Vault Path',
-        minimum: '60 MB free internal flash storage (MobileConfig: ~1.2 KB)',
+        minimum: '60 MB free internal flash storage (MobileConfig: ~1.3 KB)',
         recommended: '500 MB – 2 GB free NVMe internal storage for offline projects and high-resolution art cache',
         girionixOptimization: 'Encrypted IndexedDB vault with automatic iCloud backup exclusion to preserve total local privacy on device.'
       },

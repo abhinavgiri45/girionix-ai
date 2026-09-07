@@ -82,8 +82,18 @@ export default function ChatView({
 
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
-  const [useThinking, setUseThinking] = useState(true);
-  const [webSearchEnabled, setWebSearchEnabled] = useState(true);
+  const [useThinking, setUseThinking] = useState(() => storage.getDeepReasoningEnabled());
+  const [webSearchEnabled, setWebSearchEnabled] = useState(() => storage.getWebSearchEnabled());
+
+  const handleToggleWebSearch = (enabled) => {
+    setWebSearchEnabled(enabled);
+    storage.setWebSearchEnabled(enabled);
+  };
+
+  const handleToggleThinking = (enabled) => {
+    setUseThinking(enabled);
+    storage.setDeepReasoningEnabled(enabled);
+  };
   const [isListening, setIsListening] = useState(false);
   const [isVoiceOrbOpen, setIsVoiceOrbOpen] = useState(false);
   const [isEngineDropdownOpen, setIsEngineDropdownOpen] = useState(false);
@@ -595,6 +605,7 @@ export default function ChatView({
         temperature: settings.temperature,
         maxTokens: settings.maxTokens,
         webSearchEnabled: webSearchEnabled,
+        useThinking: useThinking,
         signal: abortControllerRef.current.signal,
         onReasoningChunk: (chunk, fullReasoning) => {
           setSessions(prev => prev.map(s => s.id === activeSessionId ? {
@@ -883,6 +894,7 @@ export default function ChatView({
                             key={m.id}
                             onClick={() => {
                               setActiveModel(m);
+                              storage.setActiveModelId(m.id);
                               setIsEngineDropdownOpen(false);
                             }}
                             className={`w-full text-left p-2.5 rounded-xl flex items-center justify-between text-xs transition-all ${
@@ -953,8 +965,8 @@ export default function ChatView({
 
               {/* Web Grounding Toggle with Sliding On/Off Switch */}
               <button
-                onClick={() => setWebSearchEnabled(!webSearchEnabled)}
-                className={`flex items-center gap-2 px-2.5 py-1 rounded-xl border transition-all ${
+                onClick={() => handleToggleWebSearch(!webSearchEnabled)}
+                className={`flex items-center gap-2 px-2.5 py-1 rounded-xl border transition-all cursor-pointer select-none ${
                   webSearchEnabled
                     ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/40 shadow-glow-cyan/50'
                     : 'bg-white/[0.04] text-gray-400 border-white/10 hover:text-white hover:bg-white/[0.08]'
@@ -979,33 +991,31 @@ export default function ChatView({
               </button>
 
               {/* Deep Reasoning Toggle with Sliding On/Off Switch */}
-              {activeModel.supportsReasoning && (
-                <button
-                  onClick={() => setUseThinking(!useThinking)}
-                  className={`flex items-center gap-2 px-2.5 py-1 rounded-xl border transition-all ${
-                    useThinking
-                      ? 'bg-purple-500/15 text-purple-300 border-purple-500/40 shadow-glow-purple/50'
-                      : 'bg-white/[0.04] text-gray-400 border-white/10 hover:text-white hover:bg-white/[0.08]'
-                  }`}
-                  title={useThinking ? "Deep Reasoning is ON" : "Deep Reasoning is OFF"}
-                >
-                  <div className="flex items-center gap-1.5">
-                    <Brain className={`w-3.5 h-3.5 transition-colors ${useThinking ? 'text-purple-400' : 'text-gray-400'}`} />
-                    <span className="font-semibold text-xs">Deep Reasoning</span>
-                  </div>
+              <button
+                onClick={() => handleToggleThinking(!useThinking)}
+                className={`flex items-center gap-2 px-2.5 py-1 rounded-xl border transition-all cursor-pointer select-none ${
+                  useThinking
+                    ? 'bg-purple-500/15 text-purple-300 border-purple-500/40 shadow-glow-purple/50'
+                    : 'bg-white/[0.04] text-gray-400 border-white/10 hover:text-white hover:bg-white/[0.08]'
+                }`}
+                title={useThinking ? "Deep Reasoning is ON (Step-by-step thinking active)" : "Deep Reasoning is OFF (Direct concise responses)"}
+              >
+                <div className="flex items-center gap-1.5">
+                  <Brain className={`w-3.5 h-3.5 transition-colors ${useThinking ? 'text-purple-400' : 'text-gray-400'}`} />
+                  <span className="font-semibold text-xs">Deep Reasoning</span>
+                </div>
 
-                  {/* Sliding On/Off Switch */}
-                  <div className={`w-7 h-4 rounded-full p-0.5 transition-colors duration-200 ease-in-out flex items-center ${
-                    useThinking ? 'bg-purple-400' : 'bg-white/20'
-                  }`}>
-                    <div className={`w-3 h-3 rounded-full transition-transform duration-200 ease-in-out ${
-                      useThinking 
-                        ? 'translate-x-3 bg-black shadow-sm' 
-                        : 'translate-x-0 bg-gray-400'
-                    }`} />
-                  </div>
-                </button>
-              )}
+                {/* Sliding On/Off Switch */}
+                <div className={`w-7 h-4 rounded-full p-0.5 transition-colors duration-200 ease-in-out flex items-center ${
+                  useThinking ? 'bg-purple-400' : 'bg-white/20'
+                }`}>
+                  <div className={`w-3 h-3 rounded-full transition-transform duration-200 ease-in-out ${
+                    useThinking 
+                      ? 'translate-x-3 bg-black shadow-sm' 
+                      : 'translate-x-0 bg-gray-400'
+                  }`} />
+                </div>
+              </button>
             </div>
 
             <div className="flex items-center gap-2">

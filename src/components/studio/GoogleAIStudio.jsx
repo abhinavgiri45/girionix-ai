@@ -72,9 +72,15 @@ const SAMPLE_PROMPTS = [
   }
 ];
 
-export default function GoogleAIStudio({ activeModel, isTitanMode = false }) {
+export default function GoogleAIStudio({ 
+  activeModel, 
+  isTitanMode = false,
+  injectedCode = null,
+  onClose = null,
+  initialMode = 'chat'
+}) {
   // Mode: 'chat' | 'freeform' | 'structured'
-  const [studioMode, setStudioMode] = useState('chat');
+  const [studioMode, setStudioMode] = useState(initialMode || 'chat');
   const [promptTitle, setPromptTitle] = useState('Untitled prompt');
   const [isEditingTitle, setIsEditingTitle] = useState(false);
 
@@ -283,12 +289,18 @@ You can click **▶ Run Code** above to execute this code right inside the in-br
         }
 
         const res = await openrouter.chat(messages, {
+          model: selectedModel,
           temperature: temperature,
           max_tokens: maxOutputTokens,
-          top_p: topP
+          top_p: topP,
+          webSearchEnabled: enableSearchGrounding,
+          useThinking: enableThinking
         });
 
-        resultText = res?.content || res || 'Generation completed successfully.';
+        resultText = res?.content || (typeof res === 'string' ? res : 'Generation completed successfully.');
+        if (res?.reasoning) {
+          thinkingText = res.reasoning;
+        }
 
         const elapsedMs = Math.round(performance.now() - startTime);
         const tokensGenerated = Math.round(resultText.length / 4);
@@ -298,7 +310,7 @@ You can click **▶ Run Code** above to execute this code right inside the in-br
           id: `model-${Date.now()}`,
           role: 'model',
           content: resultText,
-          thinking: enableThinking ? thinkingText : null,
+          thinking: enableThinking ? (thinkingText || "Analyzed context, validated constraints, and generated output.") : null,
           latencyMs: elapsedMs,
           tokenCount: tokensGenerated,
           speedTokensPerSec: speed,
@@ -338,19 +350,22 @@ You can click **▶ Run Code** above to execute this code right inside the in-br
         ];
 
         const res = await openrouter.chat(messages, {
+          model: selectedModel,
           temperature: temperature,
           max_tokens: maxOutputTokens,
-          top_p: topP
+          top_p: topP,
+          webSearchEnabled: enableSearchGrounding,
+          useThinking: enableThinking
         });
 
-        const text = res?.content || res;
+        const text = res?.content || (typeof res === 'string' ? res : '');
         const elapsedMs = Math.round(performance.now() - startTime);
         const tokensGenerated = Math.round(text.length / 4);
         const speed = Math.round((tokensGenerated / (elapsedMs / 1000)) || 70);
 
         setFreeformOutput({
           content: text,
-          thinking: enableThinking ? "Freeform prompt evaluated. Applied variable bindings and computed mathematical constraints." : null,
+          thinking: enableThinking ? (res?.reasoning || "Freeform prompt evaluated. Applied variable bindings and computed mathematical constraints.") : null,
           latencyMs: elapsedMs,
           tokenCount: tokensGenerated,
           speedTokensPerSec: speed,
@@ -380,18 +395,21 @@ You can click **▶ Run Code** above to execute this code right inside the in-br
         const messages = [{ role: 'user', content: fewShotPrompt }];
 
         const res = await openrouter.chat(messages, {
+          model: selectedModel,
           temperature: temperature,
-          max_tokens: maxOutputTokens
+          max_tokens: maxOutputTokens,
+          webSearchEnabled: enableSearchGrounding,
+          useThinking: enableThinking
         });
 
-        const text = res?.content || res;
+        const text = res?.content || (typeof res === 'string' ? res : '');
         const elapsedMs = Math.round(performance.now() - startTime);
         const tokensGenerated = Math.round(text.length / 4);
         const speed = Math.round((tokensGenerated / (elapsedMs / 1000)) || 75);
 
         setStructuredOutput({
           content: text,
-          thinking: enableThinking ? "Identified few-shot demonstration format. Evaluated sentiment polarity, aspect extractions, and compiled JSON output." : null,
+          thinking: enableThinking ? (res?.reasoning || "Identified few-shot demonstration format. Evaluated sentiment polarity, aspect extractions, and compiled JSON output.") : null,
           latencyMs: elapsedMs,
           tokenCount: tokensGenerated,
           speedTokensPerSec: speed,
@@ -593,17 +611,27 @@ println(response.text)
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-[#05070E] text-white select-none overflow-hidden relative font-sans">
+    <div className="flex-1 flex flex-col h-full bg-[#131314] text-[#e3e3e3] select-none overflow-hidden relative font-sans">
       {/* 1. Google AI Studio Header Bar */}
-      <div className="px-3 sm:px-4 py-2 bg-[#070914] border-b border-white/[0.08] flex items-center justify-between gap-2 flex-wrap shrink-0">
+      <div className="px-3 sm:px-4 py-2.5 bg-[#1e1f20] border-b border-[#3c4043] flex items-center justify-between gap-2.5 flex-wrap shrink-0 z-10">
         {/* Left: Brand Identity & Editable Prompt Title */}
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <div className="flex items-center gap-1.5 p-1 px-2 rounded-xl bg-gradient-to-r from-blue-500/15 via-cyan-500/15 to-purple-500/15 border border-cyan-500/30">
-            <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="text-xs font-bold text-white tracking-wide hidden xs:inline">Google AI Studio</span>
+        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+          <div className="flex items-center gap-2">
+            <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2C12 7.52285 7.52285 12 2 12C7.52285 12 12 16.4772 12 22C12 16.4772 16.4772 12 22 12C16.4772 12 12 7.52285 12 2Z" fill="url(#gemini_grad_hdr)" />
+              <defs>
+                <linearGradient id="gemini_grad_hdr" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                  <stop stopColor="#4285F4" />
+                  <stop offset="0.33" stopColor="#9B72CF" />
+                  <stop offset="0.66" stopColor="#D96570" />
+                  <stop offset="1" stopColor="#FBBC05" />
+                </linearGradient>
+              </defs>
+            </svg>
+            <span className="text-sm font-medium text-[#e3e3e3] tracking-tight hidden sm:inline">Google AI Studio</span>
           </div>
 
-          <div className="h-4 w-px bg-white/10 hidden sm:block" />
+          <div className="h-4 w-px bg-[#444746] hidden sm:block" />
 
           {/* Editable Prompt Title */}
           {isEditingTitle ? (
@@ -614,83 +642,84 @@ println(response.text)
               onBlur={() => setIsEditingTitle(false)}
               onKeyDown={(e) => e.key === 'Enter' && setIsEditingTitle(false)}
               autoFocus
-              className="bg-black/60 border border-cyan-500/40 rounded-lg px-2 py-0.5 text-xs text-white focus:outline-none max-w-[140px] sm:max-w-[220px]"
+              className="bg-[#131314] border border-[#a8c7fa] rounded-lg px-2.5 py-0.5 text-xs text-[#e3e3e3] focus:outline-none max-w-[140px] sm:max-w-[220px]"
             />
           ) : (
             <div 
               onClick={() => setIsEditingTitle(true)}
-              className="text-xs font-medium text-gray-300 hover:text-white cursor-pointer truncate max-w-[140px] sm:max-w-[220px] px-1 py-0.5 rounded hover:bg-white/5 transition-colors"
+              className="text-xs font-normal text-[#c4c7c5] hover:text-white cursor-pointer truncate max-w-[140px] sm:max-w-[220px] px-1.5 py-0.5 rounded hover:bg-[#282a2c] transition-colors flex items-center gap-1"
               title="Click to rename prompt"
             >
-              {promptTitle}
+              <span>{promptTitle}</span>
+              <span className="text-[10px] text-[#8e918f]">✎</span>
             </div>
           )}
         </div>
 
-        {/* Center: Mode Tabs (Chat | Freeform | Structured) */}
-        <div className="flex items-center p-0.5 rounded-xl bg-black/60 border border-white/10 text-xs font-medium">
+        {/* Center: Mode Tabs (Chat prompt | Freeform prompt | Structured prompt) */}
+        <div className="flex items-center p-0.5 rounded-full bg-[#131314] border border-[#3c4043] text-xs font-medium">
           <button
             onClick={() => setStudioMode('chat')}
-            className={`px-2.5 sm:px-3 py-1 rounded-lg transition-all flex items-center gap-1 cursor-pointer ${
+            className={`px-3 py-1 rounded-full transition-all flex items-center gap-1 cursor-pointer ${
               studioMode === 'chat'
-                ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40 shadow-sm'
-                : 'text-gray-400 hover:text-white'
+                ? 'bg-[#282a2c] text-[#a8c7fa] font-medium shadow-sm'
+                : 'text-[#c4c7c5] hover:text-white'
             }`}
             title="Multi-turn Conversational Chat Prompt"
           >
-            <span>Chat</span>
+            <span>Chat prompt</span>
           </button>
 
           <button
             onClick={() => setStudioMode('freeform')}
-            className={`px-2.5 sm:px-3 py-1 rounded-lg transition-all flex items-center gap-1 cursor-pointer ${
+            className={`px-3 py-1 rounded-full transition-all flex items-center gap-1 cursor-pointer ${
               studioMode === 'freeform'
-                ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40 shadow-sm'
-                : 'text-gray-400 hover:text-white'
+                ? 'bg-[#282a2c] text-[#a8c7fa] font-medium shadow-sm'
+                : 'text-[#c4c7c5] hover:text-white'
             }`}
             title="Single-turn Rich Freeform Canvas"
           >
-            <span>Freeform</span>
+            <span>Freeform prompt</span>
           </button>
 
           <button
             onClick={() => setStudioMode('structured')}
-            className={`px-2.5 sm:px-3 py-1 rounded-lg transition-all flex items-center gap-1 cursor-pointer ${
+            className={`px-3 py-1 rounded-full transition-all flex items-center gap-1 cursor-pointer ${
               studioMode === 'structured'
-                ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40 shadow-sm'
-                : 'text-gray-400 hover:text-white'
+                ? 'bg-[#282a2c] text-[#a8c7fa] font-medium shadow-sm'
+                : 'text-[#c4c7c5] hover:text-white'
             }`}
             title="Structured Few-Shot Examples Table"
           >
-            <span>Structured</span>
+            <span>Structured prompt</span>
           </button>
         </div>
 
-        {/* Right: Quick Action Controls (<> Get Code, Sample Prompts, Run Settings Drawer) */}
-        <div className="flex items-center gap-1.5">
+        {/* Right: Quick Action Controls (<> Get Code, Sample Prompts, Big Blue Run button) */}
+        <div className="flex items-center gap-2">
           {/* Sample Prompts Dropdown */}
           <div className="relative group">
             <button
-              className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-gray-300 hover:text-white border border-white/10 text-xs font-mono transition-all"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#282a2c] hover:bg-[#3c4043] text-[#c4c7c5] hover:text-white border border-[#444746] text-xs font-medium transition-all cursor-pointer"
               title="Load Google AI Studio Sample Prompts"
             >
-              <BookOpen className="w-3 h-3 text-purple-400" />
+              <BookOpen className="w-3.5 h-3.5 text-[#a8c7fa]" />
               <span className="hidden md:inline">Samples</span>
-              <ChevronDown className="w-2.5 h-2.5" />
+              <ChevronDown className="w-3 h-3" />
             </button>
 
-            <div className="absolute right-0 mt-1 w-64 rounded-2xl bg-[#0B0F1E] border border-white/15 p-2 shadow-2xl z-50 hidden group-hover:block space-y-1">
-              <div className="px-2 py-1 text-[10px] font-mono text-gray-400 uppercase border-b border-white/10">
+            <div className="absolute right-0 mt-1 w-64 rounded-2xl bg-[#1e1f20] border border-[#444746] p-2 shadow-2xl z-50 hidden group-hover:block space-y-1">
+              <div className="px-2 py-1 text-[10px] font-mono text-[#8e918f] uppercase border-b border-[#3c4043]">
                 Sample Prompts Library
               </div>
               {SAMPLE_PROMPTS.map((sample, sIdx) => (
                 <button
                   key={sIdx}
                   onClick={() => handleLoadSample(sample)}
-                  className="w-full text-left p-2 rounded-xl text-xs hover:bg-white/[0.06] text-gray-200 hover:text-cyan-300 transition-colors"
+                  className="w-full text-left p-2 rounded-xl text-xs hover:bg-[#282a2c] text-[#c4c7c5] hover:text-[#a8c7fa] transition-colors"
                 >
-                  <div className="font-semibold text-white">{sample.name}</div>
-                  <div className="text-[10px] text-gray-400 capitalize">{sample.mode} prompt</div>
+                  <div className="font-medium text-[#e3e3e3]">{sample.name}</div>
+                  <div className="text-[10px] text-[#8e918f] capitalize">{sample.mode} prompt</div>
                 </button>
               ))}
             </div>
@@ -699,17 +728,33 @@ println(response.text)
           {/* <> Get Code Modal Trigger */}
           <button
             onClick={() => setIsGetCodeOpen(true)}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/25 text-xs font-mono font-bold transition-all hover:scale-105 cursor-pointer"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#282a2c] hover:bg-[#3c4043] text-[#c4c7c5] hover:text-white border border-[#444746] text-xs font-medium transition-all cursor-pointer"
             title="Get Python, JavaScript, and cURL SDK code"
           >
-            <Code2 className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Get Code</span>
+            <Code2 className="w-3.5 h-3.5 text-[#a8c7fa]" />
+            <span className="hidden sm:inline">Get code</span>
+          </button>
+
+          {/* Big Blue Google Run Button */}
+          <button
+            onClick={handleRun}
+            disabled={isGenerating || (studioMode === 'chat' && !chatInput.trim() && attachedFiles.length === 0 && chatTurns.length === 0)}
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-medium text-xs transition-all cursor-pointer ${
+              isGenerating
+                ? 'bg-[#0b57d0]/60 text-white animate-pulse'
+                : 'bg-[#0b57d0] hover:bg-[#1a73e8] text-white shadow-sm disabled:opacity-40'
+            }`}
+            title="Run prompt generation (Ctrl+Enter)"
+          >
+            {isGenerating ? <Square className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current" />}
+            <span>{isGenerating ? 'Running' : 'Run'}</span>
+            <span className="hidden sm:inline text-[10px] text-blue-200/80 font-mono ml-0.5">Ctrl+↵</span>
           </button>
 
           {/* Clear Workspace */}
           <button
             onClick={handleClear}
-            className="p-1.5 rounded-xl hover:bg-white/[0.06] text-gray-400 hover:text-rose-400 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-[#282a2c] text-[#8e918f] hover:text-[#ff897d] transition-colors cursor-pointer"
             title="Clear prompt and responses"
           >
             <Trash2 className="w-3.5 h-3.5" />
@@ -718,21 +763,31 @@ println(response.text)
           {/* Mobile Run Settings Button (< lg) */}
           <button
             onClick={() => setIsMobileSettingsOpen(true)}
-            className="lg:hidden flex items-center gap-1 px-2.5 py-1 rounded-xl bg-purple-500/15 text-purple-300 border border-purple-500/30 text-xs font-mono font-bold"
+            className="lg:hidden flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#282a2c] text-[#a8c7fa] border border-[#444746] text-xs font-medium"
             title="Open Run Settings"
           >
             <Sliders className="w-3.5 h-3.5" />
-            <span>Settings</span>
           </button>
+
+          {/* Close Studio Split Button if provided */}
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-lg hover:bg-[#282a2c] text-[#8e918f] hover:text-white transition-colors cursor-pointer ml-0.5"
+              title="Close AI Studio"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
 
       {/* Main Studio Body: Workspace on Left/Center, Run Settings on Right */}
-      <div className="flex-1 flex overflow-hidden relative min-w-0">
+      <div className="flex-1 flex overflow-hidden relative min-w-0 bg-[#131314]">
         {/* Workspace Canvas (Full width on mobile, flexible on desktop) */}
-        <div className="flex-1 flex flex-col overflow-hidden bg-[#05070E] min-w-0">
+        <div className="flex-1 flex flex-col overflow-hidden bg-[#131314] min-w-0">
           {/* Collapsible System Instructions Card */}
-          <div className="border-b border-white/[0.06] bg-[#070A15]/80 shrink-0">
+          <div className="border-b border-[#3c4043] bg-[#1e1f20] shrink-0">
             <button
               onClick={() => setIsSystemInstructionsOpen(!isSystemInstructionsOpen)}
               className="w-full px-4 py-2 flex items-center justify-between text-xs font-mono text-gray-300 hover:text-white transition-colors cursor-pointer"
@@ -750,13 +805,13 @@ println(response.text)
             </button>
 
             {isSystemInstructionsOpen && (
-              <div className="px-4 pb-3 pt-1 animate-fadeIn">
+              <div className="px-4 pb-3 pt-1 animate-fadeIn bg-[#1e1f20]">
                 <textarea
                   value={systemInstruction}
                   onChange={(e) => setSystemInstruction(e.target.value)}
-                  placeholder="e.g. You are an expert AI software architect and polymath who writes clean, tested, documented code..."
+                  placeholder="Optional tone and style instructions for the model (e.g. You are a helpful math tutor...)"
                   rows={2}
-                  className="w-full bg-black/40 border border-white/10 rounded-xl p-2.5 text-base sm:text-xs text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/40 resize-y leading-relaxed font-sans"
+                  className="w-full bg-[#131314] border border-[#444746] rounded-xl p-2.5 text-base sm:text-xs text-[#e3e3e3] placeholder-[#8e918f] focus:outline-none focus:border-[#a8c7fa] resize-y leading-relaxed font-sans"
                 />
               </div>
             )}
@@ -764,18 +819,27 @@ println(response.text)
 
           {/* Mode A: Chat Prompt Workspace */}
           {studioMode === 'chat' && (
-            <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 flex flex-col overflow-hidden bg-[#131314]">
               {/* Conversation Turns List */}
               <div className="flex-1 overflow-y-auto p-3 sm:p-5 space-y-4 touch-scroll">
                 {chatTurns.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center text-center p-6 text-gray-400 space-y-3">
-                    <div className="p-4 rounded-3xl bg-cyan-500/10 border border-cyan-500/20 shadow-glow-cyan">
-                      <Sparkles className="w-8 h-8 text-cyan-400 animate-pulse" />
+                  <div className="h-full flex flex-col items-center justify-center text-center p-6 text-[#8e918f] space-y-3">
+                    <div className="p-4 rounded-3xl bg-[#1e1f20] border border-[#444746]">
+                      <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 2C12 7.52285 7.52285 12 2 12C7.52285 12 12 16.4772 12 22C12 16.4772 16.4772 12 22 12C16.4772 12 12 7.52285 12 2Z" fill="url(#gemini_center)" />
+                        <defs>
+                          <linearGradient id="gemini_center" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                            <stop stopColor="#4285F4" />
+                            <stop offset="0.5" stopColor="#9B72CF" />
+                            <stop offset="1" stopColor="#D96570" />
+                          </linearGradient>
+                        </defs>
+                      </svg>
                     </div>
                     <div className="space-y-1">
-                      <h3 className="font-bold text-white text-base">Google AI Studio Chat Prompt</h3>
-                      <p className="text-xs text-gray-400 max-w-sm">
-                        Type a user prompt below or pick from the sample library. Enjoy full LaTeX math, syntax-highlighted code with in-browser execution sandbox, and Google Search citations.
+                      <h3 className="font-medium text-[#e3e3e3] text-base">Google AI Studio Chat Prompt</h3>
+                      <p className="text-xs text-[#8e918f] max-w-sm">
+                        Type a user prompt below or pick from the sample library. Includes step-by-step thinking tokens, syntax-highlighted code with in-browser execution sandbox, and KaTeX LaTeX formulas.
                       </p>
                     </div>
                   </div>
@@ -785,25 +849,35 @@ println(response.text)
                     return (
                       <div key={turn.id} className="space-y-1.5">
                         {/* Turn Header */}
-                        <div className="flex items-center justify-between text-xs font-mono text-gray-400 px-1">
+                        <div className="flex items-center justify-between text-xs font-mono text-[#8e918f] px-1">
                           <div className="flex items-center gap-1.5">
-                            <span className={`font-bold ${isUser ? 'text-cyan-300' : 'text-purple-300'}`}>
-                              {isUser ? 'User' : selectedModel}
-                            </span>
+                            {isUser ? (
+                              <span className="font-medium text-[#c4c7c5] flex items-center gap-1">
+                                <span className="w-2 h-2 rounded-full bg-[#a8c7fa]" />
+                                <span>User</span>
+                              </span>
+                            ) : (
+                              <span className="font-medium text-[#a8c7fa] flex items-center gap-1">
+                                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
+                                  <path d="M12 2C12 7.52285 7.52285 12 2 12C7.52285 12 12 16.4772 12 22C12 16.4772 16.4772 12 22 12C16.4772 12 12 7.52285 12 2Z" fill="#a8c7fa" />
+                                </svg>
+                                <span>Model ({selectedModel})</span>
+                              </span>
+                            )}
                             {turn.tokens && (
-                              <span className="text-[10px] text-gray-500">({turn.tokens} tokens)</span>
+                              <span className="text-[10px] text-[#8e918f]">({turn.tokens} tokens)</span>
                             )}
                           </div>
                         </div>
 
                         {/* Turn Body */}
                         {isUser ? (
-                          <div className="p-3.5 rounded-2xl bg-[#0D1222] border border-cyan-500/20 text-xs sm:text-sm text-white leading-relaxed whitespace-pre-wrap selection:bg-cyan-500/30">
+                          <div className="p-3.5 rounded-2xl bg-[#1e1f20] border border-[#3c4043] text-xs sm:text-sm text-[#e3e3e3] leading-relaxed whitespace-pre-wrap selection:bg-[#004a77]">
                             {turn.content}
                             {turn.attachments && turn.attachments.length > 0 && (
-                              <div className="mt-2.5 flex flex-wrap gap-2 pt-2 border-t border-white/10">
+                              <div className="mt-2.5 flex flex-wrap gap-2 pt-2 border-t border-[#3c4043]">
                                 {turn.attachments.map((file, fIdx) => (
-                                  <div key={fIdx} className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-black/40 border border-white/10 text-[10px] font-mono text-cyan-300">
+                                  <div key={fIdx} className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[#131314] border border-[#444746] text-[10px] font-mono text-[#a8c7fa]">
                                     <Paperclip className="w-3 h-3" />
                                     <span>{file.name}</span>
                                   </div>
@@ -831,17 +905,17 @@ println(response.text)
               </div>
 
               {/* Bottom Run Composer Bar */}
-              <div className="p-2 sm:p-3 bg-[#070914] border-t border-white/[0.08] shrink-0">
+              <div className="p-2.5 sm:p-3.5 bg-[#1e1f20] border-t border-[#3c4043] shrink-0">
                 {/* Attached files pills */}
                 {attachedFiles.length > 0 && (
                   <div className="mb-2 flex flex-wrap gap-2">
                     {attachedFiles.map((f, i) => (
-                      <div key={i} className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-xs font-mono text-cyan-300">
+                      <div key={i} className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#131314] border border-[#a8c7fa]/40 text-xs font-mono text-[#a8c7fa]">
                         <Paperclip className="w-3 h-3" />
                         <span>{f.name}</span>
                         <button 
                           onClick={() => setAttachedFiles(attachedFiles.filter((_, idx) => idx !== i))}
-                          className="hover:text-white ml-1"
+                          className="hover:text-white ml-1 cursor-pointer"
                         >
                           ✕
                         </button>
@@ -850,10 +924,10 @@ println(response.text)
                   </div>
                 )}
 
-                <div className="relative flex items-end rounded-2xl bg-black/60 border border-white/10 focus-within:border-cyan-500/50 transition-colors p-2">
+                <div className="relative flex items-end rounded-2xl bg-[#131314] border border-[#444746] focus-within:border-[#a8c7fa] transition-colors p-2">
                   {/* File Attachment Input */}
-                  <label className="p-2 text-gray-400 hover:text-white rounded-xl hover:bg-white/5 transition-colors cursor-pointer mb-0.5">
-                    <Paperclip className="w-4 h-4" />
+                  <label className="p-2 text-[#8e918f] hover:text-[#e3e3e3] rounded-full hover:bg-[#282a2c] transition-colors cursor-pointer mb-0.5" title="Insert media (Images, Audio, Video, Files)">
+                    <Plus className="w-4 h-4" />
                     <input 
                       type="file" 
                       multiple 
@@ -869,7 +943,7 @@ println(response.text)
                     onKeyDown={handleKeyDown}
                     placeholder="Type something or use Ctrl+Enter to Run..."
                     rows={1}
-                    className="flex-1 bg-transparent text-base sm:text-sm text-white placeholder-gray-500 px-3 py-1.5 focus:outline-none resize-none leading-relaxed max-h-36 overflow-y-auto"
+                    className="flex-1 bg-transparent text-base sm:text-sm text-[#e3e3e3] placeholder-[#8e918f] px-3 py-1.5 focus:outline-none resize-none leading-relaxed max-h-36 overflow-y-auto font-sans"
                   />
 
                   {/* Run Button */}
@@ -877,15 +951,15 @@ println(response.text)
                     <button
                       onClick={handleRun}
                       disabled={isGenerating || (!chatInput.trim() && attachedFiles.length === 0)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs transition-all shadow-glow-cyan cursor-pointer ${
+                      className={`flex items-center gap-1.5 px-4 py-2 rounded-full font-medium text-xs transition-all cursor-pointer ${
                         isGenerating
-                          ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse'
-                          : 'bg-gradient-to-r from-blue-500 via-cyan-400 to-purple-500 text-black disabled:opacity-30'
+                          ? 'bg-[#0b57d0]/60 text-white animate-pulse'
+                          : 'bg-[#0b57d0] hover:bg-[#1a73e8] text-white shadow-sm disabled:opacity-35'
                       }`}
                       title="Run model generation (Ctrl+Enter)"
                     >
                       {isGenerating ? <Square className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current" />}
-                      <span>{isGenerating ? 'Running...' : 'Run'}</span>
+                      <span>{isGenerating ? 'Running' : 'Run'}</span>
                     </button>
                   </div>
                 </div>
@@ -895,9 +969,9 @@ println(response.text)
 
           {/* Mode B: Freeform Prompt Workspace */}
           {studioMode === 'freeform' && (
-            <div className="flex-1 flex flex-col overflow-hidden p-3 sm:p-5 space-y-3 touch-scroll overflow-y-auto">
+            <div className="flex-1 flex flex-col overflow-hidden p-3 sm:p-5 space-y-3 touch-scroll overflow-y-auto bg-[#131314]">
               <div className="space-y-1">
-                <div className="flex items-center justify-between text-xs font-mono text-gray-400">
+                <div className="flex items-center justify-between text-xs font-mono text-[#8e918f]">
                   <span>Freeform Prompt Canvas</span>
                   <span>{Math.round(freeformContent.length / 4)} tokens</span>
                 </div>
@@ -907,7 +981,7 @@ println(response.text)
                   onKeyDown={handleKeyDown}
                   placeholder="Enter your prompt here. You can insert test variables like {{variable}} and instructions freely..."
                   rows={8}
-                  className="w-full bg-black/50 border border-white/10 rounded-2xl p-4 text-base sm:text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/40 resize-y leading-relaxed font-mono"
+                  className="w-full bg-[#1e1f20] border border-[#3c4043] rounded-2xl p-4 text-base sm:text-xs text-[#e3e3e3] placeholder-[#8e918f] focus:outline-none focus:border-[#a8c7fa] resize-y leading-relaxed font-mono"
                 />
               </div>
 
@@ -915,15 +989,15 @@ println(response.text)
                 <button
                   onClick={handleRun}
                   disabled={isGenerating || !freeformContent.trim()}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 text-black font-bold text-xs shadow-glow-cyan cursor-pointer disabled:opacity-30"
+                  className="flex items-center gap-2 px-5 py-2 rounded-full bg-[#0b57d0] hover:bg-[#1a73e8] text-white font-medium text-xs shadow-sm transition-all cursor-pointer disabled:opacity-35"
                 >
-                  <Play className="w-3.5 h-3.5 fill-current" />
-                  <span>{isGenerating ? 'Running Freeform Prompt...' : 'Run Prompt (Ctrl+Enter)'}</span>
+                  {isGenerating ? <Square className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current" />}
+                  <span>{isGenerating ? 'Running Freeform...' : 'Run (Ctrl+Enter)'}</span>
                 </button>
               </div>
 
               {freeformOutput && (
-                <div className="mt-4 pt-4 border-t border-white/10">
+                <div className="mt-4 pt-4 border-t border-[#3c4043]">
                   <GoogleStudioOutput
                     text={freeformOutput.content}
                     thinking={freeformOutput.thinking}
@@ -940,36 +1014,36 @@ println(response.text)
 
           {/* Mode C: Structured Prompt Workspace */}
           {studioMode === 'structured' && (
-            <div className="flex-1 flex flex-col overflow-hidden p-3 sm:p-5 space-y-4 touch-scroll overflow-y-auto">
+            <div className="flex-1 flex flex-col overflow-hidden p-3 sm:p-5 space-y-4 touch-scroll overflow-y-auto bg-[#131314]">
               {/* Field Configuration Header */}
-              <div className="p-3.5 rounded-2xl bg-black/40 border border-white/10 flex flex-col sm:flex-row items-center gap-3 justify-between">
+              <div className="p-3.5 rounded-2xl bg-[#1e1f20] border border-[#3c4043] flex flex-col sm:flex-row items-center gap-3 justify-between">
                 <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <span className="text-xs font-mono text-cyan-300 font-bold">Input Field:</span>
+                  <span className="text-xs font-mono text-[#a8c7fa] font-bold">Input Field:</span>
                   <input
                     type="text"
                     value={structuredFields.input}
                     onChange={(e) => setStructuredFields({ ...structuredFields, input: e.target.value })}
-                    className="bg-black/60 border border-white/10 rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:border-cyan-500/40 flex-1 sm:w-36 font-mono"
+                    className="bg-[#131314] border border-[#444746] rounded-lg px-2.5 py-1 text-xs text-[#e3e3e3] focus:outline-none focus:border-[#a8c7fa] flex-1 sm:w-36 font-mono"
                   />
                 </div>
                 <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <span className="text-xs font-mono text-purple-300 font-bold">Output Field:</span>
+                  <span className="text-xs font-mono text-[#d0bcff] font-bold">Output Field:</span>
                   <input
                     type="text"
                     value={structuredFields.output}
                     onChange={(e) => setStructuredFields({ ...structuredFields, output: e.target.value })}
-                    className="bg-black/60 border border-white/10 rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:border-purple-500/40 flex-1 sm:w-36 font-mono"
+                    className="bg-[#131314] border border-[#444746] rounded-lg px-2.5 py-1 text-xs text-[#e3e3e3] focus:outline-none focus:border-[#d0bcff] flex-1 sm:w-36 font-mono"
                   />
                 </div>
               </div>
 
               {/* Few-Shot Demonstrations */}
               <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs font-mono text-gray-400">
+                <div className="flex items-center justify-between text-xs font-mono text-[#8e918f]">
                   <span>Examples ({structuredExamples.length} few-shot pairs)</span>
                   <button
                     onClick={() => setStructuredExamples([...structuredExamples, { id: `ex-${Date.now()}`, input: '', output: '' }])}
-                    className="flex items-center gap-1 text-cyan-300 hover:text-white"
+                    className="flex items-center gap-1 text-[#a8c7fa] hover:text-white"
                   >
                     <Plus className="w-3 h-3" />
                     <span>Add Example</span>
@@ -978,13 +1052,13 @@ println(response.text)
 
                 <div className="space-y-2.5">
                   {structuredExamples.map((ex, idx) => (
-                    <div key={ex.id} className="p-3 rounded-2xl bg-black/30 border border-white/[0.08] space-y-2 relative group">
-                      <div className="flex items-center justify-between text-[11px] font-mono text-gray-500">
+                    <div key={ex.id} className="p-3 rounded-2xl bg-[#1e1f20] border border-[#3c4043] space-y-2 relative group">
+                      <div className="flex items-center justify-between text-[11px] font-mono text-[#8e918f]">
                         <span>Example #{idx + 1}</span>
                         {structuredExamples.length > 1 && (
                           <button
                             onClick={() => setStructuredExamples(structuredExamples.filter(item => item.id !== ex.id))}
-                            className="hover:text-rose-400 text-gray-500"
+                            className="hover:text-[#ff897d] text-[#8e918f]"
                           >
                             ✕
                           </button>
@@ -1000,7 +1074,7 @@ println(response.text)
                           }}
                           placeholder={`Enter ${structuredFields.input}...`}
                           rows={2}
-                          className="w-full bg-black/50 border border-cyan-500/20 rounded-xl p-2 text-base sm:text-xs text-white focus:outline-none focus:border-cyan-500/40 font-mono resize-none"
+                          className="w-full bg-[#131314] border border-[#444746] rounded-xl p-2 text-base sm:text-xs text-[#e3e3e3] focus:outline-none focus:border-[#a8c7fa] font-mono resize-none"
                         />
                         <textarea
                           value={ex.output}
@@ -1011,7 +1085,7 @@ println(response.text)
                           }}
                           placeholder={`Expected ${structuredFields.output}...`}
                           rows={2}
-                          className="w-full bg-black/50 border border-purple-500/20 rounded-xl p-2 text-base sm:text-xs text-white focus:outline-none focus:border-purple-500/40 font-mono resize-none"
+                          className="w-full bg-[#131314] border border-[#444746] rounded-xl p-2 text-base sm:text-xs text-[#e3e3e3] focus:outline-none focus:border-[#d0bcff] font-mono resize-none"
                         />
                       </div>
                     </div>
@@ -1020,31 +1094,31 @@ println(response.text)
               </div>
 
               {/* Test Case Execution Section */}
-              <div className="space-y-2 pt-2 border-t border-white/10">
-                <div className="text-xs font-mono text-gray-300 font-bold">Test Case:</div>
+              <div className="space-y-2 pt-2 border-t border-[#3c4043]">
+                <div className="text-xs font-mono text-[#c4c7c5] font-bold">Test Case:</div>
                 <textarea
                   value={structuredTestInput}
                   onChange={(e) => setStructuredTestInput(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder={`Enter test ${structuredFields.input} to evaluate...`}
                   rows={3}
-                  className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-base sm:text-xs text-white focus:outline-none focus:border-cyan-500/40 font-mono"
+                  className="w-full bg-[#1e1f20] border border-[#3c4043] rounded-xl p-3 text-base sm:text-xs text-[#e3e3e3] focus:outline-none focus:border-[#a8c7fa] font-mono"
                 />
 
                 <div className="flex justify-end">
                   <button
                     onClick={handleRun}
                     disabled={isGenerating || !structuredTestInput.trim()}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-cyan-400 text-black font-bold text-xs shadow-glow-purple cursor-pointer disabled:opacity-30"
+                    className="flex items-center gap-2 px-5 py-2 rounded-full bg-[#0b57d0] hover:bg-[#1a73e8] text-white font-medium text-xs shadow-sm transition-all cursor-pointer disabled:opacity-35"
                   >
-                    <Play className="w-3.5 h-3.5 fill-current" />
+                    {isGenerating ? <Square className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current" />}
                     <span>{isGenerating ? 'Running Test Case...' : 'Run Structured (Ctrl+Enter)'}</span>
                   </button>
                 </div>
               </div>
 
               {structuredOutput && (
-                <div className="mt-4 pt-4 border-t border-white/10">
+                <div className="mt-4 pt-4 border-t border-[#3c4043]">
                   <GoogleStudioOutput
                     text={structuredOutput.content}
                     thinking={structuredOutput.thinking}
@@ -1060,40 +1134,40 @@ println(response.text)
           )}
         </div>
 
-        {/* Desktop Run Settings Sidebar (Docked on lg+ screens) */}
-        <div className="hidden lg:flex w-72 xl:w-80 flex-col bg-[#070914] border-l border-white/[0.08] overflow-y-auto p-4 space-y-4 shrink-0 text-xs font-mono">
-          <div className="flex items-center justify-between border-b border-white/10 pb-2">
-            <div className="flex items-center gap-2 text-white font-bold">
-              <Sliders className="w-4 h-4 text-cyan-400" />
-              <span>Run Settings</span>
+        {/* Desktop Run Settings Sidebar (Docked on lg+ screens - Google AI Studio Material 3 Dark theme) */}
+        <div className="hidden lg:flex w-72 xl:w-80 flex-col bg-[#1e1f20] border-l border-[#3c4043] overflow-y-auto p-4 space-y-4 shrink-0 text-xs font-sans">
+          <div className="flex items-center justify-between border-b border-[#3c4043] pb-2.5">
+            <div className="flex items-center gap-2 text-[#e3e3e3] font-medium text-sm">
+              <Sliders className="w-4 h-4 text-[#a8c7fa]" />
+              <span>Run settings</span>
             </div>
-            <div className="text-[10px] text-cyan-400 font-normal">Gemini v2.5</div>
+            <div className="text-[11px] text-[#a8c7fa] font-mono font-medium">Gemini 2.5</div>
           </div>
 
           {/* Model Selector */}
           <div className="space-y-1.5">
-            <label className="text-[11px] text-gray-400 uppercase font-bold">Model</label>
+            <label className="text-[11px] text-[#c4c7c5] font-medium">Model</label>
             <div className="relative">
               <select
                 value={selectedModel}
                 onChange={(e) => setSelectedModel(e.target.value)}
-                className="w-full bg-black/60 border border-white/10 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-cyan-500/40 cursor-pointer appearance-none font-sans"
+                className="w-full bg-[#131314] border border-[#444746] rounded-xl p-2.5 text-xs text-[#e3e3e3] focus:outline-none focus:border-[#a8c7fa] cursor-pointer appearance-none font-sans"
               >
                 {STUDIO_MODELS.map(m => (
-                  <option key={m.id} value={m.id}>
+                  <option key={m.id} value={m.id} className="bg-[#1e1f20] text-[#e3e3e3]">
                     {m.name} ({m.badge})
                   </option>
                 ))}
               </select>
-              <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-3 top-3 pointer-events-none" />
+              <ChevronDown className="w-3.5 h-3.5 text-[#8e918f] absolute right-3 top-3 pointer-events-none" />
             </div>
           </div>
 
           {/* Temperature Slider */}
           <div className="space-y-1.5">
             <div className="flex justify-between text-[11px]">
-              <span className="text-gray-400 uppercase font-bold">Temperature</span>
-              <span className="text-cyan-300 font-bold">{temperature}</span>
+              <span className="text-[#c4c7c5] font-medium">Temperature</span>
+              <span className="text-[#a8c7fa] font-mono font-medium">{temperature}</span>
             </div>
             <input
               type="range"
@@ -1102,9 +1176,9 @@ println(response.text)
               step="0.05"
               value={temperature}
               onChange={(e) => setTemperature(parseFloat(e.target.value))}
-              className="w-full accent-cyan-400 cursor-pointer"
+              className="w-full accent-[#0b57d0] cursor-pointer"
             />
-            <div className="flex justify-between text-[9px] text-gray-500">
+            <div className="flex justify-between text-[10px] text-[#8e918f]">
               <span>Precise (0.0)</span>
               <span>Balanced (1.0)</span>
               <span>Creative (2.0)</span>
@@ -1114,8 +1188,8 @@ println(response.text)
           {/* Top P Slider */}
           <div className="space-y-1.5">
             <div className="flex justify-between text-[11px]">
-              <span className="text-gray-400 uppercase font-bold">Top P</span>
-              <span className="text-cyan-300 font-bold">{topP}</span>
+              <span className="text-[#c4c7c5] font-medium">Top P</span>
+              <span className="text-[#a8c7fa] font-mono font-medium">{topP}</span>
             </div>
             <input
               type="range"
@@ -1124,15 +1198,15 @@ println(response.text)
               step="0.05"
               value={topP}
               onChange={(e) => setTopP(parseFloat(e.target.value))}
-              className="w-full accent-cyan-400 cursor-pointer"
+              className="w-full accent-[#0b57d0] cursor-pointer"
             />
           </div>
 
           {/* Top K Slider */}
           <div className="space-y-1.5">
             <div className="flex justify-between text-[11px]">
-              <span className="text-gray-400 uppercase font-bold">Top K</span>
-              <span className="text-cyan-300 font-bold">{topK}</span>
+              <span className="text-[#c4c7c5] font-medium">Top K</span>
+              <span className="text-[#a8c7fa] font-mono font-medium">{topK}</span>
             </div>
             <input
               type="range"
@@ -1141,15 +1215,15 @@ println(response.text)
               step="1"
               value={topK}
               onChange={(e) => setTopK(parseInt(e.target.value))}
-              className="w-full accent-cyan-400 cursor-pointer"
+              className="w-full accent-[#0b57d0] cursor-pointer"
             />
           </div>
 
           {/* Max Output Tokens */}
           <div className="space-y-1.5">
             <div className="flex justify-between text-[11px]">
-              <span className="text-gray-400 uppercase font-bold">Max Output Tokens</span>
-              <span className="text-purple-300 font-bold">{maxOutputTokens}</span>
+              <span className="text-[#c4c7c5] font-medium">Max Output Tokens</span>
+              <span className="text-[#a8c7fa] font-mono font-medium">{maxOutputTokens}</span>
             </div>
             <input
               type="range"
@@ -1158,26 +1232,26 @@ println(response.text)
               step="256"
               value={maxOutputTokens}
               onChange={(e) => setMaxOutputTokens(parseInt(e.target.value))}
-              className="w-full accent-purple-400 cursor-pointer"
+              className="w-full accent-[#0b57d0] cursor-pointer"
             />
           </div>
 
-          {/* Thinking Budget Drawer */}
-          <div className="p-3 rounded-2xl bg-black/40 border border-white/10 space-y-2">
+          {/* Thinking Budget Box */}
+          <div className="p-3 rounded-2xl bg-[#131314] border border-[#3c4043] space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-white">Thinking Process</span>
+              <span className="text-xs font-medium text-[#e3e3e3]">Thinking process</span>
               <input
                 type="checkbox"
                 checked={enableThinking}
                 onChange={(e) => setEnableThinking(e.target.checked)}
-                className="accent-cyan-400 w-4 h-4 cursor-pointer"
+                className="accent-[#0b57d0] w-4 h-4 cursor-pointer"
               />
             </div>
             {enableThinking && (
               <div className="space-y-1 pt-1">
-                <div className="flex justify-between text-[10px] text-gray-400">
+                <div className="flex justify-between text-[10px] text-[#8e918f]">
                   <span>Thinking Budget</span>
-                  <span className="text-cyan-300">{thinkingBudget} tokens</span>
+                  <span className="text-[#a8c7fa] font-mono">{thinkingBudget} tokens</span>
                 </div>
                 <input
                   type="range"
@@ -1186,60 +1260,60 @@ println(response.text)
                   step="512"
                   value={thinkingBudget}
                   onChange={(e) => setThinkingBudget(parseInt(e.target.value))}
-                  className="w-full accent-cyan-400 cursor-pointer"
+                  className="w-full accent-[#0b57d0] cursor-pointer"
                 />
               </div>
             )}
           </div>
 
           {/* Tools Toggles */}
-          <div className="space-y-2 pt-1 border-t border-white/10">
-            <label className="text-[11px] text-gray-400 uppercase font-bold">Tools & Extensions</label>
+          <div className="space-y-2 pt-1 border-t border-[#3c4043]">
+            <label className="text-[11px] text-[#c4c7c5] font-medium uppercase tracking-wider">Tools & Extensions</label>
             
-            <div className="flex items-center justify-between p-2 rounded-xl bg-black/40 border border-white/5">
-              <span className="text-[11px] text-gray-200">Google Search Grounding</span>
+            <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#131314] border border-[#444746]">
+              <span className="text-xs text-[#e3e3e3]">Google Search Grounding</span>
               <input
                 type="checkbox"
                 checked={enableSearchGrounding}
                 onChange={(e) => setEnableSearchGrounding(e.target.checked)}
-                className="accent-cyan-400 w-3.5 h-3.5 cursor-pointer"
+                className="accent-[#0b57d0] w-3.5 h-3.5 cursor-pointer"
               />
             </div>
 
-            <div className="flex items-center justify-between p-2 rounded-xl bg-black/40 border border-white/5">
-              <span className="text-[11px] text-gray-200">Code Execution Sandbox</span>
+            <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#131314] border border-[#444746]">
+              <span className="text-xs text-[#e3e3e3]">Code Execution Sandbox</span>
               <input
                 type="checkbox"
                 checked={enableCodeExecution}
                 onChange={(e) => setEnableCodeExecution(e.target.checked)}
-                className="accent-emerald-400 w-3.5 h-3.5 cursor-pointer"
+                className="accent-[#0b57d0] w-3.5 h-3.5 cursor-pointer"
               />
             </div>
 
-            <div className="flex items-center justify-between p-2 rounded-xl bg-black/40 border border-white/5">
-              <span className="text-[11px] text-gray-200">JSON Schema Output</span>
+            <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#131314] border border-[#444746]">
+              <span className="text-xs text-[#e3e3e3]">JSON Schema Output</span>
               <input
                 type="checkbox"
                 checked={enableJsonMode}
                 onChange={(e) => setEnableJsonMode(e.target.checked)}
-                className="accent-purple-400 w-3.5 h-3.5 cursor-pointer"
+                className="accent-[#0b57d0] w-3.5 h-3.5 cursor-pointer"
               />
             </div>
           </div>
 
           {/* Context Window Usage Meter */}
-          <div className="p-3 rounded-2xl bg-black/50 border border-white/10 space-y-1.5">
+          <div className="p-3 rounded-2xl bg-[#131314] border border-[#3c4043] space-y-1.5">
             <div className="flex items-center justify-between text-[11px]">
-              <span className="text-gray-400 font-bold">Context Window</span>
-              <span className="text-cyan-300 font-mono font-bold">{contextPercentage}%</span>
+              <span className="text-[#c4c7c5] font-medium">Context Window</span>
+              <span className="text-[#a8c7fa] font-mono font-medium">{contextPercentage}%</span>
             </div>
-            <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
+            <div className="w-full bg-[#282a2c] h-1.5 rounded-full overflow-hidden">
               <div 
-                className="bg-gradient-to-r from-cyan-400 to-purple-500 h-full transition-all duration-300"
+                className="bg-gradient-to-r from-[#4285F4] to-[#9B72CF] h-full transition-all duration-300"
                 style={{ width: `${Math.max(1, contextPercentage)}%` }}
               />
             </div>
-            <div className="flex justify-between text-[10px] text-gray-500 font-mono">
+            <div className="flex justify-between text-[10px] text-[#8e918f] font-mono">
               <span>{currentTokenCount.toLocaleString()} tokens</span>
               <span>1,048,576 tokens</span>
             </div>
@@ -1257,18 +1331,18 @@ println(response.text)
           />
 
           {/* Drawer Canvas */}
-          <div className="relative z-10 w-full max-h-[85vh] bg-[#090C18] border-t border-white/20 rounded-t-3xl p-5 overflow-y-auto space-y-4 shadow-2xl animate-fadeIn text-xs font-mono">
+          <div className="relative z-10 w-full max-h-[85vh] bg-[#1e1f20] border-t border-[#3c4043] rounded-t-3xl p-5 overflow-y-auto space-y-4 shadow-2xl animate-fadeIn text-xs font-sans">
             {/* Drag Handle */}
-            <div className="w-12 h-1 bg-white/20 rounded-full mx-auto mb-2" />
+            <div className="w-12 h-1 bg-[#444746] rounded-full mx-auto mb-2" />
 
-            <div className="flex items-center justify-between border-b border-white/10 pb-2">
-              <div className="flex items-center gap-2 text-white font-bold text-sm">
-                <Sliders className="w-4 h-4 text-cyan-400" />
-                <span>Run Settings</span>
+            <div className="flex items-center justify-between border-b border-[#3c4043] pb-2">
+              <div className="flex items-center gap-2 text-[#e3e3e3] font-medium text-sm">
+                <Sliders className="w-4 h-4 text-[#a8c7fa]" />
+                <span>Run settings</span>
               </div>
               <button
                 onClick={() => setIsMobileSettingsOpen(false)}
-                className="p-1 rounded-lg text-gray-400 hover:text-white"
+                className="p-1 rounded-lg text-[#8e918f] hover:text-[#e3e3e3]"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1276,14 +1350,14 @@ println(response.text)
 
             {/* Model Selector */}
             <div className="space-y-1.5">
-              <label className="text-[11px] text-gray-400 uppercase font-bold">Model</label>
+              <label className="text-[11px] text-[#c4c7c5] font-medium">Model</label>
               <select
                 value={selectedModel}
                 onChange={(e) => setSelectedModel(e.target.value)}
-                className="w-full bg-black/60 border border-white/10 rounded-xl p-3 text-sm text-white focus:outline-none font-sans"
+                className="w-full bg-[#131314] border border-[#444746] rounded-xl p-3 text-sm text-[#e3e3e3] focus:outline-none font-sans"
               >
                 {STUDIO_MODELS.map(m => (
-                  <option key={m.id} value={m.id}>
+                  <option key={m.id} value={m.id} className="bg-[#1e1f20] text-[#e3e3e3]">
                     {m.name} ({m.badge})
                   </option>
                 ))}
@@ -1293,7 +1367,7 @@ println(response.text)
             {/* Temperature Slider */}
             <div className="space-y-1.5">
               <div className="flex justify-between text-xs">
-                <span className="text-gray-400 font-bold">Temperature: {temperature}</span>
+                <span className="text-[#c4c7c5]">Temperature: {temperature}</span>
               </div>
               <input
                 type="range"
@@ -1302,24 +1376,24 @@ println(response.text)
                 step="0.05"
                 value={temperature}
                 onChange={(e) => setTemperature(parseFloat(e.target.value))}
-                className="w-full accent-cyan-400 cursor-pointer h-2"
+                className="w-full accent-[#0b57d0] cursor-pointer h-2"
               />
             </div>
 
             {/* Thinking Budget */}
-            <div className="p-3 rounded-2xl bg-black/40 border border-white/10 space-y-2">
+            <div className="p-3 rounded-2xl bg-[#131314] border border-[#3c4043] space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-white">Thinking Process</span>
+                <span className="text-xs font-medium text-[#e3e3e3]">Thinking process</span>
                 <input
                   type="checkbox"
                   checked={enableThinking}
                   onChange={(e) => setEnableThinking(e.target.checked)}
-                  className="accent-cyan-400 w-5 h-5 cursor-pointer"
+                  className="accent-[#0b57d0] w-5 h-5 cursor-pointer"
                 />
               </div>
               {enableThinking && (
                 <div className="space-y-1">
-                  <div className="flex justify-between text-[11px] text-gray-400">
+                  <div className="flex justify-between text-[11px] text-[#8e918f]">
                     <span>Budget: {thinkingBudget} tokens</span>
                   </div>
                   <input
@@ -1329,7 +1403,7 @@ println(response.text)
                     step="512"
                     value={thinkingBudget}
                     onChange={(e) => setThinkingBudget(parseInt(e.target.value))}
-                    className="w-full accent-cyan-400 h-2"
+                    className="w-full accent-[#0b57d0] h-2"
                   />
                 </div>
               )}
@@ -1337,23 +1411,23 @@ println(response.text)
 
             {/* Tools Toggles */}
             <div className="space-y-2">
-              <label className="text-[11px] text-gray-400 uppercase font-bold">Tools</label>
-              <div className="flex items-center justify-between p-3 rounded-xl bg-black/40 border border-white/5">
-                <span className="text-xs text-gray-200">Google Search Grounding</span>
+              <label className="text-[11px] text-[#c4c7c5] font-medium uppercase tracking-wider">Tools & Extensions</label>
+              <div className="flex items-center justify-between p-3 rounded-xl bg-[#131314] border border-[#444746]">
+                <span className="text-xs text-[#e3e3e3]">Google Search Grounding</span>
                 <input
                   type="checkbox"
                   checked={enableSearchGrounding}
                   onChange={(e) => setEnableSearchGrounding(e.target.checked)}
-                  className="accent-cyan-400 w-4 h-4"
+                  className="accent-[#0b57d0] w-4 h-4"
                 />
               </div>
-              <div className="flex items-center justify-between p-3 rounded-xl bg-black/40 border border-white/5">
-                <span className="text-xs text-gray-200">Code Execution Sandbox</span>
+              <div className="flex items-center justify-between p-3 rounded-xl bg-[#131314] border border-[#444746]">
+                <span className="text-xs text-[#e3e3e3]">Code Execution Sandbox</span>
                 <input
                   type="checkbox"
                   checked={enableCodeExecution}
                   onChange={(e) => setEnableCodeExecution(e.target.checked)}
-                  className="accent-emerald-400 w-4 h-4"
+                  className="accent-[#0b57d0] w-4 h-4"
                 />
               </div>
             </div>
@@ -1361,7 +1435,7 @@ println(response.text)
             {/* Close Button */}
             <button
               onClick={() => setIsMobileSettingsOpen(false)}
-              className="w-full py-3 rounded-xl bg-cyan-500 text-black font-bold text-sm shadow-glow-cyan"
+              className="w-full py-3 rounded-xl bg-[#0b57d0] hover:bg-[#1a73e8] text-white font-medium text-sm transition-all"
             >
               Apply Settings
             </button>
@@ -1369,31 +1443,31 @@ println(response.text)
         </div>
       )}
 
-      {/* <> Get Code Export Modal */}
+      {/* <> Get Code Export Modal (Google AI Studio Material 3 Dark theme) */}
       {isGetCodeOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md">
-          <div className="w-full max-w-2xl bg-[#090C18] border border-white/15 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh] animate-fadeIn">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm">
+          <div className="w-full max-w-2xl bg-[#1e1f20] border border-[#3c4043] rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh] animate-fadeIn">
             {/* Modal Header */}
-            <div className="p-4 bg-[#0B0F1F] border-b border-white/10 flex items-center justify-between">
+            <div className="p-4 bg-[#1e1f20] border-b border-[#3c4043] flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-cyan-500/20 text-cyan-400">
+                <div className="p-1.5 rounded-lg bg-[#282a2c] text-[#a8c7fa]">
                   <Code2 className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-white text-sm">Get Code</h3>
-                  <p className="text-[10px] text-gray-400 font-mono">Export this prompt to official Google GenAI SDKs</p>
+                  <h3 className="font-medium text-[#e3e3e3] text-sm">Get code</h3>
+                  <p className="text-[11px] text-[#8e918f] font-sans">Export this prompt to official Google GenAI SDKs</p>
                 </div>
               </div>
               <button
                 onClick={() => setIsGetCodeOpen(false)}
-                className="p-1.5 rounded-xl hover:bg-white/10 text-gray-400 hover:text-white"
+                className="p-1.5 rounded-xl hover:bg-[#282a2c] text-[#8e918f] hover:text-[#e3e3e3] transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             {/* Language Tabs */}
-            <div className="px-4 py-2 bg-black/40 border-b border-white/10 flex items-center gap-1 overflow-x-auto no-scrollbar">
+            <div className="px-4 py-2 bg-[#131314] border-b border-[#3c4043] flex items-center gap-1 overflow-x-auto no-scrollbar">
               {[
                 { id: 'python', label: 'Python (google-genai)' },
                 { id: 'javascript', label: 'JavaScript (@google/genai)' },
@@ -1406,8 +1480,8 @@ println(response.text)
                   onClick={() => setCodeLanguage(tab.id)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-mono transition-all whitespace-nowrap cursor-pointer ${
                     codeLanguage === tab.id
-                      ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40 shadow-sm'
-                      : 'text-gray-400 hover:text-white'
+                      ? 'bg-[#282a2c] text-[#a8c7fa] font-medium border border-[#444746]'
+                      : 'text-[#8e918f] hover:text-[#e3e3e3]'
                   }`}
                 >
                   {tab.label}
@@ -1416,23 +1490,23 @@ println(response.text)
             </div>
 
             {/* Code Body */}
-            <div className="flex-1 p-4 bg-[#05070E] overflow-x-auto text-xs font-mono text-gray-200 selection:bg-cyan-500/30">
-              <pre className="m-0 whitespace-pre-wrap leading-relaxed">
+            <div className="flex-1 p-4 bg-[#131314] overflow-x-auto text-xs font-mono text-[#e3e3e3] selection:bg-[#004a77]">
+              <pre className="m-0 whitespace-pre-wrap leading-relaxed font-mono">
                 <code>{generateSdkCode()}</code>
               </pre>
             </div>
 
             {/* Modal Footer */}
-            <div className="p-3 bg-[#0B0F1F] border-t border-white/10 flex items-center justify-between">
-              <span className="text-[11px] text-gray-400 font-mono">
-                SDK package configured for <strong className="text-white">{selectedModel}</strong>
+            <div className="p-3.5 bg-[#1e1f20] border-t border-[#3c4043] flex items-center justify-between">
+              <span className="text-[11px] text-[#8e918f] font-sans">
+                SDK package configured for <strong className="text-[#e3e3e3]">{selectedModel}</strong>
               </span>
               <button
                 onClick={handleCopyCodeSnippet}
-                className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-cyan-500 text-black font-bold text-xs shadow-glow-cyan hover:scale-105 transition-all cursor-pointer"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#0b57d0] hover:bg-[#1a73e8] text-white font-medium text-xs transition-all cursor-pointer"
               >
                 {copiedCode ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{copiedCode ? 'Copied Code!' : 'Copy Code'}</span>
+                <span>{copiedCode ? 'Copied code!' : 'Copy code'}</span>
               </button>
             </div>
           </div>

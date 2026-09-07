@@ -15,11 +15,19 @@ console.log('🚀 GIRIONIX AI - STANDALONE MULTI-PLATFORM PACKAGER');
 console.log('🚀 Envisioned & Engineered by Abhinav Giri (@abhinavgiri45)');
 console.log('🚀 ========================================================');
 
-// Purge legacy temporary files from public/downloads
+// 0. Backup user's working Android APK if present
+const backupApk = path.join(rootDir, 'Girionix_AI_WORKING_BACKUP.apk');
+const existingApk = path.join(downloadsDir, 'Girionix_AI.apk');
+if (fs.existsSync(existingApk) && !fs.existsSync(backupApk)) {
+  fs.copyFileSync(existingApk, backupApk);
+}
+
+// Purge legacy temporary files from public/downloads, while strictly preserving user APKs!
 if (fs.existsSync(downloadsDir)) {
   const existing = fs.readdirSync(downloadsDir);
   for (const f of existing) {
-    if (f.toLowerCase().includes('girionix') || f.toLowerCase().includes('payload.dat')) {
+    if (f.endsWith('.apk')) continue; // PRESERVE WORKING APK!
+    if (f.toLowerCase().includes('girionix') || f.toLowerCase().includes('payload') || f.endsWith('.exe') || f.endsWith('.dmg') || f.endsWith('.zip') || f.endsWith('.AppImage')) {
       try {
         fs.unlinkSync(path.join(downloadsDir, f));
       } catch (_) {}
@@ -178,14 +186,30 @@ const win32Manifest = `<?xml version="1.0" encoding="utf-8"?>
   </trustInfo>
   <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
     <application>
-      <!-- Windows 10 and Windows 11 Modern OS -->
       <supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}" />
     </application>
   </compatibility>
 </assembly>`;
 fs.writeFileSync(path.join(downloadsDir, 'app.manifest'), win32Manifest, 'utf8');
 
-// 3. Compile Safe Windows Standalone Executables (.EXE)
+// 2.5 Generate Embedded Web Payload (For both standalone runner & setup wizards)
+console.log('\n📦 [2.5/6] Creating In-Memory Compressed Web Payload for Standalone & Setup...');
+const webPayloadDict = {};
+for (const f of distFiles) {
+  const buf = fs.readFileSync(f.fullPath);
+  const gz = zlib.gzipSync(buf);
+  webPayloadDict[f.relPath] = gz.toString('base64');
+}
+const icoFile = path.join(downloadsDir, 'app.ico');
+if (fs.existsSync(icoFile)) {
+  webPayloadDict['app.ico'] = zlib.gzipSync(fs.readFileSync(icoFile)).toString('base64');
+}
+const jsonWebPayload = JSON.stringify(webPayloadDict);
+const webPayloadGz = zlib.gzipSync(Buffer.from(jsonWebPayload, 'utf8'));
+fs.writeFileSync(path.join(downloadsDir, 'web_payload.dat'), webPayloadGz);
+console.log(`✅ Web payload compiled (${(webPayloadGz.length / (1024 * 1024)).toFixed(2)} MB compressed).`);
+
+// 3. Compile Standalone Windows Executable (.EXE) with Embedded Web Payload
 console.log('\n📦 [3/6] Compiling Windows Standalone Executables & Setup Wizards...');
 const cscPath = 'C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\csc.exe';
 
@@ -193,6 +217,7 @@ const girionixAppTemplate = `using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.IO.Compression;
 using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -233,6 +258,9 @@ namespace GirionixAI
                 else if (joined.Contains("titan")) editionArgs = "&titan=true";
             }
 
+            string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            string userAppDir = Path.Combine(localAppData, "Girionix AI", "app");
+
             if (File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "index.html")))
             {
                 appDir = AppDomain.CurrentDomain.BaseDirectory;
@@ -241,14 +269,82 @@ namespace GirionixAI
             {
                 appDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "app");
             }
+            else if (File.Exists(Path.Combine(userAppDir, "index.html")))
+            {
+                appDir = userAppDir;
+            }
             else
             {
-                appDir = AppDomain.CurrentDomain.BaseDirectory;
+                // Self-extract embedded payload if present
+                ExtractEmbeddedPayload(userAppDir);
+                if (File.Exists(Path.Combine(userAppDir, "index.html")))
+                {
+                    appDir = userAppDir;
+                }
+                else
+                {
+                    appDir = AppDomain.CurrentDomain.BaseDirectory;
+                }
             }
 
             StartHttpServer();
             SetupTrayIcon();
             LaunchChromiumApp();
+        }
+
+        private static void ExtractEmbeddedPayload(string targetDir)
+        {
+            try
+            {
+                using (Stream s = typeof(AppRunner).Assembly.GetManifestResourceStream("payload.dat"))
+                {
+                    if (s == null) return;
+                    if (!Directory.Exists(targetDir)) Directory.CreateDirectory(targetDir);
+
+                    using (GZipStream gz = new GZipStream(s, CompressionMode.Decompress))
+                    using (StreamReader reader = new StreamReader(gz, Encoding.UTF8))
+                    {
+                        string json = reader.ReadToEnd();
+                        int idx = 0;
+                        while ((idx = json.IndexOf('"', idx)) != -1)
+                        {
+                            int keyEnd = json.IndexOf('"', idx + 1);
+                            if (keyEnd == -1) break;
+                            string key = json.Substring(idx + 1, keyEnd - idx - 1);
+
+                            int valStart = json.IndexOf('"', keyEnd + 2);
+                            if (valStart == -1) break;
+                            int valEnd = json.IndexOf('"', valStart + 1);
+                            if (valEnd == -1) break;
+                            string b64 = json.Substring(valStart + 1, valEnd - valStart - 1);
+
+                            try
+                            {
+                                if (!key.StartsWith("__bin__/"))
+                                {
+                                    byte[] gzBytes = Convert.FromBase64String(b64);
+                                    using (MemoryStream ms = new MemoryStream(gzBytes))
+                                    using (GZipStream itemGz = new GZipStream(ms, CompressionMode.Decompress))
+                                    using (MemoryStream outMs = new MemoryStream())
+                                    {
+                                        itemGz.CopyTo(outMs);
+                                        byte[] raw = outMs.ToArray();
+
+                                        string targetFile = Path.Combine(targetDir, key.Replace('/', Path.DirectorySeparatorChar));
+                                        string parent = Path.GetDirectoryName(targetFile);
+                                        if (!Directory.Exists(parent)) Directory.CreateDirectory(parent);
+                                        File.WriteAllBytes(targetFile, raw);
+                                    }
+                                }
+                            }
+                            catch { }
+
+                            idx = valEnd + 1;
+                        }
+                    }
+                }
+            }
+            catch { }
         }
 
         private void StartHttpServer()
@@ -299,7 +395,7 @@ namespace GirionixAI
                 string localPath = Path.Combine(appDir, reqPath.Replace('/', Path.DirectorySeparatorChar));
                 if (!File.Exists(localPath))
                 {
-                    if (!reqPath.StartsWith("assets") && !reqPath.Contains("."))
+                    if (!reqPath.Contains("."))
                     {
                         localPath = Path.Combine(appDir, "index.html");
                     }
@@ -333,9 +429,7 @@ namespace GirionixAI
                 }
                 else
                 {
-                    // Fallback to Live Cloud Application if local asset is missing
-                    context.Response.StatusCode = 302;
-                    context.Response.RedirectLocation = "https://girionix-ai.site.je/?app=true" + editionArgs;
+                    context.Response.StatusCode = 404;
                     context.Response.Close();
                 }
             }
@@ -344,19 +438,16 @@ namespace GirionixAI
 
         private void LaunchChromiumApp()
         {
-            string indexPath = Path.Combine(appDir, "index.html");
-            string url = File.Exists(indexPath)
-                ? ("http://127.0.0.1:" + port + "/?app=true" + editionArgs)
-                : ("https://girionix-ai.site.je/?app=true" + editionArgs);
+            string url = "http://127.0.0.1:" + port + "/?app=true" + editionArgs;
 
             string[] chromePaths = new string[]
             {
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), @"Google\Chrome\Application\chrome.exe"),
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), @"Google\Chrome\Application\chrome.exe"),
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Google\Chrome\Application\chrome.exe"),
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), @"Microsoft\Edge\Application\msedge.exe"),
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), @"Microsoft\Edge\Application\msedge.exe"),
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), @"BraveSoftware\Brave-Browser\Application\brave.exe")
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), @"Google\\Chrome\\Application\\chrome.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), @"Google\\Chrome\\Application\\chrome.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Google\\Chrome\\Application\\chrome.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), @"Microsoft\\Edge\\Application\\msedge.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), @"Microsoft\\Edge\\Application\\msedge.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), @"BraveSoftware\\Brave-Browser\\Application\\brave.exe")
             };
 
             string foundBrowser = null;
@@ -398,6 +489,10 @@ namespace GirionixAI
             trayIcon.Text = "Girionix AI";
 
             string icoPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "app.ico");
+            if (!File.Exists(icoPath))
+            {
+                icoPath = Path.Combine(appDir, "app.ico");
+            }
             if (File.Exists(icoPath))
             {
                 try { trayIcon.Icon = new Icon(icoPath); } catch { trayIcon.Icon = SystemIcons.Application; }
@@ -445,6 +540,7 @@ using System.Drawing;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Windows.Forms;
 using Microsoft.Win32;
 
@@ -576,8 +672,12 @@ namespace GirionixAI
 
                 string installDir = AppDomain.CurrentDomain.BaseDirectory;
                 string batchScript = Path.Combine(Path.GetTempPath(), "remove_girionix.bat");
-                string script = "@echo off\\r\\nping 127.0.0.1 -n 2 > nul\\r\\nrd /s /q \\\"" + installDir + "\\\"\\r\\ndel \\\"%~f0\\\"\\r\\n";
-                File.WriteAllText(batchScript, script);
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine("@echo off");
+                sb.AppendLine("ping 127.0.0.1 -n 2 > nul");
+                sb.AppendLine("rd /s /q \\"" + installDir + "\\"");
+                sb.AppendLine("del \\"%~f0\\"");
+                File.WriteAllText(batchScript, sb.ToString());
 
                 ProcessStartInfo psi = new ProcessStartInfo();
                 psi.FileName = batchScript;
@@ -610,12 +710,12 @@ namespace GirionixAI
 `;
 fs.writeFileSync(path.join(downloadsDir, 'GirionixUninstaller.cs'), girionixUninstallerTemplate, 'utf8');
 
-// Compile standalone runner and uninstaller
-execSync(`"${cscPath}" /target:winexe /win32icon:app.ico /win32manifest:app.manifest /out:GirionixAI.exe GirionixApp.cs`, {
+// Compile standalone runner WITH embedded web payload!
+execSync(`"${cscPath}" /target:winexe /win32icon:app.ico /win32manifest:app.manifest /resource:web_payload.dat,payload.dat /out:GirionixAI.exe GirionixApp.cs`, {
   cwd: downloadsDir,
   stdio: 'inherit'
 });
-console.log('✅ Standalone App Runner compiled (GirionixAI.exe).');
+console.log('✅ Standalone App Runner compiled (GirionixAI.exe) with embedded offline web bundle.');
 
 execSync(`"${cscPath}" /target:winexe /win32icon:app.ico /win32manifest:app.manifest /out:Uninstall_Girionix_AI.exe GirionixUninstaller.cs`, {
   cwd: downloadsDir,
@@ -623,28 +723,24 @@ execSync(`"${cscPath}" /target:winexe /win32icon:app.ico /win32manifest:app.mani
 });
 console.log('✅ Uninstaller compiled (Uninstall_Girionix_AI.exe).');
 
-// Create Compressed In-Memory Embedded Payload
+// Create Compressed In-Memory Embedded Payload for Setup Wizards
 console.log('\n📦 Creating In-Memory Embedded Binary Payload for Setup Wizards...');
-const payloadDict = {};
-for (const f of distFiles) {
-  const buf = fs.readFileSync(f.fullPath);
-  const gz = zlib.gzipSync(buf);
-  payloadDict[f.relPath] = gz.toString('base64');
-}
+const setupPayloadDict = { ...webPayloadDict };
 
 const exeBytes = fs.readFileSync(path.join(downloadsDir, 'GirionixAI.exe'));
-payloadDict['__bin__/GirionixAI.exe'] = zlib.gzipSync(exeBytes).toString('base64');
+setupPayloadDict['__bin__/GirionixAI.exe'] = zlib.gzipSync(exeBytes).toString('base64');
 
 const uninstBytes = fs.readFileSync(path.join(downloadsDir, 'Uninstall_Girionix_AI.exe'));
-payloadDict['__bin__/Uninstall_Girionix_AI.exe'] = zlib.gzipSync(uninstBytes).toString('base64');
+setupPayloadDict['__bin__/Uninstall_Girionix_AI.exe'] = zlib.gzipSync(uninstBytes).toString('base64');
 
-const icoBytes = fs.readFileSync(path.join(downloadsDir, 'app.ico'));
-payloadDict['__bin__/app.ico'] = zlib.gzipSync(icoBytes).toString('base64');
+if (fs.existsSync(icoFile)) {
+  setupPayloadDict['__bin__/app.ico'] = zlib.gzipSync(fs.readFileSync(icoFile)).toString('base64');
+}
 
-const jsonPayload = JSON.stringify(payloadDict);
-const payloadGz = zlib.gzipSync(Buffer.from(jsonPayload, 'utf8'));
-fs.writeFileSync(path.join(downloadsDir, 'payload.dat'), payloadGz);
-console.log(`✅ Payload compiled (${(payloadGz.length / (1024 * 1024)).toFixed(2)} MB compressed).`);
+const jsonSetupPayload = JSON.stringify(setupPayloadDict);
+const setupPayloadGz = zlib.gzipSync(Buffer.from(jsonSetupPayload, 'utf8'));
+fs.writeFileSync(path.join(downloadsDir, 'payload.dat'), setupPayloadGz);
+console.log(`✅ Setup Payload compiled (${(setupPayloadGz.length / (1024 * 1024)).toFixed(2)} MB compressed).`);
 
 function generateSetupWizardSource(editionName, editionSubtitle, shortcutName, launchArgs, regKey) {
   return `using System;
@@ -993,10 +1089,9 @@ namespace GirionixSetup
                             uninstKey.SetValue("DisplayVersion", "1.0.0");
                             uninstKey.SetValue("Publisher", "Abhinav Giri (@abhinavgiri45)");
                             uninstKey.SetValue("DisplayIcon", icoPath);
-                            uninstKey.SetValue("UninstallString", "\\\"" + uninstallerPath + "\\\"");
+                            uninstKey.SetValue("UninstallString", "\\"" + uninstallerPath + "\\"");
                             uninstKey.SetValue("InstallLocation", installDir);
                             uninstKey.SetValue("HelpLink", "https://github.com/abhinavgiri45/girionix-ai");
-                            uninstKey.SetValue("URLInfoAbout", "https://girionix-ai.site.je");
                         }
                     }
                 }
@@ -1108,14 +1203,6 @@ try {
   console.warn('Code signing note:', e.message);
 }
 
-// Purge any legacy .zip files from downloads directory
-try {
-  const zipFiles = fs.readdirSync(downloadsDir).filter(f => f.endsWith('.zip'));
-  for (const z of zipFiles) {
-    try { fs.unlinkSync(path.join(downloadsDir, z)); } catch (_) {}
-  }
-} catch (_) {}
-
 // 3C. Generate Verified 1-Click Batch Installer (.bat)
 const openSourceBatchInstaller = `@echo off
 title Installing Girionix AI Desktop Workstation (Verified Setup)
@@ -1186,76 +1273,41 @@ timeout /t 5 >nul
 `;
 fs.writeFileSync(path.join(downloadsDir, 'Trust_Publisher_Certificate.bat'), trustCertBatch, 'utf8');
 
-// 4. Build Standalone Android APK Packages
-console.log('\n📦 [4/6] Packaging 100% Standalone Android APK Packages...');
-try {
-  const stagingApk = path.join(downloadsDir, 'staging_apk');
-  if (fs.existsSync(stagingApk)) fs.rmSync(stagingApk, { recursive: true, force: true });
-  fs.mkdirSync(stagingApk, { recursive: true });
-
-  const androidManifest = `<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="ai.girionix.app"
-    android:versionCode="1"
-    android:versionName="1.0.0">
-    <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="35" />
-    <uses-permission android:name="android.permission.INTERNET" />
-    <application
-        android:label="Girionix AI"
-        android:icon="@mipmap/ic_launcher"
-        android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
-        <activity android:name=".MainActivity" android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-    </application>
-</manifest>`;
-  fs.writeFileSync(path.join(stagingApk, 'AndroidManifest.xml'), androidManifest, 'utf8');
-
-  // Copy app assets
-  const assetsDir = path.join(stagingApk, 'assets');
-  fs.mkdirSync(assetsDir, { recursive: true });
-  for (const f of distFiles) {
-    const target = path.join(assetsDir, f.relPath);
-    const parent = path.dirname(target);
-    if (!fs.existsSync(parent)) fs.mkdirSync(parent, { recursive: true });
-    fs.copyFileSync(f.fullPath, target);
-  }
-
-  const cleanStaging = stagingApk.replace(/\\/g, '/');
-  const apkPath = path.join(downloadsDir, 'Girionix_AI.apk').replace(/\\/g, '/');
-  if (fs.existsSync(path.join(downloadsDir, 'Girionix_AI.apk'))) fs.unlinkSync(path.join(downloadsDir, 'Girionix_AI.apk'));
-  execSync(`powershell -NoProfile -Command "Add-Type -AssemblyName System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::CreateFromDirectory('${cleanStaging}', '${apkPath}')"`, { stdio: 'inherit' });
-
-  if (fs.existsSync(path.join(downloadsDir, 'Girionix_AI.apk'))) {
-    fs.copyFileSync(path.join(downloadsDir, 'Girionix_AI.apk'), path.join(downloadsDir, 'Girionix_AI_Titan.apk'));
-    fs.copyFileSync(path.join(downloadsDir, 'Girionix_AI.apk'), path.join(downloadsDir, 'Girionix_AI_Titan_Lite.apk'));
-    console.log('✅ Real Android Standalone APK Packages created (~4.5MB).');
-  }
-
-  fs.rmSync(stagingApk, { recursive: true, force: true });
-} catch (apkErr) {
-  console.warn('APK packaging notice:', apkErr.message);
+// 4. Standalone Android APK Packages - KEEP REAL SIGNED USER APK!
+console.log('\n📦 [4/6] Preserving 100% Standalone Working Android APK Packages...');
+const realApk = fs.existsSync(backupApk) ? backupApk : existingApk;
+if (fs.existsSync(realApk)) {
+  fs.copyFileSync(realApk, path.join(downloadsDir, 'Girionix_AI.apk'));
+  fs.copyFileSync(realApk, path.join(downloadsDir, 'Girionix_AI_Titan.apk'));
+  fs.copyFileSync(realApk, path.join(downloadsDir, 'Girionix_AI_Titan_Lite.apk'));
+  console.log('✅ Genuine Android Standalone APK Packages preserved (~5.01 MB).');
 }
 
-// 5. Build Standalone macOS DMG Package & Launchers
-console.log('\n📦 [5/6] Packaging 100% Standalone macOS Universal App & Launchers...');
+// 5. Build Standalone macOS DMG Package & Launchers (100% Offline with bundled web app!)
+console.log('\n📦 [5/6] Packaging 100% Standalone macOS Universal App & DMG...');
 
 function generateMacLauncher(title, urlParams) {
   return `#!/bin/bash
 # ==========================================================
-# ${title} - macOS Native Standalone Launcher
+# ${title} - macOS Native Standalone Offline Launcher
 # Envisioned & Engineered by Abhinav Giri (@abhinavgiri45)
 # ==========================================================
+DIR="$(cd "$(dirname "$0")/../Resources/app" && pwd)"
+PORT=3456
+while lsof -i:$PORT >/dev/null 2>&1; do
+  PORT=$((PORT + 1))
+done
+
+# Start local loopback HTTP server
+python3 -m http.server $PORT --directory "$DIR" >/dev/null 2>&1 &
+SERVER_PID=$!
+trap "kill $SERVER_PID 2>/dev/null" EXIT
+
+TARGET_URL="http://127.0.0.1:$PORT/?app=true${urlParams}"
+sleep 0.4
+
 DATA_DIR="$HOME/Library/Application Support/Girionix AI/Data"
 mkdir -p "$DATA_DIR"
-
-TARGET_URL="https://girionix-ai.site.je/?app=true${urlParams}"
-
-# Unquarantine self
-xattr -d com.apple.quarantine "$0" 2>/dev/null || true
 
 if [ -d "/Applications/Google Chrome.app" ]; then
   open -n -a "Google Chrome" --args "--app=$TARGET_URL" "--user-data-dir=$DATA_DIR" "--window-size=1400,900"
@@ -1266,6 +1318,7 @@ elif [ -d "/Applications/Brave Browser.app" ]; then
 else
   open "$TARGET_URL"
 fi
+wait $SERVER_PID
 `;
 }
 
@@ -1276,11 +1329,6 @@ function generateMacInstaller(title, urlParams) {
 # Envisioned & Engineered by Abhinav Giri (@abhinavgiri45)
 # ==========================================================
 set -e
-echo "=========================================================="
-echo " ${title} - macOS Native Desktop Workstation Setup"
-echo " Envisioned & Engineered by Abhinav Giri (@abhinavgiri45)"
-echo "=========================================================="
-
 APP_NAME="Girionix AI"
 INSTALL_DIR="/Applications"
 if [ ! -w "/Applications" ]; then
@@ -1289,62 +1337,17 @@ fi
 mkdir -p "$INSTALL_DIR"
 
 BUNDLE="$INSTALL_DIR/$APP_NAME.app"
-mkdir -p "$BUNDLE/Contents/MacOS"
-mkdir -p "$BUNDLE/Contents/Resources"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-DATA_DIR="$HOME/Library/Application Support/Girionix AI/Data"
-mkdir -p "$DATA_DIR"
-
-cat << 'EOF' > "$BUNDLE/Contents/MacOS/Girionix AI"
-#!/bin/bash
-TARGET_URL="https://girionix-ai.site.je/?app=true${urlParams}"
-DATA_DIR="$HOME/Library/Application Support/Girionix AI/Data"
-mkdir -p "$DATA_DIR"
-
-if [ -d "/Applications/Google Chrome.app" ]; then
-  open -n -a "Google Chrome" --args "--app=$TARGET_URL" "--user-data-dir=$DATA_DIR" "--window-size=1400,900"
-elif [ -d "/Applications/Microsoft Edge.app" ]; then
-  open -n -a "Microsoft Edge" --args "--app=$TARGET_URL" "--user-data-dir=$DATA_DIR" "--window-size=1400,900"
-elif [ -d "/Applications/Brave Browser.app" ]; then
-  open -n -a "Brave Browser" --args "--app=$TARGET_URL" "--user-data-dir=$DATA_DIR" "--window-size=1400,900"
+if [ -d "$SCRIPT_DIR/Girionix AI.app" ]; then
+  cp -R "$SCRIPT_DIR/Girionix AI.app" "$INSTALL_DIR/"
+  xattr -cr "$BUNDLE" 2>/dev/null || true
+  echo "✅ Girionix AI successfully installed to $BUNDLE"
+  open "$BUNDLE"
 else
-  open "$TARGET_URL"
+  echo "Opening Girionix AI..."
+  open "$BUNDLE" 2>/dev/null || true
 fi
-EOF
-
-chmod +x "$BUNDLE/Contents/MacOS/Girionix AI"
-
-cat << EOF > "$BUNDLE/Contents/Info.plist"
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>CFBundleExecutable</key>
-    <string>Girionix AI</string>
-    <key>CFBundleIconFile</key>
-    <string>AppIcon</string>
-    <key>CFBundleIdentifier</key>
-    <string>ai.girionix.desktop</string>
-    <key>CFBundleName</key>
-    <string>Girionix AI</string>
-    <key>CFBundlePackageType</key>
-    <string>APPL</string>
-    <key>CFBundleShortVersionString</key>
-    <string>2.4.0</string>
-    <key>CFBundleVersion</key>
-    <string>2.4.0</string>
-    <key>NSHighResolutionCapable</key>
-    <true/>
-</dict>
-</plist>
-EOF
-
-# Clear quarantine from bundle
-xattr -cr "$BUNDLE" 2>/dev/null || true
-
-echo "✅ Girionix AI successfully installed to $BUNDLE"
-echo "🚀 Launching Girionix AI..."
-open "$BUNDLE"
 `;
 }
 
@@ -1355,7 +1358,26 @@ fs.writeFileSync(path.join(downloadsDir, 'Install_Girionix_Mac.command'), genera
 const macAppStaging = path.join(downloadsDir, 'Girionix AI.app');
 const macAppContents = path.join(macAppStaging, 'Contents');
 const macAppMacOS = path.join(macAppContents, 'MacOS');
+const macAppResources = path.join(macAppContents, 'Resources');
+const macAppResourcesApp = path.join(macAppResources, 'app');
+
+if (fs.existsSync(macAppStaging)) {
+  try { fs.rmSync(macAppStaging, { recursive: true, force: true }); } catch (_) {}
+}
 fs.mkdirSync(macAppMacOS, { recursive: true });
+fs.mkdirSync(macAppResourcesApp, { recursive: true });
+
+// Copy all dist files into Resources/app
+for (const f of distFiles) {
+  const target = path.join(macAppResourcesApp, f.relPath);
+  const parent = path.dirname(target);
+  if (!fs.existsSync(parent)) fs.mkdirSync(parent, { recursive: true });
+  fs.copyFileSync(f.fullPath, target);
+}
+if (fs.existsSync(icoFile)) {
+  fs.copyFileSync(icoFile, path.join(macAppResources, 'app.ico'));
+}
+
 fs.writeFileSync(path.join(macAppMacOS, 'Girionix AI'), generateMacLauncher('Girionix AI', ''), 'utf8');
 fs.writeFileSync(path.join(macAppContents, 'Info.plist'), `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -1370,7 +1392,11 @@ fs.writeFileSync(path.join(macAppContents, 'Info.plist'), `<?xml version="1.0" e
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>2.4.0</string>
+    <string>2.5.0</string>
+    <key>CFBundleVersion</key>
+    <string>2.5.0</string>
+    <key>NSHighResolutionCapable</key>
+    <true/>
 </dict>
 </plist>`, 'utf8');
 
@@ -1381,7 +1407,7 @@ try {
     fs.copyFileSync(macZipPath, path.join(downloadsDir, 'Girionix_AI_macOS.dmg'));
     fs.copyFileSync(macZipPath, path.join(downloadsDir, 'Girionix_AI_Titan_macOS.dmg'));
     fs.copyFileSync(macZipPath, path.join(downloadsDir, 'Girionix_AI_Titan_Lite_macOS.dmg'));
-    console.log('✅ Standalone macOS Zip & Universal Package created.');
+    console.log('✅ Standalone macOS Zip & Universal DMG created with embedded web app.');
   }
 } catch (zipErr) {
   console.warn('macOS zip bundling notice:', zipErr.message);
@@ -1401,82 +1427,118 @@ echo "✅ Girionix AI has been cleanly uninstalled from macOS."
 `;
 fs.writeFileSync(path.join(downloadsDir, 'Uninstall_Girionix_Mac.command'), macUninstallerScript, 'utf8');
 
-// 6. Build Standalone Linux AppImage & Runner
+// 6. Build Standalone Linux AppImage & Runner (100% Offline with bundled web app!)
 console.log('\n📦 [6/6] Packaging 100% Standalone Linux AppImage & Runner...');
+
+const tempTar = path.join(downloadsDir, 'dist_linux.tar.gz');
+execSync(`tar -czf "${tempTar}" -C "${distDir}" .`, { stdio: 'inherit' });
+const linuxTarBase64 = fs.readFileSync(tempTar).toString('base64');
+try { fs.unlinkSync(tempTar); } catch (_) {}
 
 function generateLinuxAppImage(title, urlParams) {
   return `#!/bin/bash
 # ==========================================================
-# ${title} - Linux Standalone Universal Application
+# ${title} - Linux Standalone Universal Offline Application
 # Envisioned & Engineered by Abhinav Giri (@abhinavgiri45)
 # ==========================================================
+set -e
+APP_DIR="$HOME/.local/share/girionix-ai/app"
 DATA_DIR="$HOME/.local/share/girionix-ai/data"
-mkdir -p "$DATA_DIR"
+mkdir -p "$APP_DIR" "$DATA_DIR"
 
-TARGET_URL="https://girionix-ai.site.je/?app=true${urlParams}"
+if [ ! -f "$APP_DIR/index.html" ]; then
+  echo "Extracting Girionix AI offline components..."
+  cat << 'B64EOF' | base64 -d | tar -xz -C "$APP_DIR"
+${linuxTarBase64}
+B64EOF
+fi
+
+PORT=3456
+while lsof -i:$PORT >/dev/null 2>&1 || ss -tuln 2>/dev/null | grep -q ":$PORT "; do
+  PORT=$((PORT + 1))
+done
+
+python3 -m http.server $PORT --directory "$APP_DIR" >/dev/null 2>&1 &
+SERVER_PID=$!
+trap "kill $SERVER_PID 2>/dev/null" EXIT
+
+TARGET_URL="http://127.0.0.1:$PORT/?app=true${urlParams}"
+sleep 0.4
 
 if command -v google-chrome &>/dev/null; then
-  google-chrome --app="$TARGET_URL" --user-data-dir="$DATA_DIR" --window-size=1400,900 &
+  google-chrome --app="$TARGET_URL" --user-data-dir="$DATA_DIR" --window-size=1400,900
 elif command -v google-chrome-stable &>/dev/null; then
-  google-chrome-stable --app="$TARGET_URL" --user-data-dir="$DATA_DIR" --window-size=1400,900 &
+  google-chrome-stable --app="$TARGET_URL" --user-data-dir="$DATA_DIR" --window-size=1400,900
 elif command -v chromium &>/dev/null; then
-  chromium --app="$TARGET_URL" --user-data-dir="$DATA_DIR" --window-size=1400,900 &
+  chromium --app="$TARGET_URL" --user-data-dir="$DATA_DIR" --window-size=1400,900
 elif command -v chromium-browser &>/dev/null; then
-  chromium-browser --app="$TARGET_URL" --user-data-dir="$DATA_DIR" --window-size=1400,900 &
+  chromium-browser --app="$TARGET_URL" --user-data-dir="$DATA_DIR" --window-size=1400,900
 elif command -v microsoft-edge &>/dev/null; then
-  microsoft-edge --app="$TARGET_URL" --user-data-dir="$DATA_DIR" --window-size=1400,900 &
+  microsoft-edge --app="$TARGET_URL" --user-data-dir="$DATA_DIR" --window-size=1400,900
 elif command -v brave-browser &>/dev/null; then
-  brave-browser --app="$TARGET_URL" --user-data-dir="$DATA_DIR" --window-size=1400,900 &
+  brave-browser --app="$TARGET_URL" --user-data-dir="$DATA_DIR" --window-size=1400,900
 else
-  xdg-open "$TARGET_URL" &
+  xdg-open "$TARGET_URL"
 fi
+wait $SERVER_PID
 `;
 }
 
 function generateLinuxInstaller(title, urlParams) {
   return `#!/bin/bash
 # ==========================================================
-# ${title} - Linux Native 1-Click Desktop Installer
+# ${title} - Linux Native 1-Click Desktop Setup
 # Envisioned & Engineered by Abhinav Giri (@abhinavgiri45)
 # ==========================================================
 set -e
-echo "=========================================================="
-echo " ${title} - Linux Native Desktop Setup"
-echo " Envisioned & Engineered by Abhinav Giri (@abhinavgiri45)"
-echo "=========================================================="
-
 BIN_DIR="$HOME/.local/bin"
-APP_DIR="$HOME/.local/share/applications"
+APP_DIR="$HOME/.local/share/girionix-ai/app"
 DATA_DIR="$HOME/.local/share/girionix-ai/data"
-mkdir -p "$BIN_DIR" "$APP_DIR" "$DATA_DIR"
+APPS_DIR="$HOME/.local/share/applications"
+mkdir -p "$BIN_DIR" "$APP_DIR" "$DATA_DIR" "$APPS_DIR"
+
+echo "[*] Extracting Girionix AI offline components..."
+cat << 'B64EOF' | base64 -d | tar -xz -C "$APP_DIR"
+${linuxTarBase64}
+B64EOF
 
 RUNNER="$BIN_DIR/girionix-ai"
 cat << 'EOF' > "$RUNNER"
 #!/bin/bash
-TARGET_URL="https://girionix-ai.site.je/?app=true${urlParams}"
+APP_DIR="$HOME/.local/share/girionix-ai/app"
 DATA_DIR="$HOME/.local/share/girionix-ai/data"
-mkdir -p "$DATA_DIR"
+PORT=3456
+while lsof -i:$PORT >/dev/null 2>&1 || ss -tuln 2>/dev/null | grep -q ":$PORT "; do
+  PORT=$((PORT + 1))
+done
+
+python3 -m http.server $PORT --directory "$APP_DIR" >/dev/null 2>&1 &
+SERVER_PID=$!
+trap "kill $SERVER_PID 2>/dev/null" EXIT
+
+TARGET_URL="http://127.0.0.1:$PORT/?app=true"
+sleep 0.4
 
 if command -v google-chrome &>/dev/null; then
-  google-chrome --app="$TARGET_URL" --user-data-dir="$DATA_DIR" --window-size=1400,900 &
+  google-chrome --app="$TARGET_URL" --user-data-dir="$DATA_DIR" --window-size=1400,900
 elif command -v google-chrome-stable &>/dev/null; then
-  google-chrome-stable --app="$TARGET_URL" --user-data-dir="$DATA_DIR" --window-size=1400,900 &
+  google-chrome-stable --app="$TARGET_URL" --user-data-dir="$DATA_DIR" --window-size=1400,900
 elif command -v chromium &>/dev/null; then
-  chromium --app="$TARGET_URL" --user-data-dir="$DATA_DIR" --window-size=1400,900 &
+  chromium --app="$TARGET_URL" --user-data-dir="$DATA_DIR" --window-size=1400,900
 elif command -v chromium-browser &>/dev/null; then
-  chromium-browser --app="$TARGET_URL" --user-data-dir="$DATA_DIR" --window-size=1400,900 &
+  chromium-browser --app="$TARGET_URL" --user-data-dir="$DATA_DIR" --window-size=1400,900
 elif command -v microsoft-edge &>/dev/null; then
-  microsoft-edge --app="$TARGET_URL" --user-data-dir="$DATA_DIR" --window-size=1400,900 &
+  microsoft-edge --app="$TARGET_URL" --user-data-dir="$DATA_DIR" --window-size=1400,900
 elif command -v brave-browser &>/dev/null; then
-  brave-browser --app="$TARGET_URL" --user-data-dir="$DATA_DIR" --window-size=1400,900 &
+  brave-browser --app="$TARGET_URL" --user-data-dir="$DATA_DIR" --window-size=1400,900
 else
-  xdg-open "$TARGET_URL" &
+  xdg-open "$TARGET_URL"
 fi
+wait $SERVER_PID
 EOF
-
 chmod +x "$RUNNER"
 
-cat << EOF > "$APP_DIR/girionix-ai.desktop"
+cat << EOF > "$APPS_DIR/girionix-ai.desktop"
 [Desktop Entry]
 Version=1.0
 Type=Application
@@ -1488,15 +1550,14 @@ Terminal=false
 Categories=Development;Science;AudioVideo;Utility;
 StartupWMClass=girionix-ai
 EOF
-
-chmod +x "$APP_DIR/girionix-ai.desktop"
+chmod +x "$APPS_DIR/girionix-ai.desktop"
 
 if [ -d "$HOME/Desktop" ]; then
-  cp "$APP_DIR/girionix-ai.desktop" "$HOME/Desktop/" 2>/dev/null || true
+  cp "$APPS_DIR/girionix-ai.desktop" "$HOME/Desktop/" 2>/dev/null || true
   chmod +x "$HOME/Desktop/girionix-ai.desktop" 2>/dev/null || true
 fi
 
-echo "✅ Girionix AI successfully installed to your Linux desktop applications!"
+echo "✅ Girionix AI successfully installed to your Linux applications!"
 echo "🚀 Launching Girionix AI..."
 "$RUNNER" &
 `;
@@ -1546,7 +1607,7 @@ const iosConfig = `<?xml version="1.0" encoding="UTF-8"?>
             <key>PayloadDisplayName</key>
             <string>Girionix AI</string>
             <key>URL</key>
-            <string>https://girionix-ai.site.je/?app=true</string>
+            <string>https://girionix.ai/?app=true</string>
             <key>Label</key>
             <string>Girionix AI</string>
             <key>IsRemovable</key>
@@ -1561,9 +1622,9 @@ fs.writeFileSync(path.join(downloadsDir, 'Girionix_AI_iOS.mobileconfig'), iosCon
 fs.writeFileSync(path.join(downloadsDir, 'Girionix_AI_Titan_iOS.mobileconfig'), iosConfig, 'utf8');
 fs.writeFileSync(path.join(downloadsDir, 'Girionix_AI_Titan_Lite_iOS.mobileconfig'), iosConfig, 'utf8');
 
-// Clean up temporary files
-const tempCs = ['GirionixApp.cs', 'GirionixUninstaller.cs', 'GirionixSetupStandard.cs', 'GirionixSetupTitan.cs', 'GirionixSetupTitanLite.cs', 'app.manifest', 'payload.dat'];
-for (const f of tempCs) {
+// Clean up temporary compilation files
+const tempFiles = ['GirionixApp.cs', 'GirionixUninstaller.cs', 'GirionixSetupStandard.cs', 'GirionixSetupTitan.cs', 'GirionixSetupTitanLite.cs', 'app.manifest', 'payload.dat', 'web_payload.dat'];
+for (const f of tempFiles) {
   const p = path.join(downloadsDir, f);
   if (fs.existsSync(p)) {
     try { fs.unlinkSync(p); } catch {}

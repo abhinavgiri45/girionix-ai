@@ -195,7 +195,7 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
       os: 'Windows 10 / 11 / 12',
       format: '.EXE Setup Wizard',
       file: 'Girionix_AI_Setup.exe',
-      size: '5.66 MB',
+      size: '10.63 MB',
       architecture: 'x64 / Snapdragon X ARM64',
       storagePath: '%LocalAppData%\\Girionix AI\\Data',
       uninstaller: 'Start Menu & Windows Control Panel Add/Remove Programs'
@@ -213,7 +213,7 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
       os: 'macOS (Apple Silicon & Intel)',
       format: '.DMG Universal Bundle',
       file: 'Girionix_AI_macOS.dmg',
-      size: '715 KB',
+      size: '5.13 MB',
       architecture: 'Universal Binary (Apple M1-M4 & Intel Core)',
       storagePath: '~/Library/Application Support/Girionix AI/Data',
       uninstaller: 'Included Uninstall_Girionix_Mac.command runner'
@@ -222,7 +222,7 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
       os: 'Linux (Ubuntu / Arch / Fedora)',
       format: '.AppImage Executable',
       file: 'Girionix_AI_Linux.AppImage',
-      size: '714 KB',
+      size: '6.63 MB',
       architecture: 'x86_64 Universal Linux',
       storagePath: '~/.local/share/girionix-ai/data',
       uninstaller: 'Included uninstall_girionix_linux.sh script'
@@ -231,7 +231,7 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
       os: 'iOS / iPadOS 15 to 18+',
       format: '.MobileConfig / WebClip',
       file: 'Girionix_AI_iOS.mobileconfig',
-      size: '1.2 KB',
+      size: '1.3 KB',
       architecture: 'Apple A-Series & M-Series Bionic / Silicon',
       storagePath: 'Isolated iOS Sandboxed App Container',
       uninstaller: 'iOS Settings -> VPN & Device Management -> Remove Profile'
@@ -1617,9 +1617,9 @@ export default function NeuralPulseSphere() {
                     </tr>
                     <tr className="hover:bg-white/[0.02]">
                       <td className="py-3 px-4 font-bold text-white font-mono">📦 Standalone Installer Size</td>
-                      <td className="py-3 px-4 text-purple-300 font-mono font-bold">~5.66 MB</td>
-                      <td className="py-3 px-4 text-purple-300 font-mono font-bold">~5.66 MB</td>
-                      <td className="py-3 px-4 text-purple-300 font-mono font-bold">~5.66 MB</td>
+                      <td className="py-3 px-4 text-purple-300 font-mono font-bold">~10.63 MB</td>
+                      <td className="py-3 px-4 text-purple-300 font-mono font-bold">~10.63 MB</td>
+                      <td className="py-3 px-4 text-purple-300 font-mono font-bold">~10.63 MB</td>
                     </tr>
                     <tr className="hover:bg-white/[0.02]">
                       <td className="py-3 px-4 font-bold text-white font-mono">⚡ Universal Model Auto-Upgrade</td>
@@ -1666,11 +1666,11 @@ export default function NeuralPulseSphere() {
               {/* Synchronized Platform Quick Tabs */}
               <div className="flex items-center gap-2 overflow-x-auto pb-2 pt-1">
                 {[
-                  { id: 'windows', label: 'Windows (PC & Surface)', icon: '🪟', size: '5.66 MB' },
+                  { id: 'windows', label: 'Windows (PC & Surface)', icon: '🪟', size: '10.63 MB' },
                   { id: 'android', label: 'Android (Phones & Tablets)', icon: '🤖', size: '5.01 MB' },
-                  { id: 'mac', label: 'macOS (Apple Silicon & Intel)', icon: '🍏', size: '715 KB' },
-                  { id: 'linux', label: 'Linux (Ubuntu, Debian, Arch)', icon: '🐧', size: '714 KB' },
-                  { id: 'ios', label: 'iOS & iPadOS (iPhone & iPad)', icon: '📱', size: '1.2 KB' },
+                  { id: 'mac', label: 'macOS (Apple Silicon & Intel)', icon: '🍏', size: '5.13 MB' },
+                  { id: 'linux', label: 'Linux (Ubuntu, Debian, Arch)', icon: '🐧', size: '6.63 MB' },
+                  { id: 'ios', label: 'iOS & iPadOS (iPhone & iPad)', icon: '📱', size: '1.3 KB' },
                 ].map((p) => {
                   const isSelected = p.id === selectedPlatform;
                   return (

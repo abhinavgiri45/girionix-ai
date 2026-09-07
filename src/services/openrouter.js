@@ -112,6 +112,7 @@ export const openrouter = {
     temperature = 0.6,
     maxTokens = 4096,
     webSearchEnabled = false,
+    useThinking = true,
     onChunk,
     onReasoningChunk,
     signal
@@ -139,12 +140,23 @@ export const openrouter = {
     // Dynamically resolve target model with Auto-Upgrade capability
     const targetModelId = universalApiEngine.resolveTargetModel(model);
 
-    // Ensure system prompt always carries the full master polymath prompt
+    // Build specific feature directives based on user preferences
+    let featureDirectives = '';
+    if (webSearchEnabled) {
+      featureDirectives += '\n\n[REAL-TIME WEB SEARCH ACTIVE]: You have live search grounding enabled. Provide up-to-date real-world facts, accurate citations, and verified documentation.';
+    }
+    if (useThinking) {
+      featureDirectives += '\n\n[DEEP REASONING ACTIVATED]: Think through the problem step-by-step with deep logical rigor, analyze edge cases, verify calculations, and construct a robust mathematical/algorithmic solution.';
+    } else {
+      featureDirectives += '\n\n[DIRECT CONCISE MODE]: Deep reasoning is disabled. Provide a fast, direct, and concise response without excessive internal deliberation.';
+    }
+
+    // Ensure system prompt always carries the full master polymath prompt & active directives
     const enrichedMessages = messages.map(m => {
       if (m.role === 'system') {
         return {
           ...m,
-          content: `${GIRIONIX_SYSTEM_PROMPT}\n\n${m.content}`
+          content: `${GIRIONIX_SYSTEM_PROMPT}\n\n${m.content}${featureDirectives}`
         };
       }
       return m;
@@ -153,7 +165,7 @@ export const openrouter = {
     if (!enrichedMessages.some(m => m.role === 'system')) {
       enrichedMessages.unshift({
         role: 'system',
-        content: GIRIONIX_SYSTEM_PROMPT
+        content: `${GIRIONIX_SYSTEM_PROMPT}${featureDirectives}`
       });
     }
 
@@ -201,6 +213,19 @@ export const openrouter = {
             max_tokens: maxTokens,
             stream: true
           };
+
+          // Pass OpenRouter Web Search plugin if Web Search is enabled
+          if (webSearchEnabled && config.providerId === 'openrouter') {
+            requestBody.plugins = [{ id: 'web', max_results: 5 }];
+          }
+
+          // Pass reasoning parameters if Deep Reasoning is enabled
+          if (useThinking) {
+            requestBody.reasoning = {
+              max_tokens: 2048,
+              effort: 'high'
+            };
+          }
 
           const response = await fetch(endpoint, {
             method: 'POST',
@@ -292,5 +317,28 @@ export const openrouter = {
 
     // Fallback: If all cloud endpoints fail, display clean notice
     return this.streamFreeNeuralAI({ messages: enrichedMessages, onChunk, onReasoningChunk, signal });
+  },
+
+  /**
+   * Non-streaming chat completion with automatic token collection
+   */
+  async chat(messages, options = {}) {
+    let result = '';
+    let reasoning = '';
+    const res = await this.streamChat({
+      messages,
+      model: options.model || 'girionix-pro',
+      temperature: options.temperature,
+      maxTokens: options.max_tokens || options.maxTokens,
+      webSearchEnabled: options.webSearchEnabled !== undefined ? options.webSearchEnabled : storage.getWebSearchEnabled(),
+      useThinking: options.useThinking !== undefined ? options.useThinking : storage.getDeepReasoningEnabled(),
+      onChunk: (chunk, full) => { result = full; },
+      onReasoningChunk: (chunk, full) => { reasoning = full; }
+    });
+    return {
+      content: res?.content || result,
+      reasoning: res?.reasoning || reasoning,
+      modelUsed: res?.modelUsed
+    };
   }
 };

@@ -10,7 +10,10 @@ const KEYS = {
   CODE_PROJECT: 'girionix_code_project',
   IMAGE_GALLERY: 'girionix_image_gallery',
   VIDEO_PROJECTS: 'girionix_video_projects',
-  MATH_NOTES: 'girionix_math_notes'
+  MATH_NOTES: 'girionix_math_notes',
+  ACTIVE_MODEL_ID: 'girionix_active_model_id',
+  WEB_SEARCH_ENABLED: 'girionix_web_search_enabled',
+  DEEP_REASONING_ENABLED: 'girionix_deep_reasoning_enabled'
 };
 
 const decodeSecret = (b64) => {
@@ -279,6 +282,21 @@ export const storage = {
   },
   setSeenIntro: (seen = true) => {
     safeSetItem('girionix_seen_intro', seen ? 'true' : 'false');
-  }
+  },
+
+  getActiveModelId: () => safeGetItem(KEYS.ACTIVE_MODEL_ID) || 'girionix-pro',
+  setActiveModelId: (id) => safeSetItem(KEYS.ACTIVE_MODEL_ID, (id || '').trim()),
+
+  getWebSearchEnabled: () => {
+    const val = safeGetItem(KEYS.WEB_SEARCH_ENABLED);
+    return val === null ? true : val === 'true';
+  },
+  setWebSearchEnabled: (enabled) => safeSetItem(KEYS.WEB_SEARCH_ENABLED, enabled ? 'true' : 'false'),
+
+  getDeepReasoningEnabled: () => {
+    const val = safeGetItem(KEYS.DEEP_REASONING_ENABLED);
+    return val === null ? true : val === 'true';
+  },
+  setDeepReasoningEnabled: (enabled) => safeSetItem(KEYS.DEEP_REASONING_ENABLED, enabled ? 'true' : 'false')
 };
 

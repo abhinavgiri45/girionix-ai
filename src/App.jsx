@@ -34,8 +34,18 @@ export default function App() {
     const isTitan = typeof window !== 'undefined' && (localStorage.getItem('girionix_titan_mode') === 'true' || window.location.search.includes('titan=true'));
     const isLite = typeof window !== 'undefined' && window.location.search.includes('profile=lite');
     if (isTitan) return isLite ? TITAN_AI_MODELS[1] : TITAN_AI_MODELS[0];
-    return AI_MODELS[0]; // Full Pro Flagship Universal Model available seamlessly on both web and app
+    const savedModelId = storage.getActiveModelId();
+    const found = AI_MODELS.find(m => m.id === savedModelId);
+    return found || AI_MODELS[0];
   });
+
+  const handleSetActiveModel = (model) => {
+    if (!model) return;
+    setActiveModel(model);
+    if (model.id) {
+      storage.setActiveModelId(model.id);
+    }
+  };
   const [layoutMode, setLayoutMode] = useState('chat'); // 'chat' | 'split' | 'studio'
   const [activeStudioTab, setActiveStudioTab] = useState('google-studio'); // Flagship Google AI Studio by default
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -80,9 +90,11 @@ export default function App() {
     } catch (_) {}
     if (enableTitan) {
       const selected = targetModelId ? (TITAN_AI_MODELS.find(m => m.id === targetModelId) || TITAN_AI_MODELS[0]) : TITAN_AI_MODELS[0];
-      setActiveModel(selected);
+      handleSetActiveModel(selected);
     } else {
-      setActiveModel(AI_MODELS[0]);
+      const savedModelId = storage.getActiveModelId();
+      const found = AI_MODELS.find(m => m.id === savedModelId);
+      handleSetActiveModel(found || AI_MODELS[0]);
     }
   };
 
@@ -332,7 +344,7 @@ export default function App() {
             }`}>
               <ChatView
                 activeModel={activeModel}
-                setActiveModel={setActiveModel}
+                setActiveModel={handleSetActiveModel}
                 onOpenInCodeStudio={handleOpenInCodeStudio}
                 onOpenStudioTab={(tabId) => {
                   setActiveStudioTab(tabId);
@@ -517,7 +529,7 @@ export default function App() {
         isOpen={isCommandPaletteOpen}
         onClose={() => setIsCommandPaletteOpen(false)}
         setCurrentStudio={(s) => { setActiveStudioTab(s); setLayoutMode('split'); }}
-        setActiveModel={setActiveModel}
+        setActiveModel={handleSetActiveModel}
         onOpenSettings={() => setIsToolsOpen(true)}
       />
     </div>
