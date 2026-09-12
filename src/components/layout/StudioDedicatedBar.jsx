@@ -47,9 +47,9 @@ export default function StudioDedicatedBar({
   const currentDedicatedModel = getDedicatedStudioModel(activeStudioTab, isTitanMode);
 
   return (
-    <div className="bg-[#070915] border-b border-white/[0.08] flex flex-col select-none relative z-20">
+    <div className="bg-[#1e1f20] border-b border-[#3c4043] flex flex-col select-none relative z-20">
       {/* Primary Navigation & Dedicated AI Model Bar */}
-      <div className="px-3 py-1.5 flex items-center justify-between gap-2.5 flex-wrap bg-gradient-to-r from-[#070915] via-[#0B0F22] to-[#070915]">
+      <div className="px-3 py-1.5 flex items-center justify-between gap-2.5 flex-wrap bg-gradient-to-r from-[#1e1f20] via-[#282a2c] to-[#1e1f20]">
         {/* Left: Studio Domain Tabs */}
         <div className="flex items-center gap-1 overflow-x-auto py-0.5 no-scrollbar touch-scroll max-w-full">
           {tabs.map((tab) => {

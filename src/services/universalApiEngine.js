@@ -9,7 +9,7 @@
  * 4. Zero-Downtime Fallback Cascade with Free Neural Gateway
  */
 
-import { storage } from './storage';
+import { storage } from './storage.js';
 
 const STORAGE_KEYS = {
   UNIVERSAL_PROVIDER: 'girionix_universal_provider',
@@ -89,21 +89,56 @@ export const SUPPORTED_PROVIDERS = [
 
 export const universalApiEngine = {
   /**
-   * Get active provider configuration
+   * Detect AI provider from API key format
+   */
+  detectProviderFromKey(key) {
+    if (!key || typeof key !== 'string') return null;
+    const k = key.trim();
+    if (k.startsWith('AIzaSy')) {
+      return { providerId: 'google', baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai', name: 'Google Gemini AI Direct' };
+    }
+    if (k.startsWith('gsk_')) {
+      return { providerId: 'groq', baseUrl: 'https://api.groq.com/openai/v1', name: 'Groq Cloud' };
+    }
+    if (k.startsWith('sk-or-v1-')) {
+      return { providerId: 'openrouter', baseUrl: 'https://openrouter.ai/api/v1', name: 'OpenRouter' };
+    }
+    if (k.startsWith('sk-ant-')) {
+      return { providerId: 'anthropic', baseUrl: 'https://api.anthropic.com/v1', name: 'Anthropic Direct' };
+    }
+    if (k.startsWith('sk-proj-') || (k.startsWith('sk-') && !k.startsWith('sk-or-') && !k.startsWith('sk-ant-'))) {
+      return { providerId: 'openai', baseUrl: 'https://api.openai.com/v1', name: 'OpenAI Direct' };
+    }
+    return null;
+  },
+
+  /**
+   * Get active provider configuration with auto-detection
    */
   getProviderConfig() {
     try {
-      const providerId = localStorage.getItem(STORAGE_KEYS.UNIVERSAL_PROVIDER) || 'openrouter';
-      const customBaseUrl = localStorage.getItem(STORAGE_KEYS.CUSTOM_BASE_URL) || '';
-      const customApiKey = localStorage.getItem(STORAGE_KEYS.CUSTOM_API_KEY) || '';
-      const autoUpgrade = localStorage.getItem(STORAGE_KEYS.AUTO_UPGRADE_ENABLED) !== 'false'; // default TRUE
+      let providerId = localStorage.getItem(STORAGE_KEYS.UNIVERSAL_PROVIDER) || '';
+      let customBaseUrl = localStorage.getItem(STORAGE_KEYS.CUSTOM_BASE_URL) || '';
+      let customApiKey = storage.getApiKey();
+      const autoUpgrade = localStorage.getItem(STORAGE_KEYS.AUTO_UPGRADE_ENABLED) !== 'false';
+
+      // Auto-detect provider if key has recognizable signature
+      const detected = this.detectProviderFromKey(customApiKey);
+      if (detected) {
+        if (!providerId || (providerId === 'openrouter' && detected.providerId !== 'openrouter')) {
+          providerId = detected.providerId;
+          customBaseUrl = customBaseUrl || detected.baseUrl;
+        }
+      }
+
+      if (!providerId) providerId = 'openrouter';
       const provider = SUPPORTED_PROVIDERS.find(p => p.id === providerId) || SUPPORTED_PROVIDERS[0];
 
       return {
         providerId,
         providerName: provider.name,
         baseUrl: customBaseUrl || provider.defaultBaseUrl,
-        apiKey: customApiKey || (providerId === 'openrouter' ? storage.getApiKey() : ''),
+        apiKey: customApiKey,
         autoUpgradeEnabled: autoUpgrade
       };
     } catch (_) {
@@ -118,18 +153,27 @@ export const universalApiEngine = {
   },
 
   /**
-   * Save provider configuration
+   * Save provider configuration with auto-detection sync
    */
   saveProviderConfig({ providerId, baseUrl, apiKey, autoUpgradeEnabled }) {
     try {
-      if (providerId) localStorage.setItem(STORAGE_KEYS.UNIVERSAL_PROVIDER, providerId);
-      if (baseUrl !== undefined) localStorage.setItem(STORAGE_KEYS.CUSTOM_BASE_URL, baseUrl.trim());
+      let finalProviderId = providerId;
+      let finalBaseUrl = baseUrl;
+
       if (apiKey !== undefined) {
-        localStorage.setItem(STORAGE_KEYS.CUSTOM_API_KEY, apiKey.trim());
-        if (providerId === 'openrouter') {
-          storage.setApiKey(apiKey.trim());
+        const trimmedKey = apiKey.trim();
+        localStorage.setItem(STORAGE_KEYS.CUSTOM_API_KEY, trimmedKey);
+        storage.setApiKey(trimmedKey);
+
+        const detected = this.detectProviderFromKey(trimmedKey);
+        if (detected && (!providerId || providerId === 'openrouter')) {
+          finalProviderId = detected.providerId;
+          finalBaseUrl = detected.baseUrl;
         }
       }
+
+      if (finalProviderId) localStorage.setItem(STORAGE_KEYS.UNIVERSAL_PROVIDER, finalProviderId);
+      if (finalBaseUrl !== undefined) localStorage.setItem(STORAGE_KEYS.CUSTOM_BASE_URL, finalBaseUrl.trim());
       if (autoUpgradeEnabled !== undefined) {
         localStorage.setItem(STORAGE_KEYS.AUTO_UPGRADE_ENABLED, autoUpgradeEnabled ? 'true' : 'false');
       }
@@ -336,6 +380,16 @@ export const universalApiEngine = {
     }
 
     // 7. OpenRouter (Default Universal Provider)
+    if (config.providerId === 'openrouter' && requestedModelId.startsWith('gemini-')) {
+      if (requestedModelId === 'gemini-2.5-pro') return 'google/gemini-2.5-pro';
+      if (requestedModelId === 'gemini-2.5-flash') return 'google/gemini-2.5-flash';
+      if (requestedModelId === 'gemini-2.5-flash-thinking') return 'google/gemini-2.0-flash-thinking-exp:free';
+      if (requestedModelId === 'gemini-2.0-flash') return 'google/gemini-2.0-flash-001';
+      if (requestedModelId === 'gemini-1.5-pro') return 'google/gemini-pro-1.5';
+      if (requestedModelId === 'gemini-1.5-flash') return 'google/gemini-flash-1.5';
+      return `google/${requestedModelId}`;
+    }
+
     if (!config.autoUpgradeEnabled) {
       if (requestedModelId === 'girionix-pro') return 'minimax/minimax-m3:free';
       if (requestedModelId === 'girionix-lite') return 'minimax/minimax-m3:free';

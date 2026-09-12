@@ -32,9 +32,15 @@ import {
   CheckCircle2,
   Table,
   Columns3,
-  Bot
+  Bot,
+  Key,
+  RefreshCw,
+  Shield,
+  Edit2,
+  RotateCcw
 } from 'lucide-react';
 import GoogleStudioOutput from './GoogleStudioOutput';
+import { geminiStudioEngine, OFFICIAL_GEMINI_MODELS } from '../../services/geminiStudioEngine';
 import { openrouter } from '../../services/openrouter';
 import { universalApiEngine } from '../../services/universalApiEngine';
 import { storage } from '../../services/storage';
@@ -122,7 +128,7 @@ print(f"Fibonacci (10 elements): {result}")
 \`\`\`
 
 ### Mathematical Definition
-The Fibonacci sequence is defined recurrence relation:
+The Fibonacci sequence is defined by the recurrence relation:
 $$F_0 = 0, \\quad F_1 = 1, \\quad F_n = F_{n-1} + F_{n-2} \\quad \\text{for } n \\ge 2$$
 
 The closed-form representation is given by Binet's Formula:
@@ -138,6 +144,8 @@ You can click **▶ Run Code** above to execute this code right inside the in-br
   ]);
   const [chatInput, setChatInput] = useState('');
   const [attachedFiles, setAttachedFiles] = useState([]);
+  const [editingTurnId, setEditingTurnId] = useState(null);
+  const [editingTurnContent, setEditingTurnContent] = useState('');
 
   // Freeform Mode State
   const [freeformContent, setFreeformContent] = useState(
@@ -178,6 +186,14 @@ You can click **▶ Run Code** above to execute this code right inside the in-br
   const [enableSearchGrounding, setEnableSearchGrounding] = useState(true);
   const [enableCodeExecution, setEnableCodeExecution] = useState(true);
   const [enableJsonMode, setEnableJsonMode] = useState(false);
+  const [safetyThreshold, setSafetyThreshold] = useState('BLOCK_NONE'); // 'BLOCK_NONE' | 'BLOCK_FEW' | 'BLOCK_SOME'
+
+  // API Key Modal State
+  const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
+  const [apiKeyInput, setApiKeyInput] = useState(() => geminiStudioEngine.getApiKey());
+  const [isVerifyingKey, setIsVerifyingKey] = useState(false);
+  const [verifyStatus, setVerifyStatus] = useState(null);
+  const [hasDirectKey, setHasDirectKey] = useState(() => geminiStudioEngine.hasApiKey());
 
   // Mobile Run Settings Drawer
   const [isMobileSettingsOpen, setIsMobileSettingsOpen] = useState(false);
@@ -187,27 +203,33 @@ You can click **▶ Run Code** above to execute this code right inside the in-br
   const [codeLanguage, setCodeLanguage] = useState('python'); // 'python' | 'javascript' | 'curl' | 'swift' | 'kotlin'
   const [copiedCode, setCopiedCode] = useState(false);
 
-  // Execution state
+  // Streaming & Execution state
   const [isGenerating, setIsGenerating] = useState(false);
   const chatBottomRef = useRef(null);
+  const abortControllerRef = useRef(null);
 
   // Auto-scroll chat
   useEffect(() => {
     if (studioMode === 'chat') {
       chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [chatTurns, studioMode]);
+  }, [chatTurns, studioMode, isGenerating]);
 
-  // Model catalog for Google AI Studio
-  const STUDIO_MODELS = [
-    { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', desc: 'Flagship reasoning & deep logic', maxTokens: 1048576, badge: 'Flagship' },
-    { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', desc: 'Ultra-fast multimodal speed', maxTokens: 1048576, badge: 'Fast' },
-    { id: 'gemini-2.5-flash-thinking', name: 'Gemini 2.5 Flash Thinking', desc: 'Step-by-step reasoning with CoT', maxTokens: 1048576, badge: 'Thinking' },
-    { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', desc: 'High capability long context', maxTokens: 2097152, badge: '2M Context' },
-    { id: 'claude-3.7-sonnet', name: 'Claude 3.7 Sonnet', desc: 'Hybrid reasoning & coding', maxTokens: 200000, badge: 'Top Coder' },
-    { id: 'deepseek-r1', name: 'DeepSeek R1', desc: 'Open reasoning powerhouse', maxTokens: 128000, badge: 'Open CoT' },
-    { id: 'titan-offline', name: 'Titan 100% Offline Core', desc: 'Zero cloud latency local execution', maxTokens: 128000, badge: 'Offline' }
-  ];
+  // Handle injected code (from chat "Open in Code Studio")
+  useEffect(() => {
+    if (injectedCode) {
+      setStudioMode('chat');
+      setChatTurns(prev => [
+        ...prev,
+        {
+          id: `injected-${Date.now()}`,
+          role: 'user',
+          content: `Here is code to review, optimize, and run in the AI Studio environment:\n\n\`\`\`\n${injectedCode}\n\`\`\``,
+          tokens: Math.round(injectedCode.length / 4)
+        }
+      ]);
+    }
+  }, [injectedCode]);
 
   // Calculate approximate context token usage
   const approximateTokenCount = () => {
@@ -223,7 +245,8 @@ You can click **▶ Run Code** above to execute this code right inside the in-br
   };
 
   const currentTokenCount = approximateTokenCount();
-  const maxModelContext = 1048576; // 1M+ tokens for Gemini 2.5
+  const activeModelMeta = OFFICIAL_GEMINI_MODELS.find(m => m.id === selectedModel) || OFFICIAL_GEMINI_MODELS[0];
+  const maxModelContext = activeModelMeta.contextWindow || 1048576;
   const contextPercentage = Math.min(100, Math.max(0.01, (currentTokenCount / maxModelContext) * 100)).toFixed(2);
 
   // File Upload Handler
@@ -240,7 +263,8 @@ You can click **▶ Run Code** above to execute this code right inside the in-br
             name: file.name,
             size: `${(file.size / 1024).toFixed(1)} KB`,
             type: file.type,
-            dataUrl: reader.result
+            dataUrl: typeof reader.result === 'string' ? reader.result : '',
+            text: typeof reader.result === 'string' && !file.type.startsWith('image/') ? reader.result : ''
           }
         ]);
       };
@@ -252,178 +276,259 @@ You can click **▶ Run Code** above to execute this code right inside the in-br
     });
   };
 
-  // Run generation
+  // Stop Generation handler
+  const handleStop = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setIsGenerating(false);
+  };
+
+  // API Key Save & Verification
+  const handleSaveApiKey = async () => {
+    setIsVerifyingKey(true);
+    setVerifyStatus(null);
+    try {
+      const res = await geminiStudioEngine.verifyApiKey(apiKeyInput);
+      if (res.valid) {
+        geminiStudioEngine.setApiKey(apiKeyInput);
+        setHasDirectKey(true);
+        setVerifyStatus({ success: true, message: res.label });
+        setTimeout(() => setIsApiKeyModalOpen(false), 1200);
+      } else {
+        setVerifyStatus({ success: false, message: res.message });
+      }
+    } catch (err) {
+      setVerifyStatus({ success: false, message: err.message });
+    } finally {
+      setIsVerifyingKey(false);
+    }
+  };
+
+  const handleClearApiKey = () => {
+    geminiStudioEngine.setApiKey('');
+    setApiKeyInput('');
+    setHasDirectKey(false);
+    setVerifyStatus({ success: true, message: 'Reverted to Free Neural AI Gateway' });
+  };
+
+  // Run generation with Real-Time Streaming
   const handleRun = async () => {
     if (isGenerating) return;
 
-    if (studioMode === 'chat') {
-      if (!chatInput.trim() && attachedFiles.length === 0) return;
+    abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
 
-      const userText = chatInput;
+    if (studioMode === 'chat') {
+      if (!chatInput.trim() && attachedFiles.length === 0 && chatTurns.length === 0) return;
+
+      const userText = chatInput.trim();
+      const currentAttachments = [...attachedFiles];
+
       const userTurn = {
         id: `user-${Date.now()}`,
         role: 'user',
-        content: userText,
-        tokens: Math.round(userText.length / 4),
-        attachments: attachedFiles
+        content: userText || '(Attached files provided)',
+        tokens: Math.round((userText || '').length / 4),
+        attachments: currentAttachments
       };
 
-      setChatTurns(prev => [...prev, userTurn]);
+      const modelTurnId = `model-${Date.now()}`;
+      const placeholderModelTurn = {
+        id: modelTurnId,
+        role: 'model',
+        content: '',
+        thinking: enableThinking ? '' : null,
+        latencyMs: 0,
+        tokenCount: 0,
+        speedTokensPerSec: 0,
+        finishReason: null,
+        isStreaming: true,
+        groundingSources: enableSearchGrounding ? [
+          { title: "Google DeepMind Gemini 2.5", url: "https://deepmind.google/technologies/gemini/" },
+          { title: "Google AI for Developers", url: "https://ai.google.dev/" }
+        ] : []
+      };
+
+      setChatTurns(prev => [...prev, userTurn, placeholderModelTurn]);
       setChatInput('');
       setAttachedFiles([]);
       setIsGenerating(true);
 
-      const startTime = performance.now();
       try {
-        const messages = [
-          { role: 'system', content: systemInstruction },
-          ...chatTurns.map(t => ({ role: t.role, content: t.content })),
-          { role: 'user', content: userText }
-        ];
-
-        let resultText = '';
-        let thinkingText = '';
-
-        if (enableThinking) {
-          thinkingText = `1. Analyzing user input: "${userText.substring(0, 45)}..."\n2. Consulting system instructions: "${systemInstruction.substring(0, 40)}..."\n3. Synthesizing response with step-by-step logic, code validation, and LaTeX mathematical formatting.\n4. Verification: ensured zero runtime bottlenecks, accurate type assertions, and concise structure.`;
-        }
-
-        const res = await openrouter.chat(messages, {
+        await geminiStudioEngine.streamPrompt({
+          mode: 'chat',
+          systemInstruction,
+          prompt: userText,
+          history: chatTurns,
+          files: currentAttachments,
           model: selectedModel,
-          temperature: temperature,
-          max_tokens: maxOutputTokens,
-          top_p: topP,
-          webSearchEnabled: enableSearchGrounding,
-          useThinking: enableThinking
+          temperature,
+          topP,
+          topK,
+          maxOutputTokens,
+          thinkingBudget,
+          enableThinking,
+          enableSearchGrounding,
+          enableJsonMode,
+          onToken: (chunk, full) => {
+            setChatTurns(prev => prev.map(t => {
+              if (t.id === modelTurnId) {
+                return { ...t, content: full };
+              }
+              return t;
+            }));
+          },
+          onThinking: (chunk, full) => {
+            setChatTurns(prev => prev.map(t => {
+              if (t.id === modelTurnId) {
+                return { ...t, thinking: full };
+              }
+              return t;
+            }));
+          },
+          onMetrics: (metrics) => {
+            setChatTurns(prev => prev.map(t => {
+              if (t.id === modelTurnId) {
+                return { 
+                  ...t, 
+                  latencyMs: metrics.latencyMs, 
+                  tokenCount: metrics.tokenCount, 
+                  speedTokensPerSec: metrics.speedTokensPerSec,
+                  finishReason: metrics.finishReason || t.finishReason
+                };
+              }
+              return t;
+            }));
+          },
+          signal
         });
-
-        resultText = res?.content || (typeof res === 'string' ? res : 'Generation completed successfully.');
-        if (res?.reasoning) {
-          thinkingText = res.reasoning;
-        }
-
-        const elapsedMs = Math.round(performance.now() - startTime);
-        const tokensGenerated = Math.round(resultText.length / 4);
-        const speed = Math.round((tokensGenerated / (elapsedMs / 1000)) || 65);
-
-        const modelTurn = {
-          id: `model-${Date.now()}`,
-          role: 'model',
-          content: resultText,
-          thinking: enableThinking ? (thinkingText || "Analyzed context, validated constraints, and generated output.") : null,
-          latencyMs: elapsedMs,
-          tokenCount: tokensGenerated,
-          speedTokensPerSec: speed,
-          finishReason: 'stop',
-          groundingSources: enableSearchGrounding ? [
-            { title: "Google DeepMind Documentation", url: "https://deepmind.google/technologies/gemini/" },
-            { title: "Google AI for Developers", url: "https://ai.google.dev/" }
-          ] : []
-        };
-
-        setChatTurns(prev => [...prev, modelTurn]);
       } catch (err) {
-        setChatTurns(prev => [
-          ...prev,
-          {
-            id: `error-${Date.now()}`,
-            role: 'model',
-            content: `### Execution Note\n${err.message || 'Error occurred while contacting neural engine.'}`,
-            latencyMs: Math.round(performance.now() - startTime),
-            tokenCount: 40,
-            speedTokensPerSec: 45,
-            finishReason: 'error'
-          }
-        ]);
+        if (!signal.aborted) {
+          setChatTurns(prev => prev.map(t => {
+            if (t.id === modelTurnId) {
+              return { 
+                ...t, 
+                content: t.content ? `${t.content}\n\n*[Generation stopped: ${err.message}]*` : `### Error\n${err.message}`, 
+                finishReason: 'error' 
+              };
+            }
+            return t;
+          }));
+        }
       } finally {
+        setChatTurns(prev => prev.map(t => t.id === modelTurnId ? { ...t, isStreaming: false, finishReason: t.finishReason || 'stop' } : t));
         setIsGenerating(false);
       }
     } else if (studioMode === 'freeform') {
       if (!freeformContent.trim()) return;
       setIsGenerating(true);
-      const startTime = performance.now();
+
+      setFreeformOutput({
+        content: '',
+        thinking: enableThinking ? '' : null,
+        latencyMs: 0,
+        tokenCount: 0,
+        speedTokensPerSec: 0,
+        finishReason: null,
+        isStreaming: true
+      });
 
       try {
-        const messages = [
-          { role: 'system', content: systemInstruction },
-          { role: 'user', content: freeformContent }
-        ];
-
-        const res = await openrouter.chat(messages, {
+        await geminiStudioEngine.streamPrompt({
+          mode: 'freeform',
+          systemInstruction,
+          prompt: freeformContent,
           model: selectedModel,
-          temperature: temperature,
-          max_tokens: maxOutputTokens,
-          top_p: topP,
-          webSearchEnabled: enableSearchGrounding,
-          useThinking: enableThinking
-        });
-
-        const text = res?.content || (typeof res === 'string' ? res : '');
-        const elapsedMs = Math.round(performance.now() - startTime);
-        const tokensGenerated = Math.round(text.length / 4);
-        const speed = Math.round((tokensGenerated / (elapsedMs / 1000)) || 70);
-
-        setFreeformOutput({
-          content: text,
-          thinking: enableThinking ? (res?.reasoning || "Freeform prompt evaluated. Applied variable bindings and computed mathematical constraints.") : null,
-          latencyMs: elapsedMs,
-          tokenCount: tokensGenerated,
-          speedTokensPerSec: speed,
-          finishReason: 'stop'
+          temperature,
+          topP,
+          topK,
+          maxOutputTokens,
+          thinkingBudget,
+          enableThinking,
+          enableSearchGrounding,
+          enableJsonMode,
+          onToken: (chunk, full) => {
+            setFreeformOutput(prev => prev ? { ...prev, content: full } : null);
+          },
+          onThinking: (chunk, full) => {
+            setFreeformOutput(prev => prev ? { ...prev, thinking: full } : null);
+          },
+          onMetrics: (metrics) => {
+            setFreeformOutput(prev => prev ? { 
+              ...prev, 
+              latencyMs: metrics.latencyMs, 
+              tokenCount: metrics.tokenCount, 
+              speedTokensPerSec: metrics.speedTokensPerSec,
+              finishReason: metrics.finishReason || prev.finishReason
+            } : null);
+          },
+          signal
         });
       } catch (err) {
-        setFreeformOutput({
-          content: `Error: ${err.message}`,
-          latencyMs: Math.round(performance.now() - startTime),
-          tokenCount: 20,
-          speedTokensPerSec: 30,
-          finishReason: 'error'
-        });
+        if (!signal.aborted) {
+          setFreeformOutput(prev => prev ? { ...prev, content: `Error: ${err.message}`, finishReason: 'error' } : null);
+        }
       } finally {
+        setFreeformOutput(prev => prev ? { ...prev, isStreaming: false, finishReason: prev.finishReason || 'stop' } : null);
         setIsGenerating(false);
       }
     } else if (studioMode === 'structured') {
       if (!structuredTestInput.trim()) return;
       setIsGenerating(true);
-      const startTime = performance.now();
+
+      setStructuredOutput({
+        content: '',
+        thinking: enableThinking ? '' : null,
+        latencyMs: 0,
+        tokenCount: 0,
+        speedTokensPerSec: 0,
+        finishReason: null,
+        isStreaming: true
+      });
+
+      const fewShotPrompt = `${systemInstruction}\n\nTask: Map field "${structuredFields.input}" to output field "${structuredFields.output}".\n\n` +
+        structuredExamples.map((ex, i) => `Example ${i + 1}:\n${structuredFields.input}: ${ex.input}\n${structuredFields.output}: ${ex.output}`).join('\n\n') +
+        `\n\nProcess:\n${structuredFields.input}: ${structuredTestInput}\n${structuredFields.output}:`;
 
       try {
-        const fewShotPrompt = `${systemInstruction}\n\nTask: Input field "${structuredFields.input}" maps to output field "${structuredFields.output}".\n\nExamples:\n` +
-          structuredExamples.map((ex, i) => `Example ${i + 1}:\n${structuredFields.input}: ${ex.input}\n${structuredFields.output}: ${ex.output}`).join('\n\n') +
-          `\n\nNow process the following:\n${structuredFields.input}: ${structuredTestInput}\n${structuredFields.output}:`;
-
-        const messages = [{ role: 'user', content: fewShotPrompt }];
-
-        const res = await openrouter.chat(messages, {
+        await geminiStudioEngine.streamPrompt({
+          mode: 'structured',
+          systemInstruction,
+          prompt: fewShotPrompt,
           model: selectedModel,
-          temperature: temperature,
-          max_tokens: maxOutputTokens,
-          webSearchEnabled: enableSearchGrounding,
-          useThinking: enableThinking
-        });
-
-        const text = res?.content || (typeof res === 'string' ? res : '');
-        const elapsedMs = Math.round(performance.now() - startTime);
-        const tokensGenerated = Math.round(text.length / 4);
-        const speed = Math.round((tokensGenerated / (elapsedMs / 1000)) || 75);
-
-        setStructuredOutput({
-          content: text,
-          thinking: enableThinking ? (res?.reasoning || "Identified few-shot demonstration format. Evaluated sentiment polarity, aspect extractions, and compiled JSON output.") : null,
-          latencyMs: elapsedMs,
-          tokenCount: tokensGenerated,
-          speedTokensPerSec: speed,
-          finishReason: 'stop'
+          temperature,
+          topP,
+          topK,
+          maxOutputTokens,
+          thinkingBudget,
+          enableThinking,
+          enableSearchGrounding,
+          enableJsonMode: true,
+          onToken: (chunk, full) => {
+            setStructuredOutput(prev => prev ? { ...prev, content: full } : null);
+          },
+          onThinking: (chunk, full) => {
+            setStructuredOutput(prev => prev ? { ...prev, thinking: full } : null);
+          },
+          onMetrics: (metrics) => {
+            setStructuredOutput(prev => prev ? { 
+              ...prev, 
+              latencyMs: metrics.latencyMs, 
+              tokenCount: metrics.tokenCount, 
+              speedTokensPerSec: metrics.speedTokensPerSec,
+              finishReason: metrics.finishReason || prev.finishReason
+            } : null);
+          },
+          signal
         });
       } catch (err) {
-        setStructuredOutput({
-          content: `Error: ${err.message}`,
-          latencyMs: Math.round(performance.now() - startTime),
-          tokenCount: 20,
-          speedTokensPerSec: 30,
-          finishReason: 'error'
-        });
+        if (!signal.aborted) {
+          setStructuredOutput(prev => prev ? { ...prev, content: `Error: ${err.message}`, finishReason: 'error' } : null);
+        }
       } finally {
+        setStructuredOutput(prev => prev ? { ...prev, isStreaming: false, finishReason: prev.finishReason || 'stop' } : null);
         setIsGenerating(false);
       }
     }
@@ -462,6 +567,7 @@ You can click **▶ Run Code** above to execute this code right inside the in-br
 
   // Clear workspace
   const handleClear = () => {
+    if (isGenerating) handleStop();
     if (studioMode === 'chat') {
       setChatTurns([]);
       setChatInput('');
@@ -475,10 +581,46 @@ You can click **▶ Run Code** above to execute this code right inside the in-br
     }
   };
 
-  // Code snippets for Get Code Dialog
+  // Edit past user turn and fork conversation
+  const handleSaveEditTurn = (turnId) => {
+    const turnIndex = chatTurns.findIndex(t => t.id === turnId);
+    if (turnIndex === -1) return;
+
+    const trimmed = chatTurns.slice(0, turnIndex);
+    const updatedUserTurn = {
+      ...chatTurns[turnIndex],
+      content: editingTurnContent,
+      tokens: Math.round(editingTurnContent.length / 4)
+    };
+
+    setChatTurns([...trimmed, updatedUserTurn]);
+    setEditingTurnId(null);
+    setEditingTurnContent('');
+  };
+
+  // Delete a turn
+  const handleDeleteTurn = (turnId) => {
+    setChatTurns(prev => prev.filter(t => t.id !== turnId));
+  };
+
+  // Regenerate last model response
+  const handleRegenerate = () => {
+    if (chatTurns.length < 2 || isGenerating) return;
+    const lastUserTurn = [...chatTurns].reverse().find(t => t.role === 'user');
+    if (!lastUserTurn) return;
+
+    // Drop last model turn and rerun
+    const trimmed = chatTurns.filter((_, idx) => idx < chatTurns.length - 1);
+    setChatTurns(trimmed);
+    setChatInput(lastUserTurn.content);
+    setTimeout(() => handleRun(), 100);
+  };
+
+  // Official Google GenAI SDK Code generation for Get Code modal
   const generateSdkCode = () => {
     const activeSys = systemInstruction.replace(/"/g, '\\"');
     const model = selectedModel;
+    const lastContent = (studioMode === 'chat' ? (chatTurns[chatTurns.length - 1]?.content || 'Hello') : freeformContent).replace(/"/g, '\\"');
 
     if (codeLanguage === 'python') {
       return `# Official Google GenAI SDK (google-genai)
@@ -487,11 +629,12 @@ You can click **▶ Run Code** above to execute this code right inside the in-br
 from google import genai
 from google.genai import types
 
+# Initialize client using GEMINI_API_KEY environment variable
 client = genai.Client()
 
 response = client.models.generate_content(
     model="${model}",
-    contents="${(studioMode === 'chat' ? (chatTurns[chatTurns.length - 1]?.content || 'Hello') : freeformContent).replace(/"/g, '\\"')}",
+    contents="${lastContent}",
     config=types.GenerateContentConfig(
         system_instruction="${activeSys}",
         temperature=${temperature},
@@ -518,7 +661,7 @@ const ai = new GoogleGenAI();
 async function main() {
   const response = await ai.models.generateContent({
     model: '${model}',
-    contents: '${(studioMode === 'chat' ? (chatTurns[chatTurns.length - 1]?.content || 'Hello') : freeformContent).replace(/'/g, "\\'")}',
+    contents: '${lastContent.replace(/'/g, "\\'")}',
     config: {
       systemInstruction: '${activeSys}',
       temperature: ${temperature},
@@ -543,7 +686,7 @@ main();
   -X POST \\
   -d '{
     "system_instruction": { "parts": [{ "text": "${activeSys}" }] },
-    "contents": [{ "parts": [{ "text": "${(studioMode === 'chat' ? (chatTurns[chatTurns.length - 1]?.content || 'Hello') : freeformContent).replace(/"/g, '\\"')}" }] }],
+    "contents": [{ "parts": [{ "text": "${lastContent}" }] }],
     "generationConfig": {
       "temperature": ${temperature},
       "topP": ${topP},
@@ -569,7 +712,7 @@ let config = GenerateContentConfig(
 
 let response = try await ai.models.generateContent(
     model: "${model}",
-    prompt: "Hello Gemini",
+    prompt: "${lastContent}",
     config: config
 )
 
@@ -593,7 +736,7 @@ val config = GenerateContentConfig(
 
 val response = client.models.generateContent(
     model = "${model}",
-    prompt = "Hello Gemini",
+    prompt = "${lastContent}",
     config = config
 )
 
@@ -628,7 +771,7 @@ println(response.text)
                 </linearGradient>
               </defs>
             </svg>
-            <span className="text-sm font-medium text-[#e3e3e3] tracking-tight hidden sm:inline">AI Studio</span>
+            <span className="text-sm font-medium text-[#e3e3e3] tracking-tight hidden sm:inline">Google AI Studio</span>
           </div>
 
           <div className="h-4 w-px bg-[#444746] hidden sm:block" />
@@ -695,8 +838,23 @@ println(response.text)
           </button>
         </div>
 
-        {/* Right: Quick Action Controls (<> Get Code, Sample Prompts, Big Blue Run button) */}
+        {/* Right: Quick Action Controls (<> Get Code, Sample Prompts, API Key, Big Blue Run button) */}
         <div className="flex items-center gap-2">
+          {/* Direct Google Gemini API Key Button (Official Google AI Studio Top Nav Feature) */}
+          <button
+            onClick={() => setIsApiKeyModalOpen(true)}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all cursor-pointer ${
+              hasDirectKey
+                ? 'bg-[#004a77]/40 text-[#a8c7fa] border-[#a8c7fa]/40 hover:bg-[#004a77]/60 shadow-sm'
+                : 'bg-[#282a2c] hover:bg-[#3c4043] text-[#c4c7c5] hover:text-white border-[#444746]'
+            }`}
+            title="Set official Google Gemini API Key (aistudio.google.com)"
+          >
+            <Key className="w-3.5 h-3.5 text-[#a8c7fa]" />
+            <span className="hidden md:inline">{hasDirectKey ? 'API Key Active' : 'Get API Key'}</span>
+            {hasDirectKey && <span className="w-1.5 h-1.5 rounded-full bg-[#7adaa2]" />}
+          </button>
+
           {/* Sample Prompts Dropdown */}
           <div className="relative group">
             <button
@@ -716,7 +874,7 @@ println(response.text)
                 <button
                   key={sIdx}
                   onClick={() => handleLoadSample(sample)}
-                  className="w-full text-left p-2 rounded-xl text-xs hover:bg-[#282a2c] text-[#c4c7c5] hover:text-[#a8c7fa] transition-colors"
+                  className="w-full text-left p-2 rounded-xl text-xs hover:bg-[#282a2c] text-[#c4c7c5] hover:text-[#a8c7fa] transition-colors cursor-pointer"
                 >
                   <div className="font-medium text-[#e3e3e3]">{sample.name}</div>
                   <div className="text-[10px] text-[#8e918f] capitalize">{sample.mode} prompt</div>
@@ -735,21 +893,28 @@ println(response.text)
             <span className="hidden sm:inline">Get code</span>
           </button>
 
-          {/* Big Blue Google Run Button */}
-          <button
-            onClick={handleRun}
-            disabled={isGenerating || (studioMode === 'chat' && !chatInput.trim() && attachedFiles.length === 0 && chatTurns.length === 0)}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-medium text-xs transition-all cursor-pointer ${
-              isGenerating
-                ? 'bg-[#0b57d0]/60 text-white animate-pulse'
-                : 'bg-[#0b57d0] hover:bg-[#1a73e8] text-white shadow-sm disabled:opacity-40'
-            }`}
-            title="Run prompt generation (Ctrl+Enter)"
-          >
-            {isGenerating ? <Square className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current" />}
-            <span>{isGenerating ? 'Running' : 'Run'}</span>
-            <span className="hidden sm:inline text-[10px] text-blue-200/80 font-mono ml-0.5">Ctrl+↵</span>
-          </button>
+          {/* Big Blue Google Run / Stop Button */}
+          {isGenerating ? (
+            <button
+              onClick={handleStop}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-medium text-xs bg-[#ba1a1a] hover:bg-[#ff5449] text-white shadow-sm transition-all cursor-pointer animate-pulse"
+              title="Stop prompt generation"
+            >
+              <Square className="w-3.5 h-3.5 fill-current" />
+              <span>Stop</span>
+            </button>
+          ) : (
+            <button
+              onClick={handleRun}
+              disabled={isGenerating || (studioMode === 'chat' && !chatInput.trim() && attachedFiles.length === 0 && chatTurns.length === 0)}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-medium text-xs bg-[#0b57d0] hover:bg-[#1a73e8] text-white shadow-sm transition-all cursor-pointer disabled:opacity-40"
+              title="Run prompt generation (Ctrl+Enter)"
+            >
+              <Play className="w-3.5 h-3.5 fill-current" />
+              <span>Run</span>
+              <span className="hidden sm:inline text-[10px] text-blue-200/80 font-mono ml-0.5">Ctrl+↵</span>
+            </button>
+          )}
 
           {/* Clear Workspace */}
           <button
@@ -763,7 +928,7 @@ println(response.text)
           {/* Mobile Run Settings Button (< lg) */}
           <button
             onClick={() => setIsMobileSettingsOpen(true)}
-            className="lg:hidden flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#282a2c] text-[#a8c7fa] border border-[#444746] text-xs font-medium"
+            className="lg:hidden flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#282a2c] text-[#a8c7fa] border border-[#444746] text-xs font-medium cursor-pointer"
             title="Open Run Settings"
           >
             <Sliders className="w-3.5 h-3.5" />
@@ -793,7 +958,7 @@ println(response.text)
               className="w-full px-4 py-2 flex items-center justify-between text-xs font-mono text-gray-300 hover:text-white transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-2">
-                <Bot className="w-3.5 h-3.5 text-cyan-400" />
+                <Bot className="w-3.5 h-3.5 text-[#a8c7fa]" />
                 <span className="font-bold text-gray-200">System instructions</span>
                 <span className="text-[10px] text-gray-500 font-normal hidden sm:inline">
                   (Optional, tell the model how to behave)
@@ -837,17 +1002,19 @@ println(response.text)
                       </svg>
                     </div>
                     <div className="space-y-1">
-                      <h3 className="font-medium text-[#e3e3e3] text-base">AI Studio Chat Prompt</h3>
+                      <h3 className="font-medium text-[#e3e3e3] text-base">Google AI Studio Chat Prompt</h3>
                       <p className="text-xs text-[#8e918f] max-w-sm">
-                        Type a user prompt below or pick from the sample library. Includes step-by-step thinking tokens, syntax-highlighted code with in-browser execution sandbox, and KaTeX LaTeX formulas.
+                        Type a user prompt below or pick from the sample library. Features real-time token streaming, step-by-step thinking tokens, syntax-highlighted code with in-browser execution sandbox, and KaTeX LaTeX formulas.
                       </p>
                     </div>
                   </div>
                 ) : (
                   chatTurns.map((turn) => {
                     const isUser = turn.role === 'user';
+                    const isEditing = editingTurnId === turn.id;
+
                     return (
-                      <div key={turn.id} className="space-y-1.5">
+                      <div key={turn.id} className="space-y-1.5 group">
                         {/* Turn Header */}
                         <div className="flex items-center justify-between text-xs font-mono text-[#8e918f] px-1">
                           <div className="flex items-center gap-1.5">
@@ -868,23 +1035,71 @@ println(response.text)
                               <span className="text-[10px] text-[#8e918f]">({turn.tokens} tokens)</span>
                             )}
                           </div>
+
+                          {/* Quick Action: Edit / Delete */}
+                          <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1.5">
+                            {isUser && !isEditing && (
+                              <button
+                                onClick={() => {
+                                  setEditingTurnId(turn.id);
+                                  setEditingTurnContent(turn.content);
+                                }}
+                                className="p-1 rounded hover:bg-[#282a2c] text-[#8e918f] hover:text-[#e3e3e3] cursor-pointer"
+                                title="Edit prompt and re-run"
+                              >
+                                <Edit2 className="w-3 h-3" />
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleDeleteTurn(turn.id)}
+                              className="p-1 rounded hover:bg-[#282a2c] text-[#8e918f] hover:text-[#ff897d] cursor-pointer"
+                              title="Delete turn"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
                         </div>
 
                         {/* Turn Body */}
                         {isUser ? (
-                          <div className="p-3.5 rounded-2xl bg-[#1e1f20] border border-[#3c4043] text-xs sm:text-sm text-[#e3e3e3] leading-relaxed whitespace-pre-wrap selection:bg-[#004a77]">
-                            {turn.content}
-                            {turn.attachments && turn.attachments.length > 0 && (
-                              <div className="mt-2.5 flex flex-wrap gap-2 pt-2 border-t border-[#3c4043]">
-                                {turn.attachments.map((file, fIdx) => (
-                                  <div key={fIdx} className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[#131314] border border-[#444746] text-[10px] font-mono text-[#a8c7fa]">
-                                    <Paperclip className="w-3 h-3" />
-                                    <span>{file.name}</span>
-                                  </div>
-                                ))}
+                          isEditing ? (
+                            <div className="p-3 rounded-2xl bg-[#1e1f20] border border-[#a8c7fa] space-y-2">
+                              <textarea
+                                value={editingTurnContent}
+                                onChange={(e) => setEditingTurnContent(e.target.value)}
+                                rows={3}
+                                className="w-full bg-[#131314] border border-[#444746] rounded-xl p-2.5 text-xs text-[#e3e3e3] focus:outline-none font-sans resize-y"
+                              />
+                              <div className="flex justify-end gap-2">
+                                <button
+                                  onClick={() => setEditingTurnId(null)}
+                                  className="px-3 py-1 rounded-lg text-xs text-[#c4c7c5] hover:text-white"
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  onClick={() => handleSaveEditTurn(turn.id)}
+                                  className="px-3 py-1 rounded-lg bg-[#0b57d0] hover:bg-[#1a73e8] text-white text-xs font-medium"
+                                >
+                                  Save & Fork
+                                </button>
                               </div>
-                            )}
-                          </div>
+                            </div>
+                          ) : (
+                            <div className="p-3.5 rounded-2xl bg-[#1e1f20] border border-[#3c4043] text-xs sm:text-sm text-[#e3e3e3] leading-relaxed whitespace-pre-wrap selection:bg-[#004a77]">
+                              {turn.content}
+                              {turn.attachments && turn.attachments.length > 0 && (
+                                <div className="mt-2.5 flex flex-wrap gap-2 pt-2 border-t border-[#3c4043]">
+                                  {turn.attachments.map((file, fIdx) => (
+                                    <div key={fIdx} className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[#131314] border border-[#444746] text-[10px] font-mono text-[#a8c7fa]">
+                                      <Paperclip className="w-3 h-3" />
+                                      <span>{file.name}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )
                         ) : (
                           <GoogleStudioOutput
                             text={turn.content}
@@ -895,6 +1110,8 @@ println(response.text)
                             speedTokensPerSec={turn.speedTokensPerSec}
                             finishReason={turn.finishReason}
                             groundingSources={turn.groundingSources}
+                            isStreaming={turn.isStreaming}
+                            onRegenerate={handleRegenerate}
                           />
                         )}
                       </div>
@@ -936,7 +1153,7 @@ println(response.text)
                     />
                   </label>
 
-                  {/* iOS Safari 16px font fix (text-base sm:text-sm) */}
+                  {/* Textarea */}
                   <textarea
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
@@ -946,21 +1163,28 @@ println(response.text)
                     className="flex-1 bg-transparent text-base sm:text-sm text-[#e3e3e3] placeholder-[#8e918f] px-3 py-1.5 focus:outline-none resize-none leading-relaxed max-h-36 overflow-y-auto font-sans"
                   />
 
-                  {/* Run Button */}
+                  {/* Run / Stop Button */}
                   <div className="flex items-center gap-1.5 mb-0.5">
-                    <button
-                      onClick={handleRun}
-                      disabled={isGenerating || (!chatInput.trim() && attachedFiles.length === 0)}
-                      className={`flex items-center gap-1.5 px-4 py-2 rounded-full font-medium text-xs transition-all cursor-pointer ${
-                        isGenerating
-                          ? 'bg-[#0b57d0]/60 text-white animate-pulse'
-                          : 'bg-[#0b57d0] hover:bg-[#1a73e8] text-white shadow-sm disabled:opacity-35'
-                      }`}
-                      title="Run model generation (Ctrl+Enter)"
-                    >
-                      {isGenerating ? <Square className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current" />}
-                      <span>{isGenerating ? 'Running' : 'Run'}</span>
-                    </button>
+                    {isGenerating ? (
+                      <button
+                        onClick={handleStop}
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-full font-medium text-xs bg-[#ba1a1a] hover:bg-[#ff5449] text-white shadow-sm transition-all cursor-pointer animate-pulse"
+                        title="Stop generation"
+                      >
+                        <Square className="w-3.5 h-3.5 fill-current" />
+                        <span>Stop</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleRun}
+                        disabled={isGenerating || (!chatInput.trim() && attachedFiles.length === 0)}
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-full font-medium text-xs bg-[#0b57d0] hover:bg-[#1a73e8] text-white shadow-sm transition-all cursor-pointer disabled:opacity-35"
+                        title="Run model generation (Ctrl+Enter)"
+                      >
+                        <Play className="w-3.5 h-3.5 fill-current" />
+                        <span>Run</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -985,15 +1209,25 @@ println(response.text)
                 />
               </div>
 
-              <div className="flex justify-end">
-                <button
-                  onClick={handleRun}
-                  disabled={isGenerating || !freeformContent.trim()}
-                  className="flex items-center gap-2 px-5 py-2 rounded-full bg-[#0b57d0] hover:bg-[#1a73e8] text-white font-medium text-xs shadow-sm transition-all cursor-pointer disabled:opacity-35"
-                >
-                  {isGenerating ? <Square className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current" />}
-                  <span>{isGenerating ? 'Running Freeform...' : 'Run (Ctrl+Enter)'}</span>
-                </button>
+              <div className="flex justify-end gap-2">
+                {isGenerating ? (
+                  <button
+                    onClick={handleStop}
+                    className="flex items-center gap-2 px-5 py-2 rounded-full bg-[#ba1a1a] hover:bg-[#ff5449] text-white font-medium text-xs shadow-sm transition-all cursor-pointer animate-pulse"
+                  >
+                    <Square className="w-3.5 h-3.5 fill-current" />
+                    <span>Stop Freeform</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleRun}
+                    disabled={isGenerating || !freeformContent.trim()}
+                    className="flex items-center gap-2 px-5 py-2 rounded-full bg-[#0b57d0] hover:bg-[#1a73e8] text-white font-medium text-xs shadow-sm transition-all cursor-pointer disabled:opacity-35"
+                  >
+                    <Play className="w-3.5 h-3.5 fill-current" />
+                    <span>Run (Ctrl+Enter)</span>
+                  </button>
+                )}
               </div>
 
               {freeformOutput && (
@@ -1006,6 +1240,7 @@ println(response.text)
                     tokenCount={freeformOutput.tokenCount}
                     speedTokensPerSec={freeformOutput.speedTokensPerSec}
                     finishReason={freeformOutput.finishReason}
+                    isStreaming={freeformOutput.isStreaming}
                   />
                 </div>
               )}
@@ -1043,7 +1278,7 @@ println(response.text)
                   <span>Examples ({structuredExamples.length} few-shot pairs)</span>
                   <button
                     onClick={() => setStructuredExamples([...structuredExamples, { id: `ex-${Date.now()}`, input: '', output: '' }])}
-                    className="flex items-center gap-1 text-[#a8c7fa] hover:text-white"
+                    className="flex items-center gap-1 text-[#a8c7fa] hover:text-white cursor-pointer"
                   >
                     <Plus className="w-3 h-3" />
                     <span>Add Example</span>
@@ -1058,7 +1293,7 @@ println(response.text)
                         {structuredExamples.length > 1 && (
                           <button
                             onClick={() => setStructuredExamples(structuredExamples.filter(item => item.id !== ex.id))}
-                            className="hover:text-[#ff897d] text-[#8e918f]"
+                            className="hover:text-[#ff897d] text-[#8e918f] cursor-pointer"
                           >
                             ✕
                           </button>
@@ -1105,15 +1340,25 @@ println(response.text)
                   className="w-full bg-[#1e1f20] border border-[#3c4043] rounded-xl p-3 text-base sm:text-xs text-[#e3e3e3] focus:outline-none focus:border-[#a8c7fa] font-mono"
                 />
 
-                <div className="flex justify-end">
-                  <button
-                    onClick={handleRun}
-                    disabled={isGenerating || !structuredTestInput.trim()}
-                    className="flex items-center gap-2 px-5 py-2 rounded-full bg-[#0b57d0] hover:bg-[#1a73e8] text-white font-medium text-xs shadow-sm transition-all cursor-pointer disabled:opacity-35"
-                  >
-                    {isGenerating ? <Square className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current" />}
-                    <span>{isGenerating ? 'Running Test Case...' : 'Run Structured (Ctrl+Enter)'}</span>
-                  </button>
+                <div className="flex justify-end gap-2">
+                  {isGenerating ? (
+                    <button
+                      onClick={handleStop}
+                      className="flex items-center gap-2 px-5 py-2 rounded-full bg-[#ba1a1a] hover:bg-[#ff5449] text-white font-medium text-xs shadow-sm transition-all cursor-pointer animate-pulse"
+                    >
+                      <Square className="w-3.5 h-3.5 fill-current" />
+                      <span>Stop Structured</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleRun}
+                      disabled={isGenerating || !structuredTestInput.trim()}
+                      className="flex items-center gap-2 px-5 py-2 rounded-full bg-[#0b57d0] hover:bg-[#1a73e8] text-white font-medium text-xs shadow-sm transition-all cursor-pointer disabled:opacity-35"
+                    >
+                      <Play className="w-3.5 h-3.5 fill-current" />
+                      <span>Run Structured (Ctrl+Enter)</span>
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -1127,6 +1372,7 @@ println(response.text)
                     tokenCount={structuredOutput.tokenCount}
                     speedTokensPerSec={structuredOutput.speedTokensPerSec}
                     finishReason={structuredOutput.finishReason}
+                    isStreaming={structuredOutput.isStreaming}
                   />
                 </div>
               )}
@@ -1153,7 +1399,7 @@ println(response.text)
                 onChange={(e) => setSelectedModel(e.target.value)}
                 className="w-full bg-[#131314] border border-[#444746] rounded-xl p-2.5 text-xs text-[#e3e3e3] focus:outline-none focus:border-[#a8c7fa] cursor-pointer appearance-none font-sans"
               >
-                {STUDIO_MODELS.map(m => (
+                {OFFICIAL_GEMINI_MODELS.map(m => (
                   <option key={m.id} value={m.id} className="bg-[#1e1f20] text-[#e3e3e3]">
                     {m.name} ({m.badge})
                   </option>
@@ -1161,6 +1407,9 @@ println(response.text)
               </select>
               <ChevronDown className="w-3.5 h-3.5 text-[#8e918f] absolute right-3 top-3 pointer-events-none" />
             </div>
+            <p className="text-[10px] text-[#8e918f] leading-tight">
+              {OFFICIAL_GEMINI_MODELS.find(m => m.id === selectedModel)?.desc}
+            </p>
           </div>
 
           {/* Temperature Slider */}
@@ -1228,7 +1477,7 @@ println(response.text)
             <input
               type="range"
               min="256"
-              max="8192"
+              max="16384"
               step="256"
               value={maxOutputTokens}
               onChange={(e) => setMaxOutputTokens(parseInt(e.target.value))}
@@ -1256,7 +1505,7 @@ println(response.text)
                 <input
                   type="range"
                   min="0"
-                  max="8192"
+                  max="16384"
                   step="512"
                   value={thinkingBudget}
                   onChange={(e) => setThinkingBudget(parseInt(e.target.value))}
@@ -1301,6 +1550,23 @@ println(response.text)
             </div>
           </div>
 
+          {/* Safety Settings */}
+          <div className="space-y-1.5 pt-1 border-t border-[#3c4043]">
+            <div className="flex items-center gap-1 text-[11px] text-[#c4c7c5] font-medium">
+              <Shield className="w-3.5 h-3.5 text-[#a8c7fa]" />
+              <span>Safety Settings</span>
+            </div>
+            <select
+              value={safetyThreshold}
+              onChange={(e) => setSafetyThreshold(e.target.value)}
+              className="w-full bg-[#131314] border border-[#444746] rounded-xl p-2 text-xs text-[#e3e3e3] focus:outline-none"
+            >
+              <option value="BLOCK_NONE">Block None (Developer Full Freedom)</option>
+              <option value="BLOCK_FEW">Block Few (High threshold)</option>
+              <option value="BLOCK_SOME">Block Some (Standard filter)</option>
+            </select>
+          </div>
+
           {/* Context Window Usage Meter */}
           <div className="p-3 rounded-2xl bg-[#131314] border border-[#3c4043] space-y-1.5">
             <div className="flex items-center justify-between text-[11px]">
@@ -1315,24 +1581,111 @@ println(response.text)
             </div>
             <div className="flex justify-between text-[10px] text-[#8e918f] font-mono">
               <span>{currentTokenCount.toLocaleString()} tokens</span>
-              <span>1,048,576 tokens</span>
+              <span>{maxModelContext.toLocaleString()} tokens</span>
             </div>
           </div>
         </div>
       </div>
 
+      {/* Direct Google Gemini API Key Modal (Official Google AI Studio Flow) */}
+      {isApiKeyModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+          <div className="w-full max-w-md bg-[#1e1f20] border border-[#3c4043] rounded-3xl p-5 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-[#3c4043] pb-3">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-[#282a2c] text-[#a8c7fa]">
+                  <Key className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-white text-sm">Google AI Studio API Key</h3>
+                  <p className="text-[11px] text-[#8e918f]">Direct connection to Gemini API</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setIsApiKeyModalOpen(false)}
+                className="p-1 rounded-lg text-[#8e918f] hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-2 text-xs text-[#c4c7c5] leading-relaxed">
+              <p>
+                Get a free API key with 1,000,000+ token context window directly from Google:
+              </p>
+              <a 
+                href="https://aistudio.google.com/app/apikey" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-[#a8c7fa] hover:underline font-medium"
+              >
+                <span>Get API key from Google AI Studio</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[11px] text-[#c4c7c5] font-medium">Gemini API Key (starts with AIzaSy...):</label>
+              <input
+                type="password"
+                value={apiKeyInput}
+                onChange={(e) => setApiKeyInput(e.target.value)}
+                placeholder="AIzaSy..."
+                className="w-full bg-[#131314] border border-[#444746] rounded-xl px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-[#a8c7fa]"
+              />
+            </div>
+
+            {verifyStatus && (
+              <div className={`p-2.5 rounded-xl text-xs font-mono flex items-center gap-2 ${
+                verifyStatus.success ? 'bg-[#7adaa2]/15 text-[#7adaa2] border border-[#7adaa2]/30' : 'bg-[#ff897d]/15 text-[#ff897d] border border-[#ff897d]/30'
+              }`}>
+                {verifyStatus.success ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <X className="w-4 h-4 shrink-0" />}
+                <span>{verifyStatus.message}</span>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between pt-2">
+              {hasDirectKey ? (
+                <button
+                  onClick={handleClearApiKey}
+                  className="text-xs text-[#ff897d] hover:underline cursor-pointer"
+                >
+                  Clear Key & Use Free Gateway
+                </button>
+              ) : (
+                <span className="text-[11px] text-[#8e918f]">Free Neural Gateway Active</span>
+              )}
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setIsApiKeyModalOpen(false)}
+                  className="px-3 py-1.5 rounded-xl text-xs text-[#c4c7c5] hover:text-white"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveApiKey}
+                  disabled={isVerifyingKey || !apiKeyInput.trim()}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#0b57d0] hover:bg-[#1a73e8] text-white text-xs font-medium cursor-pointer disabled:opacity-40"
+                >
+                  {isVerifyingKey ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                  <span>{isVerifyingKey ? 'Verifying...' : 'Save Key'}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Mobile Slide-Up Run Settings Bottom Sheet Drawer (< lg screens) */}
       {isMobileSettingsOpen && (
         <div className="lg:hidden fixed inset-0 z-50 flex flex-col justify-end">
-          {/* Backdrop */}
           <div 
             onClick={() => setIsMobileSettingsOpen(false)}
             className="fixed inset-0 bg-black/75 backdrop-blur-sm transition-opacity"
           />
 
-          {/* Drawer Canvas */}
           <div className="relative z-10 w-full max-h-[85vh] bg-[#1e1f20] border-t border-[#3c4043] rounded-t-3xl p-5 overflow-y-auto space-y-4 shadow-2xl animate-fadeIn text-xs font-sans">
-            {/* Drag Handle */}
             <div className="w-12 h-1 bg-[#444746] rounded-full mx-auto mb-2" />
 
             <div className="flex items-center justify-between border-b border-[#3c4043] pb-2">
@@ -1348,7 +1701,6 @@ println(response.text)
               </button>
             </div>
 
-            {/* Model Selector */}
             <div className="space-y-1.5">
               <label className="text-[11px] text-[#c4c7c5] font-medium">Model</label>
               <select
@@ -1356,7 +1708,7 @@ println(response.text)
                 onChange={(e) => setSelectedModel(e.target.value)}
                 className="w-full bg-[#131314] border border-[#444746] rounded-xl p-3 text-sm text-[#e3e3e3] focus:outline-none font-sans"
               >
-                {STUDIO_MODELS.map(m => (
+                {OFFICIAL_GEMINI_MODELS.map(m => (
                   <option key={m.id} value={m.id} className="bg-[#1e1f20] text-[#e3e3e3]">
                     {m.name} ({m.badge})
                   </option>
@@ -1364,7 +1716,6 @@ println(response.text)
               </select>
             </div>
 
-            {/* Temperature Slider */}
             <div className="space-y-1.5">
               <div className="flex justify-between text-xs">
                 <span className="text-[#c4c7c5]">Temperature: {temperature}</span>
@@ -1380,7 +1731,6 @@ println(response.text)
               />
             </div>
 
-            {/* Thinking Budget */}
             <div className="p-3 rounded-2xl bg-[#131314] border border-[#3c4043] space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-medium text-[#e3e3e3]">Thinking process</span>
@@ -1399,7 +1749,7 @@ println(response.text)
                   <input
                     type="range"
                     min="0"
-                    max="8192"
+                    max="16384"
                     step="512"
                     value={thinkingBudget}
                     onChange={(e) => setThinkingBudget(parseInt(e.target.value))}
@@ -1409,30 +1759,6 @@ println(response.text)
               )}
             </div>
 
-            {/* Tools Toggles */}
-            <div className="space-y-2">
-              <label className="text-[11px] text-[#c4c7c5] font-medium uppercase tracking-wider">Tools & Extensions</label>
-              <div className="flex items-center justify-between p-3 rounded-xl bg-[#131314] border border-[#444746]">
-                <span className="text-xs text-[#e3e3e3]">Google Search Grounding</span>
-                <input
-                  type="checkbox"
-                  checked={enableSearchGrounding}
-                  onChange={(e) => setEnableSearchGrounding(e.target.checked)}
-                  className="accent-[#0b57d0] w-4 h-4"
-                />
-              </div>
-              <div className="flex items-center justify-between p-3 rounded-xl bg-[#131314] border border-[#444746]">
-                <span className="text-xs text-[#e3e3e3]">Code Execution Sandbox</span>
-                <input
-                  type="checkbox"
-                  checked={enableCodeExecution}
-                  onChange={(e) => setEnableCodeExecution(e.target.checked)}
-                  className="accent-[#0b57d0] w-4 h-4"
-                />
-              </div>
-            </div>
-
-            {/* Close Button */}
             <button
               onClick={() => setIsMobileSettingsOpen(false)}
               className="w-full py-3 rounded-xl bg-[#0b57d0] hover:bg-[#1a73e8] text-white font-medium text-sm transition-all"
@@ -1443,11 +1769,10 @@ println(response.text)
         </div>
       )}
 
-      {/* <> Get Code Export Modal (Google AI Studio Material 3 Dark theme) */}
+      {/* <> Get Code Export Modal */}
       {isGetCodeOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm">
           <div className="w-full max-w-2xl bg-[#1e1f20] border border-[#3c4043] rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh] animate-fadeIn">
-            {/* Modal Header */}
             <div className="p-4 bg-[#1e1f20] border-b border-[#3c4043] flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="p-1.5 rounded-lg bg-[#282a2c] text-[#a8c7fa]">
@@ -1455,18 +1780,17 @@ println(response.text)
                 </div>
                 <div>
                   <h3 className="font-medium text-[#e3e3e3] text-sm">Get code</h3>
-                  <p className="text-[11px] text-[#8e918f] font-sans">Export this prompt to official Google GenAI SDKs</p>
+                  <p className="text-[11px] text-[#8e918f] font-sans">Export prompt to official Google GenAI SDKs</p>
                 </div>
               </div>
               <button
                 onClick={() => setIsGetCodeOpen(false)}
-                className="p-1.5 rounded-xl hover:bg-[#282a2c] text-[#8e918f] hover:text-[#e3e3e3] transition-colors"
+                className="p-1.5 rounded-xl hover:bg-[#282a2c] text-[#8e918f] hover:text-[#e3e3e3] transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Language Tabs */}
             <div className="px-4 py-2 bg-[#131314] border-b border-[#3c4043] flex items-center gap-1 overflow-x-auto no-scrollbar">
               {[
                 { id: 'python', label: 'Python (google-genai)' },
@@ -1489,17 +1813,15 @@ println(response.text)
               ))}
             </div>
 
-            {/* Code Body */}
             <div className="flex-1 p-4 bg-[#131314] overflow-x-auto text-xs font-mono text-[#e3e3e3] selection:bg-[#004a77]">
               <pre className="m-0 whitespace-pre-wrap leading-relaxed font-mono">
                 <code>{generateSdkCode()}</code>
               </pre>
             </div>
 
-            {/* Modal Footer */}
             <div className="p-3.5 bg-[#1e1f20] border-t border-[#3c4043] flex items-center justify-between">
               <span className="text-[11px] text-[#8e918f] font-sans">
-                SDK package configured for <strong className="text-[#e3e3e3]">{selectedModel}</strong>
+                Official Google GenAI SDK configured for <strong className="text-[#e3e3e3]">{selectedModel}</strong>
               </span>
               <button
                 onClick={handleCopyCodeSnippet}

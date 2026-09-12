@@ -24,8 +24,14 @@ const decodeSecret = (b64) => {
   }
 };
 
-const DEFAULT_OPENROUTER_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || decodeSecret('c2stb3ItdjEtMmE2MTY4NTRkNmFjZDhiMjQ1Y2FhODIyMDU1NWViNTc2OTFlNDFjYjkwNGMyOWIwNjkzMTI2MzM5NmI1MjkwNw==');
-const DEFAULT_REPLICATE_TOKEN = import.meta.env.VITE_REPLICATE_API_TOKEN || decodeSecret('cjhfRFdrdVJUaXNoZXdJUVNrcklBclVDVWhXUDU0TEhFSDBLMTZGTA==');
+const DEFAULT_OPENROUTER_KEY = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_OPENROUTER_API_KEY) || '';
+const DEFAULT_REPLICATE_TOKEN = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_REPLICATE_API_TOKEN) || '';
+
+export const isRevokedToken = (token) => {
+  if (!token || typeof token !== 'string') return false;
+  const t = token.trim();
+  return t.includes('2a616854d6acd8b2') || t.includes('DWkuRTishewIQSkr');
+};
 
 export const GIRIONIX_SYSTEM_PROMPT = `You are Girionix AI (operating in Girionix Pro and Girionix Lite modes), an omnipotent, next-generation AI polymath platform engineered for supreme intelligence, superhuman coding, rigorous mathematical Olympiad proofs, 8K art generation, cinematic video direction, and fluid voice intelligence.
 
@@ -123,6 +129,18 @@ const safeRemoveItem = (key) => {
   delete memoryStore[key];
 };
 
+// Immediate startup purge of any deprecated or revoked tokens
+try {
+  if (typeof localStorage !== 'undefined') {
+    [KEYS.API_KEY, 'girionix_custom_api_key', 'girionix_gemini_api_key', KEYS.REPLICATE_TOKEN].forEach(k => {
+      const val = localStorage.getItem(k);
+      if (val && isRevokedToken(val)) {
+        localStorage.removeItem(k);
+      }
+    });
+  }
+} catch (_) {}
+
 export const storage = {
   getUserName: () => {
     const saved = safeGetItem(KEYS.USER_NAME);
@@ -140,11 +158,64 @@ export const storage = {
   },
   setUserName: (name) => safeSetItem(KEYS.USER_NAME, (name || '').trim()),
 
-  getApiKey: () => safeGetItem(KEYS.API_KEY) || DEFAULT_OPENROUTER_KEY,
-  setApiKey: (key) => safeSetItem(KEYS.API_KEY, (key || '').trim()),
-  removeApiKey: () => safeRemoveItem(KEYS.API_KEY),
+  getApiKey: () => {
+    try {
+      const directGemini = safeGetItem('girionix_gemini_api_key');
+      if (directGemini && directGemini.trim() && !isRevokedToken(directGemini.trim())) return directGemini.trim();
 
-  getReplicateToken: () => safeGetItem(KEYS.REPLICATE_TOKEN) || DEFAULT_REPLICATE_TOKEN,
+      const customKey = safeGetItem('girionix_custom_api_key');
+      if (customKey && customKey.trim()) {
+        if (isRevokedToken(customKey.trim())) {
+          safeRemoveItem('girionix_custom_api_key');
+        } else {
+          return customKey.trim();
+        }
+      }
+
+      const savedKey = safeGetItem(KEYS.API_KEY);
+      if (savedKey && savedKey.trim()) {
+        if (isRevokedToken(savedKey.trim())) {
+          safeRemoveItem(KEYS.API_KEY);
+        } else {
+          return savedKey.trim();
+        }
+      }
+    } catch (_) {}
+    if (DEFAULT_OPENROUTER_KEY && !isRevokedToken(DEFAULT_OPENROUTER_KEY)) {
+      return DEFAULT_OPENROUTER_KEY;
+    }
+    return '';
+  },
+  setApiKey: (key) => {
+    const trimmed = (key || '').trim();
+    if (trimmed && !isRevokedToken(trimmed)) {
+      safeSetItem(KEYS.API_KEY, trimmed);
+      safeSetItem('girionix_custom_api_key', trimmed);
+      if (trimmed.startsWith('AIzaSy')) {
+        safeSetItem('girionix_gemini_api_key', trimmed);
+        safeSetItem('girionix_universal_provider', 'google');
+      }
+    } else {
+      safeRemoveItem(KEYS.API_KEY);
+      safeRemoveItem('girionix_custom_api_key');
+      safeRemoveItem('girionix_gemini_api_key');
+    }
+  },
+  removeApiKey: () => {
+    safeRemoveItem(KEYS.API_KEY);
+    safeRemoveItem('girionix_custom_api_key');
+    safeRemoveItem('girionix_gemini_api_key');
+  },
+  hasApiKey: () => Boolean(storage.getApiKey()),
+
+  getReplicateToken: () => {
+    const token = safeGetItem(KEYS.REPLICATE_TOKEN);
+    if (token && isRevokedToken(token.trim())) {
+      safeRemoveItem(KEYS.REPLICATE_TOKEN);
+      return '';
+    }
+    return token || (!isRevokedToken(DEFAULT_REPLICATE_TOKEN) ? DEFAULT_REPLICATE_TOKEN : '');
+  },
   setReplicateToken: (token) => safeSetItem(KEYS.REPLICATE_TOKEN, (token || '').trim()),
   removeReplicateToken: () => safeRemoveItem(KEYS.REPLICATE_TOKEN),
 
