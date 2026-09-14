@@ -184,30 +184,30 @@ export const voiceAiEngine = {
       return this.pickDiverse(enSongs, 'songs_en');
     }
 
-    // 2. Creator Questions / "Who is Giri" / "Who is Abhinav Giri" / "Who created you"
-    if (/\b(who is giri|who is abhinav giri|abhinav giri|giri|who created you|who made you|who are you|what is your name|founder|creator|kisne banaya|kiska hai|naam kya hai|kya naam hai|origin|country|kaha se ho|kahan se ho|desh|which country)\b/i.test(p)) {
+    // 2. Creator Questions / "Who is Giri" / "Who is Abhinav Giri" / "Who created you" / "Company"
+    if (/\b(who is giri|who is abhinav giri|abhinav giri|giri|who created you|who made you|who are you|what is your name|founder|creator|company|corporation|giri corporation|website|kisne banaya|kiska hai|naam kya hai|kya naam hai|origin|country|kaha se ho|kahan se ho|desh|which country)\b/i.test(p)) {
       if (isHindi) {
         const hindiIntros = [
-          "नमस्ते! मैं गिरिऑनिक्स एआई (Girionix AI) हूँ, जिसे भारत 🇮🇳 में अभिनव गिरी द्वारा बनाया गया है। अभिनव गिरी एक दूरदर्शी इंजीनियर और इनोवेटर हैं जिन्होंने इस संप्रभु एआई का निर्माण किया है।",
-          "अभिनव गिरी गिरिऑनिक्स एआई के संस्थापक और मुख्य आर्किटेक्ट हैं। उन्होंने इस प्लेटफॉर्म को भारत से वैश्विक स्तर पर शक्तिशाली पॉलीमैथ इंटेलिजेंस देने के लिए तैयार किया है।",
-          "मैं गिरिऑनिक्स एआई हूँ, भारत से अभिनव गिरी द्वारा निर्मित। हमारा आदर्श वाक्य है: Think, Create, Explore। बताइए, आज हम क्या नया बनाएँ?"
+          "नमस्ते! मैं गिरिऑनिक्स एआई (Girionix AI) हूँ, जिसे भारत 🇮🇳 में अभिनव गिरी द्वारा गिरी कॉर्पोरेशन (Giri Corporation) के अंतर्गत बनाया गया है। आप हमारी आधिकारिक वेबसाइट giri-corporation.pages.dev पर भी जा सकते हैं।",
+          "अभिनव गिरी गिरिऑनिक्स एआई के संस्थापक और मुख्य आर्किटेक्ट हैं, और यह गिरी कॉर्पोरेशन का एक प्रमुख नवाचार है।",
+          "मैं गिरिऑनिक्स एआई हूँ, भारत से अभिनव गिरी और गिरी कॉर्पोरेशन द्वारा निर्मित। हमारा आदर्श वाक्य है: Think, Create, Explore। बताइए, आज हम क्या नया बनाएँ?"
         ];
         return this.pickDiverse(hindiIntros, 'intro_hi');
       }
 
       if (isHinglish) {
         const hinglishIntros = [
-          "Abhinav Giri Girionix AI ke founder aur visionary engineer hain, jinhone is sovereign AI system ko India 🇮🇳 mein design aur build kiya hai.",
-          "Namaste! Mera naam Girionix AI hai. Mujhe India mein Abhinav Giri ne banaya hai ek sovereign polymath companion ke roop mein.",
-          "Abhinav Giri ek brilliant creator aur developer hain jinhone Girionix AI ko create kiya hai. Main unka banaya hua intelligent polymath system hoon!"
+          "Abhinav Giri Girionix AI ke founder aur visionary engineer hain, jinhone Giri Corporation ke under is sovereign AI system ko India 🇮🇳 mein build kiya hai. Official website hai giri-corporation.pages.dev!",
+          "Namaste! Mera naam Girionix AI hai. Mujhe India mein Abhinav Giri ne Giri Corporation ke tahat banaya hai ek sovereign polymath companion ke roop mein.",
+          "Abhinav Giri ek brilliant creator aur developer hain jinhone Girionix AI aur Giri Corporation ko establish kiya hai."
         ];
         return this.pickDiverse(hinglishIntros, 'intro_hing');
       }
 
       const enIntros = [
-        "Abhinav Giri is the founder and visionary engineer who created Girionix AI in India. He built this sovereign polymath platform to empower developers, creators, and thinkers worldwide.",
-        "I am Girionix AI, envisioned and engineered in India by Abhinav Giri. I'm your sovereign AI polymath for coding, mathematics, science, and natural conversation.",
-        "Abhinav Giri is the creator of Girionix AI, developing autonomous AI systems guided by the motto: Think, Create, Explore. How can I help you today?"
+        "Abhinav Giri is the founder and visionary engineer who created Girionix AI under Giri Corporation in India. You can visit the official organization website at giri-corporation.pages.dev.",
+        "I am Girionix AI, envisioned and engineered in India by Abhinav Giri under Giri Corporation. I'm your sovereign AI polymath for coding, mathematics, science, and natural conversation.",
+        "Abhinav Giri is the creator of Girionix AI and founder of Giri Corporation, developing autonomous AI systems guided by the motto: Think, Create, Explore. How can I help you today?"
       ];
       return this.pickDiverse(enIntros, 'intro_en');
     }

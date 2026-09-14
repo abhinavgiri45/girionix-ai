@@ -110,7 +110,7 @@ export const AI_MODELS = [
     id: "girionix-lite",
     openRouterModel: "google/gemini-2.0-flash-001",
     name: "Girionix Lite",
-    provider: "Google Frontier Ultra-Fast",
+    provider: "DeepMind Frontier Ultra-Fast",
     category: "fast",
     tag: "Sub-Second Ultra-Fast & Grounded Knowledge",
     badgeColor: "cyan",
@@ -175,7 +175,7 @@ export const AI_MODELS = [
 
 export const STUDIO_MODES = [
   {
-    id: "google-studio",
+    id: "ai-studio",
     name: "AI Studio Flagship",
     shortName: "AI Studio",
     icon: "Sparkles",
@@ -232,27 +232,30 @@ export const STUDIO_MODES = [
   }
 ];
 
+const AI_STUDIO_MODEL_DEF = {
+  id: "gemini-2.5-pro",
+  name: "Gemini 2.5 Pro (AI Studio Flagship)",
+  provider: "DeepMind Tensor Core",
+  workDomain: "AI Studio Developer Environment",
+  badgeColor: "cyan",
+  tag: "Gemini 2.5 Pro Multi-Modal Reasoning Engine",
+  speed: "⚡ 85-120 tok/s (TPU v5e)",
+  contextWindow: 1048576,
+  openRouterModel: "google/gemini-2.5-pro",
+  titanModelId: "girionix-titan-70b",
+  languages: ["Python 3.12", "TypeScript", "JSON Schema", "KaTeX Math", "cURL", "Swift", "Kotlin"],
+  capabilities: [
+    "Collapsible Thinking Process & Chain-of-Thought",
+    "Interactive In-Browser Code Execution Sandbox",
+    "Search Grounding & Dynamic Citations",
+    "Few-Shot Structured & Freeform Prompt Modes"
+  ],
+  benchmark: "Flagship Reasoning & 1M+ Context Window"
+};
+
 export const STUDIO_DEDICATED_MODELS = {
-  'google-studio': {
-    id: "google-gemini-2.5-pro",
-    name: "Google Gemini 2.5 Pro (AI Studio Flagship)",
-    provider: "Google DeepMind Tensor Core",
-    workDomain: "AI Studio Developer Environment",
-    badgeColor: "cyan",
-    tag: "Gemini 2.5 Pro Multi-Modal Reasoning Engine",
-    speed: "⚡ 85-120 tok/s (Google TPU v5e)",
-    contextWindow: 1048576,
-    openRouterModel: "google/gemini-2.5-pro",
-    titanModelId: "girionix-titan-70b",
-    languages: ["Python 3.12", "TypeScript", "JSON Schema", "KaTeX Math", "cURL", "Swift", "Kotlin"],
-    capabilities: [
-      "Collapsible Thinking Process & Chain-of-Thought",
-      "Interactive In-Browser Code Execution Sandbox",
-      "Google Search Grounding & Dynamic Citations",
-      "Few-Shot Structured & Freeform Prompt Modes"
-    ],
-    benchmark: "Flagship Reasoning & 1M+ Context Window"
-  },
+  'ai-studio': AI_STUDIO_MODEL_DEF,
+  'google-studio': AI_STUDIO_MODEL_DEF,
   code: {
     id: "girionix-codemaster-ultra",
     name: "Girionix CodeMaster Ultra (70B Coder)",

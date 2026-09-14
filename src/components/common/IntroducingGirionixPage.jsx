@@ -106,7 +106,7 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
   }, [initialTab, isOpen]);
 
   // High-Trust & Interactive Playground State
-  const [interactiveStudio, setInteractiveStudio] = useState('google-studio'); // 'google-studio' | 'code' | 'math' | 'image' | 'video' | 'audio'
+  const [interactiveStudio, setInteractiveStudio] = useState('ai-studio'); // 'ai-studio' | 'code' | 'math' | 'image' | 'video' | 'audio'
   const [openFaq, setOpenFaq] = useState(0);
   const [copiedCodeSnippet, setCopiedCodeSnippet] = useState(false);
   const [activeBenchmarkPill, setActiveBenchmarkPill] = useState('humaneval');
@@ -375,6 +375,17 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
         <div className="flex items-center gap-1.5 sm:gap-3">
           <div className="hidden lg:flex items-center gap-1.5 border-r border-white/10 pr-3 mr-1">
             <a 
+              href="https://giri-corporation.pages.dev/" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="px-2.5 py-1 rounded-full bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 hover:text-white border border-cyan-500/30 transition-all text-xs font-mono flex items-center gap-1.5"
+              title="Official Giri Corporation Website (giri-corporation.pages.dev)"
+            >
+              <Globe className="w-3.5 h-3.5 text-cyan-400" />
+              <span className="hidden xl:inline">Giri Corporation</span>
+            </a>
+
+            <a 
               href="https://x.com/AbhinavGiri45" 
               target="_blank" 
               rel="noopener noreferrer" 
@@ -535,7 +546,7 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
             {/* Interactive Studio Switcher Pills */}
             <div className="p-1.5 rounded-2xl bg-[#090C16] border border-white/10 flex items-center justify-start sm:justify-center gap-1.5 overflow-x-auto shadow-2xl no-scrollbar scroll-smooth">
               {[
-                { id: 'google-studio', label: '✦ AI Studio', color: 'cyan', icon: Sparkles, desc: 'Flagship Developer Environment' },
+                { id: 'ai-studio', label: '✦ AI Studio', color: 'cyan', icon: Sparkles, desc: 'Flagship Developer Environment' },
                 { id: 'code', label: '💻 Dev Runner', color: 'cyan', icon: Code2, desc: 'React 18 & TypeScript AST' },
                 { id: 'script', label: '✍️ Script Writer', color: 'indigo', icon: ScrollText, desc: 'Fountain Screenplay & Story' },
                 { id: 'math', label: '📐 Olympiad Math', color: 'purple', icon: Sigma, desc: 'KaTeX & 3D Surfaces' },
@@ -561,7 +572,7 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
             {/* Interactive Studio Stage Card */}
             <div className="p-6 sm:p-8 rounded-3xl bg-[#070913] border border-cyan-500/30 shadow-2xl space-y-6">
               {/* STAGE 0: AI STUDIO FLAGSHIP */}
-              {interactiveStudio === 'google-studio' && (
+              {(interactiveStudio === 'ai-studio' || interactiveStudio === 'google-studio') && (
                 <div className="space-y-5 animate-fadeIn">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
                     <div className="flex items-center gap-3">
@@ -580,7 +591,7 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
                     </div>
 
                     <button
-                      onClick={() => handleLaunch('google-studio')}
+                      onClick={() => handleLaunch('ai-studio')}
                       className="px-4 py-2 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black font-bold text-xs flex items-center gap-1.5 shadow-glow-cyan cursor-pointer transition-all hover:scale-105"
                     >
                       <span>Launch AI Studio</span>
@@ -649,7 +660,7 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
                         </div>
                       </div>
                       <button
-                        onClick={() => handleLaunch('google-studio')}
+                        onClick={() => handleLaunch('ai-studio')}
                         className="w-full py-2 rounded-xl bg-gradient-to-r from-blue-500 via-cyan-400 to-purple-500 text-black font-bold text-xs shadow-glow-cyan cursor-pointer"
                       >
                         Enter AI Studio
@@ -1412,8 +1423,19 @@ export default function NeuralPulseSphere() {
               "Girionix AI was engineered with the conviction that true human creativity reaches its peak when the barriers between programming, mathematical rigor, visual art, cinema, and conversational intelligence dissolve into one unified, sovereign polymath."
             </p>
 
-            {/* Creator Social Channels */}
-            <div className="flex items-center justify-center gap-3 pt-2">
+            {/* Creator & Company Channels */}
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+              <a
+                href="https://giri-corporation.pages.dev/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 rounded-full bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-xs font-bold flex items-center gap-2 transition-all border border-cyan-500/30 shadow-sm"
+                title="Official Giri Corporation Website"
+              >
+                <Globe className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Giri Corporation</span>
+              </a>
+
               <a
                 href="https://x.com/AbhinavGiri45"
                 target="_blank"
@@ -2137,7 +2159,7 @@ export default function NeuralPulseSphere() {
                     </td>
                     <td className="p-4 font-bold text-emerald-400">None (Instant Sovereign Access)</td>
                     <td className="p-4 text-rose-400">Mandatory Email & Phone verification</td>
-                    <td className="p-4 text-rose-400">Mandatory Discord or Google KYC</td>
+                    <td className="p-4 text-rose-400">Mandatory Discord or Cloud KYC</td>
                   </tr>
                 )}
 
@@ -2423,12 +2445,23 @@ export default function NeuralPulseSphere() {
       )}
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-white/[0.08] py-8 text-center text-xs text-gray-500 space-y-2">
+      <footer className="relative z-10 border-t border-white/[0.08] py-8 text-center text-xs text-gray-500 space-y-3">
         <div className="flex items-center justify-center gap-2">
           <img src="/logo.png" alt="Girionix AI" className="w-5 h-5 rounded" />
           <span className="font-extrabold text-white">Girionix AI</span>
+          <span className="text-gray-600">•</span>
+          <a
+            href="https://giri-corporation.pages.dev/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-cyan-400 hover:text-cyan-300 transition-colors inline-flex items-center gap-1 font-medium"
+          >
+            <Globe className="w-3.5 h-3.5" />
+            <span>Giri Corporation</span>
+            <ExternalLink className="w-3 h-3 opacity-70" />
+          </a>
         </div>
-        <p>© 2026 Abhinav Giri • Think • Create • Explore • All Rights Reserved</p>
+        <p>© 2026 Abhinav Giri • A Sovereign Innovation of <a href="https://giri-corporation.pages.dev/" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-cyan-300 underline underline-offset-2">Giri Corporation</a> • All Rights Reserved</p>
       </footer>
 
       {/* Floating Ambient Motion Pause/Play Toggle Button (Bottom Left) */}

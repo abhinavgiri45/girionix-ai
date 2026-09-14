@@ -1,12 +1,12 @@
 /**
- * GIRIONIX AI — GOOGLE AI STUDIO HYPER-INTELLIGENT DEDICATED ENGINE
+ * GIRIONIX AI — AI STUDIO HYPER-INTELLIGENT DEDICATED ENGINE
  * Envisioned & Engineered by Abhinav Giri (@abhinavgiri45)
  * 
  * Capabilities:
- * - Direct Official Google Gemini Generative Language API integration (SSE streaming)
+ * - Direct Official Gemini Generative Language API integration (SSE streaming)
  * - Authentic 1:1 Gemini Thinking token stream parsing (thought: true)
- * - Official Google Gemini 2.5 Pro, 2.5 Flash, 2.5 Flash Thinking, 2.0 Flash, 1.5 Pro
- * - OpenRouter Google Model Cascade (`google/gemini-...`)
+ * - Official Gemini 2.5 Pro, 2.5 Flash, 2.5 Flash Thinking, 2.0 Flash, 1.5 Pro
+ * - OpenRouter Gemini Model Cascade (`google/gemini-...`)
  * - Free Neural Gateway zero-failure high-IQ fallback
  * - Real-Time Token Generation Speed (tok/s), Latency, and Metrics calculations
  */
@@ -21,88 +21,82 @@ const GEMINI_API_KEY_STORAGE = 'girionix_gemini_api_key';
 export const OFFICIAL_GEMINI_MODELS = [
   {
     id: 'gemini-2.5-pro',
-    name: 'Gemini 2.5 Pro',
-    desc: 'Flagship reasoning, deep coding & complex mathematical analysis',
-    badge: 'Flagship',
-    contextWindow: 1048576,
+    name: 'Gemini 2.5 Pro (Flagship Reasoning)',
     openRouterId: 'google/gemini-2.5-pro',
+    contextWindow: 1048576,
     supportsThinking: true,
-    defaultBudget: 2048
+    speedTier: 'balanced',
+    description: 'Most intelligent Gemini model with deep thinking, coding prowess, and 1M+ context window.'
   },
   {
     id: 'gemini-2.5-flash',
-    name: 'Gemini 2.5 Flash',
-    desc: 'Ultra-fast multimodal speed & high-throughput reasoning',
-    badge: 'Fast',
-    contextWindow: 1048576,
+    name: 'Gemini 2.5 Flash (Ultra-Fast & Smart)',
     openRouterId: 'google/gemini-2.5-flash',
+    contextWindow: 1048576,
     supportsThinking: true,
-    defaultBudget: 1024
+    speedTier: 'ultra-fast',
+    description: 'Sub-second multimodal reasoning model optimized for high-volume developer workloads.'
   },
   {
     id: 'gemini-2.5-flash-thinking',
-    name: 'Gemini 2.5 Flash Thinking',
-    desc: 'Deep step-by-step chain-of-thought (CoT) reasoning live',
-    badge: 'Thinking',
-    contextWindow: 1048576,
+    name: 'Gemini 2.0 Flash Thinking Exp',
     openRouterId: 'google/gemini-2.0-flash-thinking-exp:free',
+    contextWindow: 1048576,
     supportsThinking: true,
-    defaultBudget: 4096
+    speedTier: 'fast',
+    description: 'Experimental model trained to explicitly surface thinking tokens before generating answers.'
   },
   {
     id: 'gemini-2.0-flash',
     name: 'Gemini 2.0 Flash',
-    desc: 'Next-gen multimodal, native tool use & real-time search',
-    badge: '2.0 Flash',
-    contextWindow: 1048576,
     openRouterId: 'google/gemini-2.0-flash-001',
+    contextWindow: 1048576,
     supportsThinking: false,
-    defaultBudget: 0
+    speedTier: 'ultra-fast',
+    description: 'Fast multimodal generation with real-time web search grounding.'
   },
   {
     id: 'gemini-2.0-flash-lite',
     name: 'Gemini 2.0 Flash Lite',
-    desc: 'Cost-efficient ultra-low latency inference',
-    badge: 'Lite',
-    contextWindow: 1048576,
     openRouterId: 'google/gemini-2.0-flash-lite-preview-02-05:free',
+    contextWindow: 1048576,
     supportsThinking: false,
-    defaultBudget: 0
+    speedTier: 'lightweight',
+    description: 'Extremely lightweight, lowest latency model for rapid prototyping.'
   },
   {
     id: 'gemini-1.5-pro',
     name: 'Gemini 1.5 Pro',
-    desc: 'Massive 2M token context window & complex document ingestion',
-    badge: '2M Context',
-    contextWindow: 2097152,
     openRouterId: 'google/gemini-pro-1.5',
+    contextWindow: 2097152,
     supportsThinking: false,
-    defaultBudget: 0
+    speedTier: 'deep',
+    description: 'Proven 2M token context window workhorse for document analysis and repo-level coding.'
   },
   {
     id: 'gemini-1.5-flash',
     name: 'Gemini 1.5 Flash',
-    desc: 'Fast, balanced multi-turn conversational model',
-    badge: '1M Context',
-    contextWindow: 1048576,
     openRouterId: 'google/gemini-flash-1.5',
+    contextWindow: 1048576,
     supportsThinking: false,
-    defaultBudget: 0
+    speedTier: 'ultra-fast',
+    description: 'Lightweight high-throughput model.'
   }
 ];
 
 export const geminiStudioEngine = {
   /**
-   * Get active Gemini API Key
+   * Retrieve active Gemini API Key
    */
   getApiKey() {
     try {
-      const dedicated = localStorage.getItem(GEMINI_API_KEY_STORAGE);
-      if (dedicated && dedicated.trim()) return dedicated.trim();
-      const custom = localStorage.getItem('girionix_custom_api_key');
-      if (custom && custom.trim() && custom.startsWith('AIzaSy')) return custom.trim();
-      const main = storage.getApiKey();
-      if (main && main.trim() && main.startsWith('AIzaSy')) return main.trim();
+      const direct = localStorage.getItem(GEMINI_API_KEY_STORAGE);
+      if (direct && direct.trim()) return direct.trim();
+      // Fallback to universal config if it's a Gemini key
+      const universalCfg = universalApiEngine.getProviderConfig();
+      if (universalCfg?.apiKey && universalCfg.apiKey.trim().startsWith('AIzaSy')) {
+        return universalCfg.apiKey.trim();
+      }
       return '';
     } catch (_) {
       return '';
@@ -110,14 +104,14 @@ export const geminiStudioEngine = {
   },
 
   /**
-   * Save Gemini API Key
+   * Persist a user's direct Gemini API Key
    */
   setApiKey(key) {
     try {
       const trimmed = (key || '').trim();
       if (trimmed) {
         localStorage.setItem(GEMINI_API_KEY_STORAGE, trimmed);
-        // Also update universal provider if user specified a Google key
+        // Also update universal provider if user specified a Gemini key
         if (trimmed.startsWith('AIzaSy')) {
           localStorage.setItem('girionix_universal_provider', 'google');
           localStorage.setItem('girionix_custom_api_key', trimmed);
@@ -136,7 +130,7 @@ export const geminiStudioEngine = {
   },
 
   /**
-   * Verify a Google Gemini API Key
+   * Verify a Gemini API Key
    */
   async verifyApiKey(key) {
     const testKey = (key !== undefined ? key : this.getApiKey())?.trim();
@@ -151,7 +145,7 @@ export const geminiStudioEngine = {
       if (res.ok && data.models) {
         return {
           valid: true,
-          label: `Google Gemini API Connected (${data.models.length} models available)`,
+          label: `Gemini API Connected (${data.models.length} models available)`,
           modelsCount: data.models.length
         };
       }
@@ -190,7 +184,7 @@ export const geminiStudioEngine = {
   },
 
   /**
-   * Primary Streaming Engine for Google AI Studio
+   * Primary Streaming Engine for AI Studio
    */
   async streamPrompt({
     mode = 'chat', // 'chat' | 'freeform' | 'structured'
@@ -236,7 +230,7 @@ export const geminiStudioEngine = {
 
     const directKey = this.getApiKey();
 
-    // 1. Direct Official Google Gemini API SSE Streaming
+    // 1. Direct Official Gemini API SSE Streaming
     if (directKey) {
       try {
         const resolvedModel = model.startsWith('gemini-') ? model : 'gemini-2.5-pro';
@@ -325,7 +319,7 @@ export const geminiStudioEngine = {
 
         if (!response.ok) {
           const errData = await response.json().catch(() => ({}));
-          throw new Error(errData.error?.message || `Google API returned HTTP ${response.status}`);
+          throw new Error(errData.error?.message || `Gemini API returned HTTP ${response.status}`);
         }
 
         const reader = response.body.getReader();
@@ -385,11 +379,11 @@ export const geminiStudioEngine = {
         }
       } catch (err) {
         if (signal?.aborted) throw err;
-        console.warn('Direct Google Gemini API stream failed, falling back to Universal Neural Engine:', err.message);
+        console.warn('Direct Gemini API stream failed, falling back to Universal Neural Engine:', err.message);
       }
     }
 
-    // 2. OpenRouter & Multi-Provider Cascade (Resolving official google/ model IDs)
+    // 2. OpenRouter & Multi-Provider Cascade (Resolving official Gemini model IDs)
     try {
       const studioModelMeta = OFFICIAL_GEMINI_MODELS.find(m => m.id === model);
       const openRouterModel = studioModelMeta?.openRouterId || 'google/gemini-2.5-pro';

@@ -181,12 +181,12 @@ export const openrouter = {
       });
     }
 
-    // Direct Google Gemini API Route (If user provided an AIzaSy key or selected Google provider)
+    // Direct Gemini API Route (If user provided an AIzaSy key or selected Gemini provider)
     if (config.providerId === 'google' || userApiKey?.startsWith('AIzaSy')) {
       try {
         const { geminiStudioEngine } = await import('./geminiStudioEngine.js');
-        const googleKey = userApiKey || geminiStudioEngine.getApiKey();
-        if (googleKey) {
+        const geminiKey = userApiKey || geminiStudioEngine.getApiKey();
+        if (geminiKey) {
           const systemMsg = enrichedMessages.find(m => m.role === 'system')?.content || '';
           const nonSystemMsgs = enrichedMessages.filter(m => m.role !== 'system');
           const lastMsg = nonSystemMsgs.pop();
@@ -224,7 +224,7 @@ export const openrouter = {
         }
       } catch (err) {
         if (signal?.aborted) throw err;
-        console.warn('Direct Google Gemini stream error, falling back:', err.message);
+        console.warn('Direct Gemini stream error, falling back:', err.message);
       }
     }
 

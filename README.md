@@ -120,6 +120,7 @@ The native Android app version is fully integrated in the [`/android`](./android
 ## 👨‍💻 Creator & Developer
 
 **Abhinav Giri**
+* **Company Website:** [https://giri-corporation.pages.dev/](https://giri-corporation.pages.dev/)
 * **GitHub:** [@abhinavgiri45](https://github.com/abhinavgiri45)
 * **X / Twitter:** [@AbhinavGiri45](https://x.com/AbhinavGiri45)
 * **Instagram:** [@abhinavgiri45](https://instagram.com/abhinavgiri45)

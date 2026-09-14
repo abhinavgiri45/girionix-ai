@@ -9,7 +9,7 @@ import VideoStudio from '../video/VideoStudio';
 import AudioStudio from '../audio/AudioStudio';
 
 export default function StudioPanel({
-  activeStudioTab = 'google-studio',
+  activeStudioTab = 'ai-studio',
   setActiveStudioTab,
   activeModel,
   injectedCode,
@@ -32,7 +32,7 @@ export default function StudioPanel({
 
       {/* Main Studio Viewport */}
       <div className="flex-1 overflow-hidden relative">
-        {(!activeStudioTab || activeStudioTab === 'google-studio' || activeStudioTab === 'freeform' || activeStudioTab === 'structured') && (
+        {(!activeStudioTab || activeStudioTab === 'ai-studio' || activeStudioTab === 'google-studio' || activeStudioTab === 'freeform' || activeStudioTab === 'structured') && (
           <GoogleAIStudio 
             activeModel={activeModel}
             isTitanMode={isTitanMode}

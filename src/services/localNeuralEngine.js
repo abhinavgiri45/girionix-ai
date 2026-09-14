@@ -229,12 +229,14 @@ class LocalNeuralEngine {
     const tag = isLite ? '🌱 Titan Lite (On-Device Lightweight)' : '⚡ Titan 70B Heavy Core (On-Device Workstation)';
 
     // 1. Creator & Identity Query
-    if (lp.includes('who made') || lp.includes('who created') || lp.includes('who are you') || lp.includes('about girionix') || lp.includes('abhinav') || lp.includes('founder')) {
+    if (lp.includes('who made') || lp.includes('who created') || lp.includes('who are you') || lp.includes('about girionix') || lp.includes('abhinav') || lp.includes('founder') || lp.includes('company') || lp.includes('corporation') || lp.includes('website')) {
       return `### ⚡ Girionix AI — Sovereign On-Device Intelligence
 
-**Girionix AI** is envisioned, architected, and engineered by **Abhinav Giri** from **India 🇮🇳 (Bharat)**.
+**Girionix AI** is envisioned, architected, and engineered by **Abhinav Giri** under **Giri Corporation** from **India 🇮🇳 (Bharat)**.
 
 - **Guiding Vision**: **\`THINK • CREATE • EXPLORE\`**
+- **Parent Organization**: **[Giri Corporation](https://giri-corporation.pages.dev/)**
+- **Official Website**: [https://giri-corporation.pages.dev/](https://giri-corporation.pages.dev/)
 - **Architecture**: 100% Air-Gapped Sovereign Neural Engine running directly on your physical hardware.
 - **Creator Socials**:
   - **𝕏 / Twitter**: [@AbhinavGiri45](https://x.com/AbhinavGiri45)

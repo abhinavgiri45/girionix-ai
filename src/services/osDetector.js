@@ -443,18 +443,18 @@ export const PLATFORM_DETAILED_SPECS = {
     id: 'android',
     name: 'Android 8.0 to Android 15 / 16 (ARM64 & x86)',
     icon: '🤖',
-    badge: 'Google Android & Flagship Dedicated Specs',
+    badge: 'Android & Flagship Dedicated Specs',
     matrix: [
       {
         category: 'Operating System',
         minimum: 'Android 8.0 (Oreo / API Level 26) through Android 11',
-        recommended: 'Android 14 – Android 15 / 16 (API Level 34–35). Optimized for Samsung One UI 6+, Google Pixel OS, Xiaomi HyperOS, OxygenOS, and Nothing OS',
-        girionixOptimization: 'Standalone signed .APK package (5.01 MB). Zero Google Play Services hard dependency; runs on Huawei HarmonyOS, GrapheneOS, and deGoogled ROMs.'
+        recommended: 'Android 14 – Android 15 / 16 (API Level 34–35). Optimized for Samsung One UI 6+, Pixel OS, Xiaomi HyperOS, OxygenOS, and Nothing OS',
+        girionixOptimization: 'Standalone signed .APK package (5.01 MB). Zero Play Services hard dependency; runs on Huawei HarmonyOS, GrapheneOS, and sovereign ROMs.'
       },
       {
         category: 'Processor (CPU)',
         minimum: '64-bit ARM64-v8a / 32-bit armeabi-v7a. Qualcomm Snapdragon 660 / MediaTek Helio G80 (Octa-Core 1.8GHz+)',
-        recommended: 'Qualcomm Snapdragon 8 Gen 2 / Gen 3 / Gen 4 (Octa-Core 3.4GHz+), MediaTek Dimensity 9300 / 9400, or Google Tensor G3 / G4 with Hexagon NPU',
+        recommended: 'Qualcomm Snapdragon 8 Gen 2 / Gen 3 / Gen 4 (Octa-Core 3.4GHz+), MediaTek Dimensity 9300 / 9400, or Tensor G3 / G4 with Hexagon NPU',
         girionixOptimization: 'Big.LITTLE ARM scheduler prioritization: efficiency cores for background audio listening, prime Cortex-X cores for instant code compilation.'
       },
       {

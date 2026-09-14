@@ -268,7 +268,7 @@ export default function SettingsModal({ isOpen, onClose, onApiKeyUpdated }) {
                   className="px-2.5 py-1 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 border border-blue-500/30 flex items-center gap-1 transition-all"
                 >
                   <Sparkles className="w-3 h-3 text-blue-400" />
-                  <span>Google AI Studio (Gemini 2.5 Free)</span>
+                  <span>AI Studio (Gemini 2.5 Free)</span>
                   <ExternalLink className="w-2.5 h-2.5 opacity-60" />
                 </a>
                 <a

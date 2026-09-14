@@ -5,7 +5,7 @@
  * Key Highlights:
  * - Single Persistent Self-Healing SpeechRecognition Engine (Eliminates "already started" / abort crashes)
  * - Safe Utterance Anchoring to prevent Chromium V8 SpeechSynthesis GC drop
- * - Priority Neural & Natural Voice Selection (Microsoft Online Natural, Google Neural, Apple Siri/Enhanced)
+ * - Priority Neural & Natural Voice Selection (Microsoft Online Natural, High-Precision Neural, Apple Siri/Enhanced)
  * - Human Conversational Silence Timing (~1200ms) for natural, unhurried human dialogue
  * - Hands-Free Infinite Turn-Taking: Dialogue seamlessly flows turn 1 -> turn 2 -> turn 100+
  * - Audio Context Analyzer for Reactive Orb Physics

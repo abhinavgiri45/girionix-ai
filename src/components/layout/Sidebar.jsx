@@ -12,7 +12,9 @@ import {
   Award,
   Download,
   Crown,
-  X
+  X,
+  Globe,
+  ExternalLink
 } from 'lucide-react';
 
 export default function Sidebar({
@@ -98,6 +100,16 @@ export default function Sidebar({
               <Award className="w-5 h-5" />
             </button>
           )}
+
+          <a
+            href="https://giri-corporation.pages.dev/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-2.5 rounded-xl text-cyan-400 hover:text-white hover:bg-cyan-500/20 transition-colors flex items-center justify-center"
+            title="Official Giri Corporation Website (giri-corporation.pages.dev)"
+          >
+            <Globe className="w-5 h-5" />
+          </a>
 
           <button
             onClick={onOpenSettings}
@@ -280,6 +292,23 @@ export default function Sidebar({
             <ChevronRight className="w-3.5 h-3.5 text-gray-500 group-hover:text-cyan-300 transition-transform" />
           </button>
         )}
+
+        <a
+          href="https://giri-corporation.pages.dev/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full p-2 rounded-xl bg-gradient-to-r from-blue-950/25 via-cyan-950/25 to-purple-950/25 hover:from-blue-950/45 hover:via-cyan-950/45 hover:to-purple-950/45 border border-cyan-500/25 hover:border-cyan-500/50 flex items-center justify-between text-left transition-all group cursor-pointer shadow-sm"
+          title="Official Giri Corporation Website (giri-corporation.pages.dev)"
+        >
+          <div className="flex items-center gap-2">
+            <Globe className="w-3.5 h-3.5 text-cyan-400 group-hover:rotate-12 transition-transform" />
+            <div className="flex flex-col">
+              <span className="text-xs font-medium text-gray-200 group-hover:text-cyan-300">Giri Corporation</span>
+              <span className="text-[10px] font-mono text-cyan-400/70">Parent Organization ↗</span>
+            </div>
+          </div>
+          <ExternalLink className="w-3.5 h-3.5 text-gray-500 group-hover:text-cyan-300 transition-colors" />
+        </a>
 
         <div className="text-[10px] text-gray-500 font-mono flex items-center gap-1.5 leading-tight px-1 pt-0.5">
           <Lock className="w-3 h-3 text-gray-500 flex-shrink-0" />

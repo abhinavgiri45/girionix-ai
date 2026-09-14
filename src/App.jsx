@@ -47,7 +47,7 @@ export default function App() {
     }
   };
   const [layoutMode, setLayoutMode] = useState('chat'); // 'chat' | 'split' | 'studio'
-  const [activeStudioTab, setActiveStudioTab] = useState('google-studio'); // Flagship Google AI Studio by default
+  const [activeStudioTab, setActiveStudioTab] = useState('ai-studio'); // Flagship AI Studio by default
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isToolsOpen, setIsToolsOpen] = useState(false);
   const [introTab, setIntroTab] = useState('overview');
@@ -328,7 +328,7 @@ export default function App() {
                   : 'text-gray-400 hover:text-white bg-white/[0.03]'
               }`}
             >
-              <span>{activeStudioTab === 'google-studio' ? '✦ AI Studio' : `💻 Studio (${activeStudioTab.toUpperCase()})`}</span>
+              <span>{(activeStudioTab === 'ai-studio' || activeStudioTab === 'google-studio') ? '✦ AI Studio' : `💻 Studio (${activeStudioTab.toUpperCase()})`}</span>
             </button>
           </div>
         )}

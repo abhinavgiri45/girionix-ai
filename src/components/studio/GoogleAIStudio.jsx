@@ -134,7 +134,7 @@ $$F_0 = 0, \\quad F_1 = 1, \\quad F_n = F_{n-1} + F_{n-2} \\quad \\text{for } n 
 The closed-form representation is given by Binet's Formula:
 $$F_n = \\frac{\\phi^n - \\psi^n}{\\sqrt{5}} = \\frac{1}{\\sqrt{5}}\\left[\\left(\\frac{1+\\sqrt{5}}{2}\\right)^n - \\left(\\frac{1-\\sqrt{5}}{2}\\right)^n\\right]$$
 
-You can click **▶ Run Code** above to execute this code right inside the in-browser Google AI sandbox!`,
+You can click **▶ Run Code** above to execute this code right inside the in-browser sandbox runner!`,
       thinking: "The user requests an efficient Fibonacci generator in Python. I should provide a typed function with docstrings, provide the recurrence relation in KaTeX math, and include executable code with a print statement so they can test the in-browser sandbox runner.",
       latencyMs: 642,
       tokenCount: 268,
@@ -346,8 +346,8 @@ You can click **▶ Run Code** above to execute this code right inside the in-br
         finishReason: null,
         isStreaming: true,
         groundingSources: enableSearchGrounding ? [
-          { title: "Google DeepMind Gemini 2.5", url: "https://deepmind.google/technologies/gemini/" },
-          { title: "Google AI for Developers", url: "https://ai.google.dev/" }
+          { title: "DeepMind Gemini 2.5", url: "https://deepmind.google/technologies/gemini/" },
+          { title: "AI for Developers", url: "https://ai.google.dev/" }
         ] : []
       };
 
@@ -616,14 +616,14 @@ You can click **▶ Run Code** above to execute this code right inside the in-br
     setTimeout(() => handleRun(), 100);
   };
 
-  // Official Google GenAI SDK Code generation for Get Code modal
+  // Official GenAI SDK Code generation for Get Code modal
   const generateSdkCode = () => {
     const activeSys = systemInstruction.replace(/"/g, '\\"');
     const model = selectedModel;
     const lastContent = (studioMode === 'chat' ? (chatTurns[chatTurns.length - 1]?.content || 'Hello') : freeformContent).replace(/"/g, '\\"');
 
     if (codeLanguage === 'python') {
-      return `# Official Google GenAI SDK (google-genai)
+      return `# Official GenAI SDK (google-genai)
 # pip install google-genai
 
 from google import genai
@@ -651,7 +651,7 @@ print(response.text)
     }
 
     if (codeLanguage === 'javascript') {
-      return `// Official Google GenAI SDK (@google/genai)
+      return `// Official GenAI SDK (@google/genai)
 // npm install @google/genai
 
 import { GoogleGenAI } from '@google/genai';
@@ -698,7 +698,7 @@ main();
     }
 
     if (codeLanguage === 'swift') {
-      return `// Google GenAI Swift SDK
+      return `// GenAI Swift SDK
 import GoogleGenAI
 
 let ai = GoogleGenAI()
@@ -721,7 +721,7 @@ print(response.text ?? "")
     }
 
     if (codeLanguage === 'kotlin') {
-      return `// Google GenAI Android / Kotlin SDK
+      return `// GenAI Android / Kotlin SDK
 import com.google.genai.Client
 import com.google.genai.types.GenerateContentConfig
 
@@ -755,7 +755,7 @@ println(response.text)
 
   return (
     <div className="flex-1 flex flex-col h-full bg-[#131314] text-[#e3e3e3] select-none overflow-hidden relative font-sans">
-      {/* 1. Google AI Studio Header Bar */}
+      {/* 1. AI Studio Header Bar */}
       <div className="px-3 sm:px-4 py-2.5 bg-[#1e1f20] border-b border-[#3c4043] flex items-center justify-between gap-2.5 flex-wrap shrink-0 z-10">
         {/* Left: Brand Identity & Editable Prompt Title */}
         <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
@@ -771,7 +771,7 @@ println(response.text)
                 </linearGradient>
               </defs>
             </svg>
-            <span className="text-sm font-medium text-[#e3e3e3] tracking-tight hidden sm:inline">Google AI Studio</span>
+            <span className="text-sm font-medium text-[#e3e3e3] tracking-tight hidden sm:inline">AI Studio</span>
           </div>
 
           <div className="h-4 w-px bg-[#444746] hidden sm:block" />
@@ -840,7 +840,7 @@ println(response.text)
 
         {/* Right: Quick Action Controls (<> Get Code, Sample Prompts, API Key, Big Blue Run button) */}
         <div className="flex items-center gap-2">
-          {/* Direct Google Gemini API Key Button (Official Google AI Studio Top Nav Feature) */}
+          {/* Direct Gemini API Key Button (Official AI Studio Top Nav Feature) */}
           <button
             onClick={() => setIsApiKeyModalOpen(true)}
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all cursor-pointer ${
@@ -848,7 +848,7 @@ println(response.text)
                 ? 'bg-[#004a77]/40 text-[#a8c7fa] border-[#a8c7fa]/40 hover:bg-[#004a77]/60 shadow-sm'
                 : 'bg-[#282a2c] hover:bg-[#3c4043] text-[#c4c7c5] hover:text-white border-[#444746]'
             }`}
-            title="Set official Google Gemini API Key (aistudio.google.com)"
+            title="Set official Gemini API Key (aistudio.google.com)"
           >
             <Key className="w-3.5 h-3.5 text-[#a8c7fa]" />
             <span className="hidden md:inline">{hasDirectKey ? 'API Key Active' : 'Get API Key'}</span>
@@ -893,7 +893,7 @@ println(response.text)
             <span className="hidden sm:inline">Get code</span>
           </button>
 
-          {/* Big Blue Google Run / Stop Button */}
+          {/* Big Blue Run / Stop Button */}
           {isGenerating ? (
             <button
               onClick={handleStop}
@@ -1002,7 +1002,7 @@ println(response.text)
                       </svg>
                     </div>
                     <div className="space-y-1">
-                      <h3 className="font-medium text-[#e3e3e3] text-base">Google AI Studio Chat Prompt</h3>
+                      <h3 className="font-medium text-[#e3e3e3] text-base">AI Studio Chat Prompt</h3>
                       <p className="text-xs text-[#8e918f] max-w-sm">
                         Type a user prompt below or pick from the sample library. Features real-time token streaming, step-by-step thinking tokens, syntax-highlighted code with in-browser execution sandbox, and KaTeX LaTeX formulas.
                       </p>
@@ -1380,7 +1380,7 @@ println(response.text)
           )}
         </div>
 
-        {/* Desktop Run Settings Sidebar (Docked on lg+ screens - Google AI Studio Material 3 Dark theme) */}
+        {/* Desktop Run Settings Sidebar (Docked on lg+ screens - AI Studio Material 3 Dark theme) */}
         <div className="hidden lg:flex w-72 xl:w-80 flex-col bg-[#1e1f20] border-l border-[#3c4043] overflow-y-auto p-4 space-y-4 shrink-0 text-xs font-sans">
           <div className="flex items-center justify-between border-b border-[#3c4043] pb-2.5">
             <div className="flex items-center gap-2 text-[#e3e3e3] font-medium text-sm">
@@ -1520,7 +1520,7 @@ println(response.text)
             <label className="text-[11px] text-[#c4c7c5] font-medium uppercase tracking-wider">Tools & Extensions</label>
             
             <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#131314] border border-[#444746]">
-              <span className="text-xs text-[#e3e3e3]">Google Search Grounding</span>
+              <span className="text-xs text-[#e3e3e3]">Search Grounding</span>
               <input
                 type="checkbox"
                 checked={enableSearchGrounding}
@@ -1587,7 +1587,7 @@ println(response.text)
         </div>
       </div>
 
-      {/* Direct Google Gemini API Key Modal (Official Google AI Studio Flow) */}
+      {/* Direct Gemini API Key Modal (Official AI Studio Flow) */}
       {isApiKeyModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
           <div className="w-full max-w-md bg-[#1e1f20] border border-[#3c4043] rounded-3xl p-5 shadow-2xl space-y-4">
@@ -1597,7 +1597,7 @@ println(response.text)
                   <Key className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-white text-sm">Google AI Studio API Key</h3>
+                  <h3 className="font-bold text-white text-sm">AI Studio API Key</h3>
                   <p className="text-[11px] text-[#8e918f]">Direct connection to Gemini API</p>
                 </div>
               </div>
@@ -1611,7 +1611,7 @@ println(response.text)
 
             <div className="space-y-2 text-xs text-[#c4c7c5] leading-relaxed">
               <p>
-                Get a free API key with 1,000,000+ token context window directly from Google:
+                Get a free API key with 1,000,000+ token context window directly from AI Studio:
               </p>
               <a 
                 href="https://aistudio.google.com/app/apikey" 
@@ -1619,7 +1619,7 @@ println(response.text)
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 text-[#a8c7fa] hover:underline font-medium"
               >
-                <span>Get API key from Google AI Studio</span>
+                <span>Get API key from AI Studio</span>
                 <ExternalLink className="w-3 h-3" />
               </a>
             </div>
@@ -1780,7 +1780,7 @@ println(response.text)
                 </div>
                 <div>
                   <h3 className="font-medium text-[#e3e3e3] text-sm">Get code</h3>
-                  <p className="text-[11px] text-[#8e918f] font-sans">Export prompt to official Google GenAI SDKs</p>
+                  <p className="text-[11px] text-[#8e918f] font-sans">Export prompt to official GenAI SDKs</p>
                 </div>
               </div>
               <button
@@ -1821,7 +1821,7 @@ println(response.text)
 
             <div className="p-3.5 bg-[#1e1f20] border-t border-[#3c4043] flex items-center justify-between">
               <span className="text-[11px] text-[#8e918f] font-sans">
-                Official Google GenAI SDK configured for <strong className="text-[#e3e3e3]">{selectedModel}</strong>
+                Official GenAI SDK configured for <strong className="text-[#e3e3e3]">{selectedModel}</strong>
               </span>
               <button
                 onClick={handleCopyCodeSnippet}

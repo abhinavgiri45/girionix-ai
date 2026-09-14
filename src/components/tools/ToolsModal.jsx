@@ -33,7 +33,8 @@ import {
   CheckCircle,
   AlertCircle,
   Cpu,
-  ScrollText
+  ScrollText,
+  Globe
 } from 'lucide-react';
 import { storage, PERSONAS, THEMES } from '../../services/storage';
 import { updateService, CURRENT_APP_VERSION } from '../../services/updateService';
@@ -363,9 +364,9 @@ export default function ToolsModal({
                 <span className="text-cyan-400 font-bold">Specialized Studio Engines</span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {/* Flagship: Google AI Studio */}
+                {/* Flagship: AI Studio */}
                 <div
-                  onClick={() => { onLaunchStudio('google-studio'); onClose(); }}
+                  onClick={() => { onLaunchStudio('ai-studio'); onClose(); }}
                   className="p-5 rounded-2xl bg-gradient-to-br from-blue-950/50 via-cyan-950/40 to-[#0B0D19] border border-cyan-400/50 hover:border-cyan-300 cursor-pointer transition-all hover:scale-[1.01] shadow-xl group space-y-2.5 sm:col-span-2 lg:col-span-3"
                 >
                   <div className="flex items-center justify-between">
@@ -382,7 +383,7 @@ export default function ToolsModal({
                       <span>AI Studio</span>
                       <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 font-mono">Developer Studio</span>
                     </h3>
-                    <div className="text-[11px] font-mono text-cyan-400 font-bold">✦ Model: Google Gemini 2.5 Pro & Flash Thinking Core</div>
+                    <div className="text-[11px] font-mono text-cyan-400 font-bold">✦ Model: Gemini 2.5 Pro & Flash Thinking Core</div>
                   </div>
                   <p className="text-xs text-gray-300 leading-relaxed max-w-2xl">
                     Faithful AI Studio developer environment featuring Chat, Freeform, and Structured (Few-Shot) prompt workspaces, live in-browser code execution sandbox, KaTeX math rendering, and multi-language SDK code export (Python, JS, cURL, Swift, Kotlin).
@@ -1014,8 +1015,18 @@ export default function ToolsModal({
                 This certifies that <strong className="text-cyan-400">Girionix AI</strong> was envisioned, architected, and engineered in India by <strong className="text-purple-300 font-bold">Abhinav Giri</strong> to pioneer the next generation of artificial intelligence, combining superhuman code sandboxing, Olympiad mathematics, 8K art direction, and conversational voice intelligence.
               </p>
 
-              {/* Creator Official Links */}
+              {/* Creator & Company Official Links */}
               <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
+                <a
+                  href="https://giri-corporation.pages.dev/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-cyan-600/30 via-blue-600/30 to-purple-600/30 hover:from-cyan-600/50 hover:via-blue-600/50 hover:to-purple-600/50 text-cyan-200 font-mono text-xs border border-cyan-500/40 shadow-lg shadow-cyan-500/10 transition-transform transform hover:scale-105"
+                >
+                  <Globe className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>🌐 Giri Corporation</span>
+                </a>
+
                 <a
                   href="https://x.com/AbhinavGiri45"
                   target="_blank"

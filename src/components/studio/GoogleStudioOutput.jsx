@@ -109,7 +109,7 @@ function formatInlineMarkdown(text) {
 }
 
 // Render Markdown Table
-function GoogleMarkdownTable({ lines }) {
+function StudioMarkdownTable({ lines }) {
   if (!lines || lines.length < 2) return null;
   const headerLine = lines[0];
   const dataLines = lines.slice(2); // skip header and separator
@@ -156,7 +156,7 @@ function GoogleMarkdownTable({ lines }) {
 }
 
 // In-Browser Code Runner Sandbox Component
-function GoogleCodeBlock({ language = 'text', code = '', blockId }) {
+function StudioCodeBlock({ language = 'text', code = '', blockId }) {
   const [copied, setCopied] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [executionOutput, setExecutionOutput] = useState(null);
@@ -245,7 +245,7 @@ function GoogleCodeBlock({ language = 'text', code = '', blockId }) {
         setExecutionTime(`${elapsed}ms`);
         setExecutionOutput({ 
           status: 'success', 
-          text: `[Google AI Sandbox]\nCompiled ${language} module successfully.\nExit code: 0` 
+          text: `[AI Sandbox]\nCompiled ${language} module successfully.\nExit code: 0` 
         });
       }
     } catch (err) {
@@ -261,7 +261,7 @@ function GoogleCodeBlock({ language = 'text', code = '', blockId }) {
 
   return (
     <div className="my-3 rounded-2xl overflow-hidden border border-[#3c4043] bg-[#1e1f20] shadow-md text-left">
-      {/* Code Header in Google AI Studio Style */}
+      {/* Code Header in AI Studio Style */}
       <div className="px-4 py-2 bg-[#282a2c] border-b border-[#3c4043] flex items-center justify-between text-xs font-mono">
         <div className="flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full bg-[#a8c7fa]/60" />
@@ -303,7 +303,7 @@ function GoogleCodeBlock({ language = 'text', code = '', blockId }) {
         </pre>
       </div>
 
-      {/* Google AI Studio Interactive Terminal Execution Output Sandbox */}
+      {/* AI Studio Interactive Terminal Execution Output Sandbox */}
       {executionOutput && (
         <div className="border-t border-[#3c4043] bg-[#1e1f20]">
           <div 
@@ -338,7 +338,7 @@ function GoogleCodeBlock({ language = 'text', code = '', blockId }) {
   );
 }
 
-// Google AI Studio Output Component
+// AI Studio Output Component
 export default function GoogleStudioOutput({
   text = '',
   thinking = null,
@@ -409,7 +409,7 @@ export default function GoogleStudioOutput({
 
   return (
     <div className="w-full flex flex-col space-y-3 font-sans text-left">
-      {/* 1. Google AI Studio Header Metadata Bar */}
+      {/* 1. AI Studio Header Metadata Bar */}
       <div className="flex items-center justify-between flex-wrap gap-2 px-3 py-2 rounded-xl bg-[#1e1f20] border border-[#3c4043] text-xs font-sans">
         {/* Model Sparkle Identity */}
         <div className="flex items-center gap-2">
@@ -466,7 +466,7 @@ export default function GoogleStudioOutput({
         </div>
       </div>
 
-      {/* 2. Collapsible Thinking Process Drawer (Google AI Studio Flash Thinking & Chain-of-Thought) */}
+      {/* 2. Collapsible Thinking Process Drawer (Flash Thinking & Chain-of-Thought) */}
       {thinking && thinking.trim().length > 0 && (
         <div className="rounded-2xl border border-[#3c4043] bg-[#1e1f20] overflow-hidden shadow-sm">
           <button
@@ -500,7 +500,7 @@ export default function GoogleStudioOutput({
         {parsedSections.map((section, idx) => {
           if (section.type === 'code') {
             return (
-              <GoogleCodeBlock
+              <StudioCodeBlock
                 key={`code-${idx}`}
                 language={section.language}
                 code={section.content}
@@ -543,7 +543,7 @@ export default function GoogleStudioOutput({
                   // Check if this paragraph is a markdown table
                   const tableLines = trimmed.split('\n').filter(l => l.trim().length > 0);
                   if (tableLines.length >= 2 && tableLines[0].startsWith('|') && tableLines[0].endsWith('|') && tableLines[1].includes('---')) {
-                    return <GoogleMarkdownTable key={`tbl-${mIdx}-${pIdx}`} lines={tableLines} />;
+                    return <StudioMarkdownTable key={`tbl-${mIdx}-${pIdx}`} lines={tableLines} />;
                   }
 
                   // Check if heading
@@ -589,7 +589,7 @@ export default function GoogleStudioOutput({
         )}
       </div>
 
-      {/* 4. Google Search Grounding Sources / Citations */}
+      {/* 4. Search Grounding Sources / Citations */}
       {groundingSources && groundingSources.length > 0 && (
         <div className="mt-3 p-3 rounded-xl bg-[#1e1f20] border border-[#3c4043] space-y-2">
           <div className="flex items-center gap-1.5 text-xs font-medium text-[#c4c7c5]">
