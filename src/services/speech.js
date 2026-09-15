@@ -263,7 +263,7 @@ class SpeechService {
           });
         }
 
-        // Fast responsive silence threshold (default 800ms) for snappy turnaround
+        // Natural human breath pause threshold (default 1400ms) prevents cutting off user speech
         clearTimeout(this.silenceTimer);
         this.silenceTimer = setTimeout(() => {
           if (accumulatedText.trim() && !this.isSpeaking && !this.isProcessing) {
@@ -275,7 +275,7 @@ class SpeechService {
               onSpeechFinalized(finalized);
             }
           }
-        }, silenceTimeoutMs || 800);
+        }, silenceTimeoutMs || 1400);
       }
     };
 
@@ -420,6 +420,16 @@ class SpeechService {
       t = t.replace(pattern, rep);
     });
 
+    // Human conversational breathing rhythm: replace colons, semicolons, and dashes with natural pauses
+    t = t
+      .replace(/[:;]/g, ', ')
+      .replace(/[—–]/g, ', ')
+      .replace(/\s*--\s*/g, ', ')
+      .replace(/\n{2,}/g, '. ')
+      .replace(/\n/g, ', ')
+      .replace(/\s*,\s*,+/g, ', ')
+      .replace(/\s*\.\s*\.+/g, '. ');
+
     if (targetLang === 'hi-IN' || this.hasDevanagari(t)) {
       t = t
         .replace(/\bGirionix AI\b/gi, 'गिरिऑनिक्स एआई')
@@ -447,7 +457,7 @@ class SpeechService {
 
     // 1. High-Fidelity Hindi Neural/Natural Voice Matching
     if (isHindi) {
-      const topHindiKeywords = ['Natural', 'Neural', 'Swara', 'Kalpana', 'Madhur', 'Google हिन्दी', 'hi-IN', 'hi_IN', 'Hindi'];
+      const topHindiKeywords = ['Natural', 'Neural', 'Swara', 'Kalpana', 'Madhur', 'हिन्दी', 'hi-IN', 'hi_IN', 'Hindi'];
       for (const kw of topHindiKeywords) {
         const match = this.voices.find(v => (v.lang.includes('hi') || v.name.toLowerCase().includes('hindi')) && v.name.toLowerCase().includes(kw.toLowerCase()));
         if (match) return match;
@@ -469,31 +479,35 @@ class SpeechService {
       if (genericIndian) return genericIndian;
     }
 
-    // 3. Top-Tier Human Natural & Neural English Voices (Edge Neural, Google, Apple Siri/Samantha Enhanced)
+    // 3. Top-Tier Human Natural & Neural English Voices (Online Natural, Enhanced, Siri, Studio)
     const priorityKeywords = wantsMale
       ? [
           'Microsoft Guy Online (Natural)',
           'Microsoft Christopher Online (Natural)',
           'Microsoft Eric Online (Natural)',
-          'Google UK English Male',
-          'Google US English Male',
+          'Microsoft Roger Online (Natural)',
+          'Microsoft Steffan Online (Natural)',
           'Alex',
           'Daniel (Enhanced)',
           'Daniel',
+          'UK English Male',
+          'US English Male',
           'Natural',
           'Neural',
           'Male'
         ]
       : [
-          'Microsoft Aria Online (Natural)',
           'Microsoft Jenny Online (Natural)',
+          'Microsoft Aria Online (Natural)',
           'Microsoft Sonia Online (Natural)',
-          'Google US English',
-          'Google UK English Female',
+          'Microsoft Michelle Online (Natural)',
           'Samantha (Enhanced)',
           'Samantha',
           'Siri',
           'Karen (Enhanced)',
+          'Moira (Enhanced)',
+          'UK English Female',
+          'US English Female',
           'Natural',
           'Neural',
           'Female'
@@ -504,7 +518,8 @@ class SpeechService {
       if (matched) return matched;
     }
 
-    const neuralFallback = this.voices.find(v => (v.name.includes('Natural') || v.name.includes('Neural') || v.name.includes('Google')) && v.lang.startsWith('en'));
+    // Filter for any high-quality natural/neural voice before standard robotic voices
+    const neuralFallback = this.voices.find(v => (v.name.includes('Natural') || v.name.includes('Neural') || v.name.includes('Enhanced')) && v.lang.startsWith('en'));
     if (neuralFallback) return neuralFallback;
 
     return this.voices.find(v => v.lang.startsWith('en')) || this.voices[0] || null;

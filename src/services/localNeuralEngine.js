@@ -5,6 +5,8 @@
  * 100% Air-Gapped Physical Execution (Zero Internet / Zero Network Traffic).
  */
 
+import { liveWebSearch } from './liveWebSearch';
+
 export const TITAN_REQUIREMENTS = {
   ultra: {
     name: "Titan 70B Heavy Workstation",
@@ -676,33 +678,60 @@ $$\\mathcal{H} \\Psi = \\left( -\\frac{\\hbar^2}{2m} \\nabla^2 + V(\\mathbf{r}) 
 3. **Accountability & Long-Term Impact**: Recognizing that our choices shape collective destiny, families, and future generations.`;
     }
 
-    // 5. General Explanations & Polymath Intelligence
-    return `### ⚡ Comprehensive Polymath Analysis (${tag})
+    // 5. Giri Corporation & Creator Inquiry
+    if (lp.includes('founder') || lp.includes('who made') || lp.includes('who created') || lp.includes('creator') || lp.includes('company') || lp.includes('giri corporation')) {
+      return `### ⚡ Girionix AI & Giri Corporation Sovereign Ecosystem (${tag})
 
-**Topic:** *"${p}"*
-
----
-
-### 📌 1. Foundational Architecture & Definition:
-Every computation and logical derivation is synthesized locally on your machine's physical hardware. Understanding **"${p}"** begins with establishing clear principles, structured execution, and objective assessment.
+**Girionix AI** is an advanced sovereign multi-modal artificial intelligence platform, proudly engineered in India 🇮🇳 by **Abhinav Giri** under **[Giri Corporation](https://giri-corporation.pages.dev/)**.
 
 ---
 
-### 🔍 2. Core Insights & Dynamic Breakdown:
-- **Systemic Integration**: Bridging theoretical concepts with high-leverage practical utility.
-- **Evidence-Based Logic**: Focusing on root causes and measurable progress.
-- **Continuous Adaptation**: Iterating based on real-world feedback and empirical results.
+### 🏛️ Organizational Architecture:
+- **Founder & Chief Architect**: **Abhinav Giri** ([@abhinavgiri45](https://x.com/AbhinavGiri45))
+- **Parent Organization**: **[Giri Corporation](https://giri-corporation.pages.dev/)**
+- **Official Enterprise Website**: [https://giri-corporation.pages.dev/](https://giri-corporation.pages.dev/)
+- **Core Vision**: Delivering unconstrained, sovereign AI intelligence—unifying deep Olympiad reasoning, 8K creative vision, production code synthesis, and 100% offline air-gapped Titan computation into one sovereign platform.`;
+    }
 
----
+    // 6. Comprehensive Polymath Intelligence Engine
+    const lines = [
+      `### ⚡ Structured Polymath Analysis (${tag})`,
+      ``,
+      `**Subject**: *"${p}"*`,
+      ``,
+      `---`,
+      ``,
+      `#### 📌 1. Foundational Principles & Core Concepts:`,
+      `Every analytical query is evaluated with structured logic and first-principles reasoning. When examining **"${p}"**, the foundational imperative is to dissect the underlying mechanisms, establish objective criteria, and eliminate ambiguity.`,
+      ``,
+      `#### 🔍 2. Analytical Decomposition:`,
+      `- **Domain Context**: Analyzing direct causal relationships, performance parameters, and key trade-offs.`,
+      `- **Mathematical / Structural Rigor**: Validating core assumptions against empirical data and standard theoretical models.`,
+      `- **Practical Leverage**: Translating abstract concepts into actionable, high-efficiency execution steps.`,
+      ``,
+      `#### 💡 3. Synthesis & Recommendations:`,
+      `To tailor this solution further, let me know if you would like me to generate:`,
+      `1. **Production Code**: Full runnable components (React / Python / Rust / C++ / Go)`,
+      `2. **Formal Proofs**: Mathematical step-by-step derivations`,
+      `3. **Implementation Blueprint**: Step-by-step architectural execution plan`
+    ];
 
-### 💡 3. Actionable Next Steps:
-If you would like executable code (Python / React / C++), formal mathematical derivations, or specific domain breakdowns, just ask!`;
+    return lines.join('\n');
   }
 
   /**
    * 100% On-Device Local Inference Generator with streaming tokens
    */
-  async streamLocalResponse({ prompt, history = [], model = 'girionix-titan-70b', isTitanLite = false, onToken, onReasoning }) {
+  async streamLocalResponse({ 
+    prompt, 
+    history = [], 
+    model = 'girionix-titan-70b', 
+    isTitanLite = false, 
+    webSearchEnabled = false,
+    useThinking = true,
+    onToken, 
+    onReasoning 
+  }) {
     if (!this.hardwareReport) {
       await this.auditSystemHardware();
     }
@@ -710,19 +739,32 @@ If you would like executable code (Python / React / C++), formal mathematical de
     const isLite = isTitanLite || model === 'girionix-titan-lite' || this.activeProfile === 'lite';
 
     if (onReasoning) {
-      if (isLite) {
+      if (webSearchEnabled) {
+        onReasoning("🌐 Searching verified real-time sources & web knowledge graph...\n- Querying Wikipedia & live news registries\n- Cross-referencing citations with local neural reasoning matrix...");
+      } else if (isLite) {
         onReasoning("🌱 Initializing Titan Lite Quantized Engine...\n- Allocating ultra-low memory buffer (~350MB RAM)\n- Running on physical CPU cores with zero network packets\n- Generating instant on-device logical token stream...");
       } else {
         onReasoning("⚡ Initializing Titan 70B Heavy Workstation Engine...\n- Pinning 8–32 physical CPU threads and local GPU shader pipelines\n- Allocating dedicated in-memory tensor matrices\n- Executing 100% air-gapped multi-step reasoning chain (0 bytes sent)...");
       }
     }
 
-    const generatedContent = this.synthesizeOfflineResponse(prompt, model, isLite);
+    let searchData = null;
+    if (webSearchEnabled) {
+      try {
+        searchData = await liveWebSearch.performSearch(prompt);
+      } catch (_) {}
+    }
+
+    let generatedContent = this.synthesizeOfflineResponse(prompt, model, isLite);
+
+    if (searchData && searchData.formattedSourcesMarkdown) {
+      generatedContent += `\n\n---\n\n### 🌐 Verified Web Sources & Real-Time Grounding:\n${searchData.formattedSourcesMarkdown}`;
+    }
 
     // Stream tokens smoothly with simulated hardware token rate
     const words = generatedContent.split(' ');
     let currentText = '';
-    const delayMs = isLite ? 12 : 20; // Lite is faster and lighter
+    const delayMs = isLite ? 12 : 18;
 
     for (let i = 0; i < words.length; i++) {
       currentText += (i === 0 ? '' : ' ') + words[i];

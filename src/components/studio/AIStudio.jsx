@@ -39,7 +39,7 @@ import {
   Edit2,
   RotateCcw
 } from 'lucide-react';
-import GoogleStudioOutput from './GoogleStudioOutput';
+import StudioOutput from './StudioOutput';
 import { geminiStudioEngine, OFFICIAL_GEMINI_MODELS } from '../../services/geminiStudioEngine';
 import { openrouter } from '../../services/openrouter';
 import { universalApiEngine } from '../../services/universalApiEngine';
@@ -60,25 +60,26 @@ const SAMPLE_PROMPTS = [
     userPrompt: "Derive the Heisenberg Uncertainty Principle $\\Delta x \\Delta p \\ge \\frac{\\hbar}{2}$ from the Robertson-Schrödinger relation using Cauchy-Schwarz inequality for quantum operators."
   },
   {
-    name: "Structured JSON Sentiment Classifier",
-    mode: "structured",
-    system: "You are an automated customer sentiment classification engine. Respond with strict JSON schemas.",
-    fields: { input: "Customer Review", output: "Sentiment JSON" },
-    examples: [
-      { input: "The battery lasts all day and the camera is breathtaking!", output: '{"sentiment": "positive", "confidence": 0.98, "aspects": ["battery", "camera"]}' },
-      { input: "Device overheated within 10 minutes and support was unresponsive.", output: '{"sentiment": "negative", "confidence": 0.95, "aspects": ["thermals", "support"]}' }
-    ],
-    testInput: "Screen is gorgeous, but delivery arrived two days late and packaging was slightly dented."
+    name: "Deep Analytical Reasoning",
+    mode: "chat",
+    system: "You are a world-class polymath scholar. Think step-by-step with extreme logical rigor before answering.",
+    userPrompt: "Analyze the mathematical physics underlying quantum decoherence in open quantum systems. Derive the Lindblad master equation and explain its physical consequences."
   },
   {
-    name: "Fullstack React Component with Tailwind",
+    title: "Ultra-Fast Python Scripting",
+    mode: "freeform",
+    system: "Write clean, idiomatic, fully-type-hinted Python 3.12+ code with docstrings and unit tests.",
+    userPrompt: "Write a high-performance async web scraper using httpx and asyncio that respects rate limits, retries on transient errors with exponential backoff, and extracts structured JSON."
+  },
+  {
+    title: "Full-Stack React UI Architecture",
     mode: "chat",
     system: "You are a senior frontend engineer. Output pure, self-contained modern React 18 functional components with Tailwind CSS and interactive state.",
     userPrompt: "Create a modern, responsive Glassmorphism dashboard card displaying real-time system metrics (CPU load, memory usage, network latency) with interactive hover micro-interactions."
   }
 ];
 
-export default function GoogleAIStudio({ 
+export default function AIStudio({ 
   activeModel, 
   isTitanMode = false,
   injectedCode = null,
@@ -848,7 +849,7 @@ println(response.text)
                 ? 'bg-[#004a77]/40 text-[#a8c7fa] border-[#a8c7fa]/40 hover:bg-[#004a77]/60 shadow-sm'
                 : 'bg-[#282a2c] hover:bg-[#3c4043] text-[#c4c7c5] hover:text-white border-[#444746]'
             }`}
-            title="Set official Gemini API Key (aistudio.google.com)"
+            title="Set official Gemini API Key (AI Studio)"
           >
             <Key className="w-3.5 h-3.5 text-[#a8c7fa]" />
             <span className="hidden md:inline">{hasDirectKey ? 'API Key Active' : 'Get API Key'}</span>
@@ -1101,7 +1102,7 @@ println(response.text)
                             </div>
                           )
                         ) : (
-                          <GoogleStudioOutput
+                          <StudioOutput
                             text={turn.content}
                             thinking={turn.thinking}
                             modelName={selectedModel}
@@ -1232,7 +1233,7 @@ println(response.text)
 
               {freeformOutput && (
                 <div className="mt-4 pt-4 border-t border-[#3c4043]">
-                  <GoogleStudioOutput
+                  <StudioOutput
                     text={freeformOutput.content}
                     thinking={freeformOutput.thinking}
                     modelName={selectedModel}
@@ -1364,7 +1365,7 @@ println(response.text)
 
               {structuredOutput && (
                 <div className="mt-4 pt-4 border-t border-[#3c4043]">
-                  <GoogleStudioOutput
+                  <StudioOutput
                     text={structuredOutput.content}
                     thinking={structuredOutput.thinking}
                     modelName={selectedModel}
@@ -1793,8 +1794,8 @@ println(response.text)
 
             <div className="px-4 py-2 bg-[#131314] border-b border-[#3c4043] flex items-center gap-1 overflow-x-auto no-scrollbar">
               {[
-                { id: 'python', label: 'Python (google-genai)' },
-                { id: 'javascript', label: 'JavaScript (@google/genai)' },
+                { id: 'python', label: 'Python (GenAI SDK)' },
+                { id: 'javascript', label: 'JavaScript (GenAI SDK)' },
                 { id: 'curl', label: 'cURL' },
                 { id: 'swift', label: 'Swift' },
                 { id: 'kotlin', label: 'Kotlin (Android)' }

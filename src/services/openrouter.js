@@ -94,12 +94,14 @@ export const openrouter = {
   /**
    * Neural Gateway Fallback Handler - High-IQ On-Device Sovereign Synthesis
    */
-  async streamFreeNeuralAI({ messages, onChunk, onReasoningChunk, signal }) {
+  async streamFreeNeuralAI({ messages, webSearchEnabled = false, useThinking = true, onChunk, onReasoningChunk, signal }) {
     const userPrompt = messages.filter(m => m.role !== 'system').pop()?.content || '';
     try {
       const text = await localNeuralEngine.streamLocalResponse({
         prompt: userPrompt,
         history: messages,
+        webSearchEnabled,
+        useThinking,
         onToken: (fullText, token) => {
           if (onChunk) onChunk(token, fullText);
         },
@@ -181,12 +183,17 @@ export const openrouter = {
       });
     }
 
-    // Direct Gemini API Route (If user provided an AIzaSy key or selected Gemini provider)
-    if (config.providerId === 'google' || userApiKey?.startsWith('AIzaSy')) {
+    // Direct Gemini API Route (If user provided an AIzaSy key or saved one in AI Studio/Universal settings)
+    const directGeminiKey = (userApiKey?.startsWith('AIzaSy') ? userApiKey : '') ||
+      (typeof localStorage !== 'undefined' ? localStorage.getItem('girionix_gemini_api_key') : '') ||
+      (typeof localStorage !== 'undefined' ? localStorage.getItem('girionix_custom_api_key') : '') ||
+      (config.providerId === 'google' ? userApiKey : '');
+
+    if (config.providerId === 'google' || directGeminiKey) {
       try {
         const { geminiStudioEngine } = await import('./geminiStudioEngine.js');
-        const geminiKey = userApiKey || geminiStudioEngine.getApiKey();
-        if (geminiKey) {
+        const activeKey = directGeminiKey || geminiStudioEngine.getApiKey();
+        if (activeKey) {
           const systemMsg = enrichedMessages.find(m => m.role === 'system')?.content || '';
           const nonSystemMsgs = enrichedMessages.filter(m => m.role !== 'system');
           const lastMsg = nonSystemMsgs.pop();
@@ -195,12 +202,21 @@ export const openrouter = {
             content: m.content
           }));
 
+          let resolvedModel = 'gemini-2.5-pro';
+          if (model.includes('flash-thinking')) resolvedModel = 'gemini-2.0-flash-thinking-exp:free';
+          else if (model.includes('flash-lite')) resolvedModel = 'gemini-2.0-flash-lite-preview-02-05:free';
+          else if (model.includes('2.5-flash')) resolvedModel = 'gemini-2.5-flash';
+          else if (model.includes('2.0-flash')) resolvedModel = 'gemini-2.0-flash';
+          else if (model.includes('1.5-pro')) resolvedModel = 'gemini-1.5-pro';
+          else if (model.includes('1.5-flash')) resolvedModel = 'gemini-1.5-flash';
+
           const res = await geminiStudioEngine.streamPrompt({
+            directKey: activeKey,
             mode: 'chat',
             systemInstruction: systemMsg,
             history: historyTurns,
             prompt: lastMsg?.content || '',
-            model: model.startsWith('gemini-') ? model : 'gemini-2.5-pro',
+            model: resolvedModel,
             temperature,
             maxOutputTokens: maxTokens,
             enableThinking: useThinking,
@@ -218,7 +234,7 @@ export const openrouter = {
             return {
               content: res.content,
               reasoning: res.thinking || '',
-              modelUsed: res.modelUsed || 'gemini-2.5-pro'
+              modelUsed: res.modelUsed || resolvedModel
             };
           }
         }
@@ -229,8 +245,8 @@ export const openrouter = {
     }
 
     // Zero API Key Configured: Immediately stream via Sovereign Local Neural Engine without failed HTTP calls
-    if (!userApiKey && !masterKey) {
-      return this.streamFreeNeuralAI({ messages: enrichedMessages, onChunk, onReasoningChunk, signal });
+    if (!userApiKey && !masterKey && !directGeminiKey) {
+      return this.streamFreeNeuralAI({ messages: enrichedMessages, webSearchEnabled, useThinking, onChunk, onReasoningChunk, signal });
     }
 
     // Build ordered candidate model list tailored to the active provider

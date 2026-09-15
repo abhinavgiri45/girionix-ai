@@ -1,5 +1,5 @@
 import React from 'react';
-import { Crown, Sparkles, Code2, Sigma, Film, Image as ImageIcon } from 'lucide-react';
+import { Crown, Sparkles, Code2, Sigma, Film, Image as ImageIcon, Building2 } from 'lucide-react';
 
 export default function WelcomeCards({ userName, onOpenAbout, onOpenWhySwitch }) {
   return (
@@ -32,15 +32,26 @@ export default function WelcomeCards({ userName, onOpenAbout, onOpenWhySwitch })
         What would you like to explore today?
       </h2>
 
-      {/* Action Badges: Why Switch & Quick Tip */}
+      {/* Action Badges: Why Switch, Company Website & Quick Tip */}
       <div className="flex flex-wrap items-center justify-center gap-2 mb-2">
+        <a
+          href="https://giri-corporation.pages.dev/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-xs font-semibold transition-all hover:scale-105 shadow-sm"
+          title="Official Giri Corporation Website — Owner & Developer of Girionix AI"
+        >
+          <Building2 className="w-3.5 h-3.5 text-cyan-400" />
+          <span>Giri Corporation (Official) ↗</span>
+        </a>
+
         {onOpenWhySwitch && (
           <button
             onClick={onOpenWhySwitch}
             className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 text-purple-300 text-xs font-bold transition-all hover:scale-105 shadow-sm cursor-pointer"
           >
             <Crown className="w-3.5 h-3.5 text-amber-400" />
-            <span>Why Switch to Girionix AI? (Compare)</span>
+            <span>Why Switch to Girionix AI?</span>
           </button>
         )}
 

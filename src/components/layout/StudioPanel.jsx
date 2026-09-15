@@ -1,6 +1,6 @@
 import React from 'react';
 import StudioDedicatedBar from './StudioDedicatedBar';
-import GoogleAIStudio from '../studio/GoogleAIStudio';
+import AIStudio from '../studio/AIStudio';
 import CodeStudio from '../code/CodeStudio';
 import ScriptStudio from '../script/ScriptStudio';
 import MathLab from '../math/MathLab';
@@ -33,7 +33,7 @@ export default function StudioPanel({
       {/* Main Studio Viewport */}
       <div className="flex-1 overflow-hidden relative">
         {(!activeStudioTab || activeStudioTab === 'ai-studio' || activeStudioTab === 'google-studio' || activeStudioTab === 'freeform' || activeStudioTab === 'structured') && (
-          <GoogleAIStudio 
+          <AIStudio 
             activeModel={activeModel}
             isTitanMode={isTitanMode}
             injectedCode={injectedCode}

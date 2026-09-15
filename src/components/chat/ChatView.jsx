@@ -301,7 +301,7 @@ export default function ChatView({
       const userLocale = typeof navigator !== 'undefined' ? navigator.language : 'en-US';
       speech.startListening({
         lang: userLocale.startsWith('hi') ? 'hi-IN' : userLocale.includes('IN') ? 'en-IN' : 'en-US',
-        silenceTimeoutMs: 800,
+        silenceTimeoutMs: 1400,
         onResult: ({ transcript }) => {
           if (transcript) setInput(transcript);
         },
@@ -962,117 +962,137 @@ export default function ChatView({
           </div>
 
           {/* Quick Engine & Mode Bar below input */}
-          <div className="flex items-center justify-between gap-2 px-1 text-[11px] font-mono text-gray-400 overflow-x-auto no-scrollbar py-0.5 w-full">
-            <div className="flex items-center gap-1.5 sm:gap-2.5 flex-nowrap shrink-0">
+          <div className="flex flex-wrap items-center justify-between gap-2 px-1 text-[11px] font-mono text-gray-400 py-1 w-full relative z-20">
+            <div className="flex items-center gap-1.5 sm:gap-2.5 flex-wrap shrink-0">
               {/* Engine Selector */}
               <div className="relative">
                 <button
-                  onClick={() => setIsEngineDropdownOpen(!isEngineDropdownOpen)}
-                  className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-gray-300 hover:text-white border transition-colors ${
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsEngineDropdownOpen(prev => !prev);
+                  }}
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-gray-300 hover:text-white border transition-all cursor-pointer select-none ${
                     isTitanMode
                       ? 'bg-emerald-950/30 border-emerald-500/40 text-emerald-300 shadow-glow-emerald'
-                      : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/10'
+                      : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/10 active:scale-95'
                   }`}
                 >
-                  <Sparkles className={`w-3 h-3 ${isTitanMode ? 'text-emerald-400' : 'text-cyan-400'}`} />
+                  <Sparkles className={`w-3.5 h-3.5 ${isTitanMode ? 'text-emerald-400' : 'text-cyan-400'}`} />
                   <span className="font-bold">{activeModel.name}</span>
-                  <ChevronDown className="w-3 h-3" />
+                  <ChevronDown className={`w-3 h-3 transition-transform ${isEngineDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
 
                 {isEngineDropdownOpen && (
-                  <div className="absolute bottom-full left-0 mb-2 w-[calc(100vw-2rem)] sm:w-84 max-w-sm rounded-2xl bg-[#070913] border border-white/15 p-2 shadow-2xl z-50 space-y-1 backdrop-blur-xl max-h-[75vh] flex flex-col">
-                    <div className="px-2.5 py-1 text-[10px] font-mono text-gray-400 uppercase border-b border-white/10 flex justify-between items-center shrink-0">
-                      <span>{isTitanMode ? '⚡ Titan 100% Offline Models' : '🌐 Standard AI Models'}</span>
-                      {isTitanMode ? (
-                        <span className="text-emerald-400 font-bold">100% Air-Gapped</span>
-                      ) : (
-                        <span className="text-cyan-400 font-bold flex items-center gap-1">
-                          <Zap className="w-3 h-3" />
-                          <span>Auto-Upgrade ON</span>
-                        </span>
+                  <>
+                    <div 
+                      className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[1px]" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsEngineDropdownOpen(false);
+                      }} 
+                    />
+                    <div className="absolute bottom-full left-0 mb-2 w-[calc(100vw-2rem)] sm:w-84 max-w-sm rounded-2xl bg-[#070913] border border-white/15 p-2 shadow-2xl z-50 space-y-1 backdrop-blur-xl max-h-[75vh] flex flex-col">
+                      <div className="px-2.5 py-1 text-[10px] font-mono text-gray-400 uppercase border-b border-white/10 flex justify-between items-center shrink-0">
+                        <span>{isTitanMode ? '⚡ Titan 100% Offline Models' : '🌐 Standard AI Models'}</span>
+                        {isTitanMode ? (
+                          <span className="text-emerald-400 font-bold">100% Air-Gapped</span>
+                        ) : (
+                          <span className="text-cyan-400 font-bold flex items-center gap-1">
+                            <Zap className="w-3 h-3" />
+                            <span>Auto-Upgrade ON</span>
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="overflow-y-auto space-y-1 flex-1 pr-0.5 max-h-72">
+                        {(isTitanMode ? TITAN_AI_MODELS : AI_MODELS).map((m) => {
+                          return (
+                            <button
+                              type="button"
+                              key={m.id}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveModel(m);
+                                storage.setActiveModelId(m.id);
+                                setIsEngineDropdownOpen(false);
+                              }}
+                              className={`w-full text-left p-2.5 rounded-xl flex items-center justify-between text-xs transition-all cursor-pointer ${
+                                activeModel.id === m.id 
+                                  ? isTitanMode 
+                                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-glow-emerald' 
+                                    : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' 
+                                  : 'text-gray-300 hover:bg-white/5 border border-transparent'
+                              }`}
+                            >
+                              <div className="flex flex-col space-y-0.5 min-w-0 pr-2">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="font-bold text-white text-xs">{m.name}</span>
+                                  {m.isAutoUpgrade && (
+                                    <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-gradient-to-r from-cyan-500/30 to-purple-500/30 text-cyan-200 border border-cyan-400/40 font-extrabold flex items-center gap-0.5">
+                                      <Zap className="w-2.5 h-2.5 text-cyan-300 animate-pulse" />
+                                      <span>AUTO-UPGRADED</span>
+                                    </span>
+                                  )}
+                                  {m.isTitan && (
+                                    <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold">
+                                      TITAN
+                                    </span>
+                                  )}
+                                  {m.isPro && !m.isTitan && (
+                                    <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-0.5">
+                                      <Crown className="w-2.5 h-2.5" />
+                                      <span>PRO</span>
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="text-[10px] text-gray-400 truncate">
+                                  {m.tag || m.description}
+                                </span>
+                              </div>
+                              {activeModel.id === m.id && (
+                                <Check className={`w-3.5 h-3.5 shrink-0 ${isTitanMode ? 'text-emerald-400' : 'text-cyan-400'}`} />
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Quick Sync Button for Cloud / Standard Mode */}
+                      {!isTitanMode && (
+                        <div className="pt-1.5 border-t border-white/10 shrink-0">
+                          <button
+                            type="button"
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              setIsSyncingModels(true);
+                              setSyncFeedback(null);
+                              const res = await universalApiEngine.syncLatestModels();
+                              setIsSyncingModels(false);
+                              setSyncFeedback(res.success ? `✅ Synced (${res.totalModelsAvailable} models)` : '⚠️ Synced fallback');
+                              setTimeout(() => setSyncFeedback(null), 3000);
+                            }}
+                            disabled={isSyncingModels}
+                            className="w-full py-1.5 px-2 rounded-xl bg-white/[0.03] hover:bg-cyan-500/10 text-cyan-300 hover:text-cyan-200 text-[11px] font-mono border border-cyan-500/20 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                          >
+                            <RefreshCw className={`w-3 h-3 ${isSyncingModels ? 'animate-spin' : ''}`} />
+                            <span>{isSyncingModels ? 'Checking Registries...' : (syncFeedback || '⚡ Sync & Check for Model Upgrades')}</span>
+                          </button>
+                        </div>
                       )}
                     </div>
-
-                    <div className="overflow-y-auto space-y-1 flex-1 pr-0.5">
-                      {(isTitanMode ? TITAN_AI_MODELS : AI_MODELS).map((m) => {
-                        return (
-                          <button
-                            key={m.id}
-                            onClick={() => {
-                              setActiveModel(m);
-                              storage.setActiveModelId(m.id);
-                              setIsEngineDropdownOpen(false);
-                            }}
-                            className={`w-full text-left p-2.5 rounded-xl flex items-center justify-between text-xs transition-all ${
-                              activeModel.id === m.id 
-                                ? isTitanMode 
-                                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-glow-emerald' 
-                                  : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' 
-                                : 'text-gray-300 hover:bg-white/5 border border-transparent'
-                            }`}
-                          >
-                            <div className="flex flex-col space-y-0.5 min-w-0 pr-2">
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className="font-bold text-white text-xs">{m.name}</span>
-                                {m.isAutoUpgrade && (
-                                  <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-gradient-to-r from-cyan-500/30 to-purple-500/30 text-cyan-200 border border-cyan-400/40 font-extrabold flex items-center gap-0.5">
-                                    <Zap className="w-2.5 h-2.5 text-cyan-300 animate-pulse" />
-                                    <span>AUTO-UPGRADED</span>
-                                  </span>
-                                )}
-                                {m.isTitan && (
-                                  <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold">
-                                    TITAN
-                                  </span>
-                                )}
-                                {m.isPro && !m.isTitan && (
-                                  <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-0.5">
-                                    <Crown className="w-2.5 h-2.5" />
-                                    <span>PRO</span>
-                                  </span>
-                                )}
-                              </div>
-                              <span className="text-[10px] text-gray-400 truncate">
-                                {m.tag || m.description}
-                              </span>
-                            </div>
-                            {activeModel.id === m.id && (
-                              <Check className={`w-3.5 h-3.5 shrink-0 ${isTitanMode ? 'text-emerald-400' : 'text-cyan-400'}`} />
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {/* Quick Sync Button for Cloud / Standard Mode */}
-                    {!isTitanMode && (
-                      <div className="pt-1.5 border-t border-white/10 shrink-0">
-                        <button
-                          onClick={async (e) => {
-                            e.stopPropagation();
-                            setIsSyncingModels(true);
-                            setSyncFeedback(null);
-                            const res = await universalApiEngine.syncLatestModels();
-                            setIsSyncingModels(false);
-                            setSyncFeedback(res.success ? `✅ Synced (${res.totalModelsAvailable} models)` : '⚠️ Synced fallback');
-                            setTimeout(() => setSyncFeedback(null), 3000);
-                          }}
-                          disabled={isSyncingModels}
-                          className="w-full py-1.5 px-2 rounded-xl bg-white/[0.03] hover:bg-cyan-500/10 text-cyan-300 hover:text-cyan-200 text-[11px] font-mono border border-cyan-500/20 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
-                        >
-                          <RefreshCw className={`w-3 h-3 ${isSyncingModels ? 'animate-spin' : ''}`} />
-                          <span>{isSyncingModels ? 'Checking Registries...' : (syncFeedback || '⚡ Sync & Check for Model Upgrades')}</span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                  </>
                 )}
               </div>
 
               {/* Web Grounding Toggle with Sliding On/Off Switch */}
               <button
-                onClick={() => handleToggleWebSearch(!webSearchEnabled)}
-                className={`flex items-center gap-2 px-2.5 py-1 rounded-xl border transition-all cursor-pointer select-none ${
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleToggleWebSearch(!webSearchEnabled);
+                }}
+                className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl border transition-all cursor-pointer select-none active:scale-95 ${
                   webSearchEnabled
                     ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/40 shadow-glow-cyan/50'
                     : 'bg-white/[0.04] text-gray-400 border-white/10 hover:text-white hover:bg-white/[0.08]'
@@ -1098,8 +1118,12 @@ export default function ChatView({
 
               {/* Deep Reasoning Toggle with Sliding On/Off Switch */}
               <button
-                onClick={() => handleToggleThinking(!useThinking)}
-                className={`flex items-center gap-2 px-2.5 py-1 rounded-xl border transition-all cursor-pointer select-none ${
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleToggleThinking(!useThinking);
+                }}
+                className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl border transition-all cursor-pointer select-none active:scale-95 ${
                   useThinking
                     ? 'bg-purple-500/15 text-purple-300 border-purple-500/40 shadow-glow-purple/50'
                     : 'bg-white/[0.04] text-gray-400 border-white/10 hover:text-white hover:bg-white/[0.08]'

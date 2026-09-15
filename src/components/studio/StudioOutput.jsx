@@ -339,7 +339,7 @@ function StudioCodeBlock({ language = 'text', code = '', blockId }) {
 }
 
 // AI Studio Output Component
-export default function GoogleStudioOutput({
+export default function StudioOutput({
   text = '',
   thinking = null,
   modelName = 'Gemini 2.5 Pro',
