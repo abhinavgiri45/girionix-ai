@@ -52,7 +52,7 @@ function getAllFiles(dirPath, arrayOfFiles = [], baseDir = dirPath) {
   files.forEach(file => {
     const fullPath = path.join(dirPath, file);
     if (fs.statSync(fullPath).isDirectory()) {
-      if (file !== 'downloads' && file !== 'node_modules') {
+      if (file !== 'downloads' && file !== 'node_modules' && file !== 'videos') {
         getAllFiles(fullPath, arrayOfFiles, baseDir);
       }
     } else {
