@@ -30,7 +30,9 @@ import {
   Crown,
   Lock,
   RefreshCw,
-  FileCode
+  FileCode,
+  Share2,
+  Lightbulb
 } from 'lucide-react';
 import MessageItem from './MessageItem';
 import VoiceOrbModal from './VoiceOrbModal';
@@ -47,6 +49,8 @@ import WelcomeCards from './WelcomeCards';
 import SlashCommandMenu from './SlashCommandMenu';
 import UrlInspectorModal from './UrlInspectorModal';
 import FlashcardModal from './FlashcardModal';
+import ChatExportModal from './ChatExportModal';
+import PromptLibraryModal from './PromptLibraryModal';
 
 import { openrouter } from '../../services/openrouter';
 import { imageGenerator } from '../../services/imageGenerator';
@@ -111,6 +115,8 @@ export default function ChatView({
 
   const [isUrlModalOpen, setIsUrlModalOpen] = useState(false);
   const [isFlashcardModalOpen, setIsFlashcardModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [isPromptLibraryOpen, setIsPromptLibraryOpen] = useState(false);
   const [isSyncingModels, setIsSyncingModels] = useState(false);
   const [syncFeedback, setSyncFeedback] = useState(null);
 
@@ -200,6 +206,21 @@ export default function ChatView({
 
   const handleSelectSlashCommand = (cmd) => {
     setShowSlashMenu(false);
+    if (cmd === '/export') {
+      setIsExportModalOpen(true);
+      setInput('');
+      return;
+    }
+    if (cmd === '/prompts' || cmd === '/template') {
+      setIsPromptLibraryOpen(true);
+      setInput('');
+      return;
+    }
+    if (cmd === '/clear') {
+      updateCurrentSessionMessages([]);
+      setInput('');
+      return;
+    }
     if (cmd === '/voice') {
       setIsVoiceOrbOpen(true);
       setInput('');
@@ -661,6 +682,48 @@ export default function ChatView({
         </div>
       )}
 
+      {/* Active Conversation Control Bar */}
+      {!isCleanSession && (
+        <div className="px-3 sm:px-6 py-2 bg-black/40 border-b border-white/[0.06] flex items-center justify-between text-xs backdrop-blur-md z-10">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="font-semibold text-gray-200 truncate max-w-[180px] sm:max-w-xs md:max-w-md">
+              {currentSession?.title || 'Active Conversation'}
+            </span>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 whitespace-nowrap">
+              {messages.filter(m => m.id !== 'welcome').length} msgs
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => setIsPromptLibraryOpen(true)}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 transition-all cursor-pointer text-xs"
+              title="Browse Practical Prompt Templates"
+            >
+              <Lightbulb className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline font-medium">Prompts</span>
+            </button>
+
+            <button
+              onClick={() => setIsExportModalOpen(true)}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 transition-all cursor-pointer text-xs"
+              title="Export Conversation (Markdown, Text, JSON, HTML)"
+            >
+              <Share2 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline font-medium">Export</span>
+            </button>
+
+            <button
+              onClick={() => updateCurrentSessionMessages([])}
+              className="p-1.5 rounded-lg text-gray-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer"
+              title="Clear Current Chat"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Main Messages or Welcome Area */}
       <div 
         ref={chatScrollContainerRef}
@@ -774,6 +837,24 @@ export default function ChatView({
               <Wand2 className="w-3.5 h-3.5 text-cyan-400" />
               <span>Enhance Prompt</span>
             </button>
+
+            <button
+              onClick={() => setIsPromptLibraryOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 transition-all whitespace-nowrap cursor-pointer hover:scale-105"
+              title="Explore Practical Prompt Templates"
+            >
+              <Lightbulb className="w-3.5 h-3.5 text-amber-400" />
+              <span className="font-bold">💡 Prompts</span>
+            </button>
+
+            <button
+              onClick={() => setIsExportModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 transition-all whitespace-nowrap cursor-pointer hover:scale-105"
+              title="Export & Share Conversation"
+            >
+              <Share2 className="w-3.5 h-3.5 text-cyan-400" />
+              <span className="font-bold">📤 Export</span>
+            </button>
           </div>
 
           {/* File Attachment Pill */}
@@ -794,64 +875,89 @@ export default function ChatView({
           )}
 
           {/* Main Input Textarea & Action Buttons */}
-          <div className="relative flex items-end rounded-2xl bg-black/60 border border-white/10 focus-within:border-cyan-500/40 transition-colors p-2">
-            <button
-              onClick={() => setIsFileModalOpen(true)}
-              className="p-2 text-gray-400 hover:text-white rounded-xl hover:bg-white/5 transition-colors mb-0.5"
-              title="Attach File or Code"
-            >
-              <Paperclip className="w-4 h-4" />
-            </button>
+          <div className="relative rounded-2xl bg-black/60 border border-white/10 focus-within:border-cyan-500/40 transition-colors p-2 flex flex-col">
+            {/* Live Token & Character Counter HUD */}
+            {input.trim().length > 0 && (
+              <div className="flex items-center justify-between px-2 pt-0.5 pb-1.5 text-[11px] font-mono text-gray-400 border-b border-white/5 mb-1.5 animate-fadeIn">
+                <div className="flex items-center gap-2">
+                  <span className="text-cyan-400 font-semibold">{input.length} chars</span>
+                  <span className="text-gray-600">•</span>
+                  <span>{input.trim().split(/\s+/).length} words</span>
+                  <span className="text-gray-600">•</span>
+                  <span className={input.length > 3000 ? "text-amber-400 font-bold" : "text-purple-300 font-medium"}>
+                    ~{Math.ceil(input.length / 4)} tokens
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setInput('')}
+                  className="text-gray-500 hover:text-gray-300 text-[10px] uppercase tracking-wider cursor-pointer"
+                  title="Clear text"
+                >
+                  Clear
+                </button>
+              </div>
+            )}
 
-            <textarea
-              ref={textareaRef}
-              value={input}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
-              placeholder="Ask anything, write 'create a image of...', 'create a video of...', 'write code for...', or '/' for commands..."
-              rows={1}
-              className="flex-1 bg-transparent text-base sm:text-sm text-white placeholder-gray-500 px-3 py-1.5 focus:outline-none resize-none leading-relaxed max-h-44 overflow-y-auto"
-            />
-
-            <div className="flex items-center gap-1.5 mb-0.5">
+            <div className="flex items-end w-full">
               <button
-                onClick={handleToggleListening}
-                className={`p-2 rounded-xl transition-all ${
-                  isListening
-                    ? 'bg-rose-500 text-white animate-pulse shadow-glow-rose'
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
-                }`}
-                title="Voice Input (English / Hindi)"
+                onClick={() => setIsFileModalOpen(true)}
+                className="p-2 text-gray-400 hover:text-white rounded-xl hover:bg-white/5 transition-colors mb-0.5"
+                title="Attach File or Code"
               >
-                <Mic className="w-4 h-4" />
+                <Paperclip className="w-4 h-4" />
               </button>
 
-              <button
-                onClick={onOpenVoiceModal}
-                className="p-2 text-gray-400 hover:text-cyan-300 rounded-xl hover:bg-white/5 transition-colors"
-                title="Real-time Voice Conversation Orb"
-              >
-                <Radio className="w-4 h-4" />
-              </button>
+              <textarea
+                ref={textareaRef}
+                value={input}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                placeholder="Ask anything, write 'create a image of...', 'create a video of...', 'write code for...', or '/' for commands..."
+                rows={1}
+                className="flex-1 bg-transparent text-base sm:text-sm text-white placeholder-gray-500 px-3 py-1.5 focus:outline-none resize-none leading-relaxed max-h-44 overflow-y-auto"
+              />
 
-              {isStreaming ? (
+              <div className="flex items-center gap-1.5 mb-0.5">
                 <button
-                  onClick={handleStop}
-                  className="p-2 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30 transition-colors"
-                  title="Stop generating"
+                  onClick={handleToggleListening}
+                  className={`p-2 rounded-xl transition-all ${
+                    isListening
+                      ? 'bg-rose-500 text-white animate-pulse shadow-glow-rose'
+                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  }`}
+                  title="Voice Input (English / Hindi)"
                 >
-                  <Square className="w-4 h-4 fill-current" />
+                  <Mic className="w-4 h-4" />
                 </button>
-              ) : (
+
                 <button
-                  onClick={() => handleSend()}
-                  disabled={!input.trim() && !attachedFile}
-                  className="p-2 rounded-xl bg-gradient-to-r from-cyan-400 to-purple-500 text-black font-bold disabled:opacity-30 transition-all shadow-glow-cyan"
-                  title="Send message (Enter)"
+                  onClick={onOpenVoiceModal}
+                  className="p-2 text-gray-400 hover:text-cyan-300 rounded-xl hover:bg-white/5 transition-colors"
+                  title="Real-time Voice Conversation Orb"
                 >
-                  <Send className="w-4 h-4" />
+                  <Radio className="w-4 h-4" />
                 </button>
-              )}
+
+                {isStreaming ? (
+                  <button
+                    onClick={handleStop}
+                    className="p-2 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30 transition-colors"
+                    title="Stop generating"
+                  >
+                    <Square className="w-4 h-4 fill-current" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handleSend()}
+                    disabled={!input.trim() && !attachedFile}
+                    className="p-2 rounded-xl bg-gradient-to-r from-cyan-400 to-purple-500 text-black font-bold disabled:opacity-30 transition-all shadow-glow-cyan"
+                    title="Send message (Enter)"
+                  >
+                    <Send className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
@@ -1057,6 +1163,27 @@ export default function ChatView({
         isOpen={isFlashcardModalOpen}
         onClose={() => setIsFlashcardModalOpen(false)}
         activeModel={activeModel}
+      />
+
+      <ChatExportModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        session={currentSession}
+        activeModel={activeModel}
+      />
+
+      <PromptLibraryModal
+        isOpen={isPromptLibraryOpen}
+        onClose={() => setIsPromptLibraryOpen(false)}
+        onSelectPrompt={(text) => {
+          setInput(text);
+          if (textareaRef.current) {
+            textareaRef.current.focus();
+          }
+        }}
+        onRunPrompt={(text) => {
+          handleSend(text);
+        }}
       />
     </div>
   );

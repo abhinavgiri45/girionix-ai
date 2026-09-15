@@ -10,13 +10,18 @@ import {
   Globe, 
   ShieldAlert,
   Brain,
-  Wand2
+  Wand2,
+  Lightbulb,
+  Share2,
+  Trash2
 } from 'lucide-react';
 
 export default function SlashCommandMenu({ isOpen, onSelectCommand, filterText }) {
   if (!isOpen) return null;
 
   const commands = [
+    { cmd: '/prompts', desc: 'Open curated Prompt Templates Library', icon: <Lightbulb className="w-3.5 h-3.5 text-amber-300" /> },
+    { cmd: '/export', desc: 'Export chat as Markdown, Text, HTML, or JSON', icon: <Share2 className="w-3.5 h-3.5 text-emerald-400" /> },
     { cmd: '/code', desc: 'Generate or live-run a React / Fullstack Web App', icon: <Code2 className="w-3.5 h-3.5 text-cyan-400" /> },
     { cmd: '/script', desc: 'Write a Hollywood screenplay, YouTube script, or story', icon: <ScrollText className="w-3.5 h-3.5 text-indigo-400" /> },
     { cmd: '/image', desc: 'Create a photorealistic 8K FLUX.1 visual art render', icon: <ImageIcon className="w-3.5 h-3.5 text-rose-400" /> },
@@ -25,6 +30,7 @@ export default function SlashCommandMenu({ isOpen, onSelectCommand, filterText }
     { cmd: '/voice', desc: 'Open hands-free bidirectional Voice Mode', icon: <Radio className="w-3.5 h-3.5 text-purple-400" /> },
     { cmd: '/web', desc: 'Toggle real-time web search grounding', icon: <Globe className="w-3.5 h-3.5 text-blue-400" /> },
     { cmd: '/enhance', desc: 'Expand prompt into master instructions', icon: <Wand2 className="w-3.5 h-3.5 text-cyan-300" /> },
+    { cmd: '/clear', desc: 'Clear chat session and start fresh', icon: <Trash2 className="w-3.5 h-3.5 text-rose-400" /> },
     { cmd: '/incognito', desc: 'Enable Ephemeral session mode (unsaved)', icon: <ShieldAlert className="w-3.5 h-3.5 text-rose-300" /> },
     { cmd: '/founder', desc: 'Learn about founder Abhinav Giri & Girionix vision', icon: <Sparkles className="w-3.5 h-3.5 text-amber-300" /> }
   ];
