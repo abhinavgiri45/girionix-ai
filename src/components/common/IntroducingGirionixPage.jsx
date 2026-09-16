@@ -373,16 +373,17 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
 
         {/* Top Right Developer Profile Badges & Actions */}
         <div className="flex items-center gap-1.5 sm:gap-3">
-          <div className="hidden lg:flex items-center gap-1.5 border-r border-white/10 pr-3 mr-1">
+          <div className="flex items-center gap-1.5 border-r border-white/10 pr-2 sm:pr-3 mr-1">
             <a 
               href="https://giri-corporation.pages.dev/" 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="px-2.5 py-1 rounded-full bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 hover:text-white border border-cyan-500/30 transition-all text-xs font-mono flex items-center gap-1.5"
+              className="px-3 py-1.5 rounded-full bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-emerald-500/20 hover:from-cyan-500/30 hover:to-emerald-500/30 text-cyan-200 hover:text-white border border-cyan-400/50 shadow-glow-cyan/30 transition-all text-xs font-bold font-mono flex items-center gap-1.5 hover:scale-105"
               title="Official Giri Corporation Website (giri-corporation.pages.dev)"
             >
-              <Globe className="w-3.5 h-3.5 text-cyan-400" />
-              <span className="hidden xl:inline">Giri Corporation</span>
+              <Globe className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+              <span className="font-extrabold tracking-wide">Giri Corporation</span>
+              <ExternalLink className="w-3 h-3 text-cyan-400 opacity-80" />
             </a>
 
             <a 
@@ -442,12 +443,19 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
           {/* Top Floating Trust Badge Banner */}
           <div className="bg-gradient-to-r from-cyan-950/40 via-purple-950/30 to-emerald-950/40 border-b border-white/10 py-2.5 px-4 text-center">
             <div className="max-w-6xl mx-auto flex items-center justify-center gap-3 sm:gap-6 flex-wrap text-[11px] font-mono text-gray-300">
-              <span className="flex items-center gap-1.5 text-cyan-400 font-bold">
-                <Globe className="w-3.5 h-3.5" /> Made in Bharat / India 🇮🇳
-              </span>
+              <a
+                href="https://giri-corporation.pages.dev/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 text-cyan-300 hover:text-white font-extrabold transition-colors underline decoration-cyan-400/50 underline-offset-2"
+              >
+                <Globe className="w-3.5 h-3.5 text-cyan-400" />
+                <span>🏛️ Giri Corporation Sovereign Ecosystem</span>
+                <ExternalLink className="w-2.5 h-2.5 opacity-80" />
+              </a>
               <span className="text-gray-600 hidden sm:inline">•</span>
               <span className="flex items-center gap-1.5 text-emerald-400 font-bold">
-                <ShieldCheck className="w-3.5 h-3.5" /> VirusTotal 0/70 Verified Clean
+                <ShieldCheck className="w-3.5 h-3.5" /> VirusTotal 0/70 Clean
               </span>
               <span className="text-gray-600 hidden sm:inline">•</span>
               <span className="flex items-center gap-1.5 text-purple-300 font-bold">
@@ -465,9 +473,28 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
             {/* Ambient Background Glow Orbs */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[350px] bg-gradient-to-tr from-cyan-500/15 via-purple-500/15 to-rose-500/15 rounded-full blur-3xl pointer-events-none -z-10 animate-pulse" />
 
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.05] border border-cyan-500/30 text-xs font-mono text-cyan-300 backdrop-blur-md shadow-glow-cyan/20">
-              <Sparkles className="w-3.5 h-3.5 text-cyan-400 animate-spin" />
-              <span>GIRIONIX AI • THE OMNIPOTENT SOVEREIGN POLYMATH</span>
+            {/* Giri Corporation Featured Hero Pill */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5">
+              <a
+                href="https://giri-corporation.pages.dev/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-emerald-500/20 border border-cyan-400/50 text-xs font-mono text-cyan-200 backdrop-blur-xl shadow-glow-cyan hover:border-cyan-300 hover:scale-105 transition-all group cursor-pointer"
+                title="Visit Official Giri Corporation Portal"
+              >
+                <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse" />
+                <span className="font-extrabold text-white tracking-wide">A Sovereign Innovation of</span>
+                <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-teal-200 to-emerald-300 underline decoration-cyan-400/60 underline-offset-4">
+                  Giri Corporation
+                </span>
+                <ExternalLink className="w-3.5 h-3.5 text-cyan-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+              </a>
+
+              <div className="hidden sm:inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-white/[0.04] border border-white/10 text-xs font-mono text-gray-300">
+                <span className="text-emerald-400 font-bold">Bharat / India 🇮🇳</span>
+                <span>•</span>
+                <span className="text-cyan-300 font-bold">Abhinav Giri</span>
+              </div>
             </div>
 
             <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight leading-[1.08] text-white">
@@ -478,7 +505,7 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
             </h1>
 
             <p className="max-w-3xl mx-auto text-base sm:text-lg text-gray-300 font-normal leading-relaxed font-sans">
-              Stop paying <span className="text-rose-400 font-bold underline decoration-rose-500/40">$120+/month ($1,440/yr)</span> across fragmented subscriptions for ChatGPT, Midjourney, Claude, Runway, and ElevenLabs. <strong>Girionix AI</strong> unifies fullstack live code compilation, Olympiad mathematical proofs, 8K photorealistic art, 4K/8K Hollywood cinema video, and 48kHz neural voice into <strong>one private, lightning-fast sovereign powerhouse</strong>.
+              Stop paying <span className="text-rose-400 font-bold underline decoration-rose-500/40">$120+/month ($1,440/yr)</span> across fragmented subscriptions for ChatGPT, Midjourney, Claude, Runway, and ElevenLabs. <strong>Girionix AI</strong>, engineered under <strong><a href="https://giri-corporation.pages.dev/" target="_blank" rel="noopener noreferrer" className="text-cyan-300 hover:text-white underline decoration-cyan-400/50 underline-offset-2">Giri Corporation</a></strong> by <strong>Abhinav Giri</strong>, unifies fullstack live code compilation, Olympiad mathematical proofs, 8K photorealistic art, 4K/8K Hollywood cinema video, and 48kHz neural voice into <strong>one private, lightning-fast sovereign powerhouse</strong>.
             </p>
 
             {/* Action CTAs */}
@@ -499,6 +526,41 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
                 <Download className="w-4 h-4 text-cyan-400" />
                 <span>Download Standalone Apps</span>
               </button>
+            </div>
+
+            {/* Giri Corporation Featured Organization Spotlight Card */}
+            <div className="max-w-4xl mx-auto p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-[#070B18] via-[#0B1024] to-[#070B18] border border-cyan-500/40 shadow-2xl shadow-glow-cyan/20 backdrop-blur-xl flex flex-col sm:flex-row items-center justify-between gap-5 text-left">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-400 via-purple-500 to-emerald-400 p-0.5 shrink-0 shadow-lg">
+                  <div className="w-full h-full bg-[#050814] rounded-[14px] flex items-center justify-center">
+                    <Globe className="w-6 h-6 text-cyan-400 animate-pulse" />
+                  </div>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="font-black text-lg text-white tracking-tight">Giri Corporation</h3>
+                    <span className="px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 text-[10px] font-mono font-bold border border-cyan-500/40">
+                      PARENT ENTERPRISE
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-mono font-bold border border-emerald-500/40">
+                      INDIA 🇮🇳
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-300 mt-1 font-sans">
+                    Founded & architected by <strong>Abhinav Giri</strong> — Engineering sovereign, unconstrained intelligence across computing, creative arts, and air-gapped workstations.
+                  </p>
+                </div>
+              </div>
+
+              <a
+                href="https://giri-corporation.pages.dev/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0 px-5 py-2.5 rounded-2xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-200 hover:text-white border border-cyan-400/50 hover:border-cyan-300 text-xs font-bold font-mono transition-all flex items-center gap-2 shadow-sm hover:scale-105"
+              >
+                <span>Visit Portal</span>
+                <ExternalLink className="w-3.5 h-3.5 text-cyan-400" />
+              </a>
             </div>
 
             {/* Live Metrics Trust Banner */}
@@ -1409,62 +1471,141 @@ export default function NeuralPulseSphere() {
             </div>
           </div>
 
-          {/* Creator Spotlight (Overview Exclusive) */}
-          <section id="creator" className="max-w-4xl mx-auto px-6 py-16 text-center space-y-6 border-t border-white/10 mt-8">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/[0.05] border border-white/10 text-xs font-mono text-cyan-300">
-              <span>Envisioned & Engineered in India 🇮🇳</span>
+          {/* Giri Corporation Enterprise Spotlight & Creator Hub */}
+          <section id="creator" className="max-w-5xl mx-auto px-6 py-16 space-y-8 border-t border-white/10 mt-12">
+            <div className="text-center space-y-3">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-cyan-500/15 via-purple-500/15 to-emerald-500/15 border border-cyan-400/40 text-xs font-mono text-cyan-300">
+                <Globe className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+                <span>SOVEREIGN ARCHITECTURE • BHARAT / INDIA 🇮🇳</span>
+              </div>
+
+              <h3 className="text-2xl sm:text-4xl font-black text-white tracking-tight">
+                A Sovereign Innovation of{' '}
+                <a
+                  href="https://giri-corporation.pages.dev/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-teal-200 to-emerald-300 hover:opacity-80 transition-opacity underline decoration-cyan-400/60 underline-offset-4"
+                >
+                  Giri Corporation
+                </a>
+              </h3>
+
+              <p className="text-gray-400 text-xs sm:text-sm max-w-2xl mx-auto leading-relaxed font-sans">
+                Girionix AI is built under the sovereign banner of <strong>Giri Corporation</strong>, architected to empower every creator, developer, and researcher with unmonopolized, local-first artificial intelligence.
+              </p>
             </div>
 
-            <h3 className="text-2xl sm:text-3xl font-black text-white">
-              Crafted with Passion by Abhinav Giri
-            </h3>
+            {/* Enterprise Grid: Giri Corporation + Founder Abhinav Giri */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+              {/* Card 1: Giri Corporation Enterprise */}
+              <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-b from-[#0B1228] to-[#060914] border border-cyan-500/40 shadow-2xl relative overflow-hidden group hover:border-cyan-300 transition-all flex flex-col justify-between">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none group-hover:bg-cyan-500/20 transition-all" />
 
-            <p className="text-gray-400 text-xs sm:text-sm max-w-xl mx-auto leading-relaxed">
-              "Girionix AI was engineered with the conviction that true human creativity reaches its peak when the barriers between programming, mathematical rigor, visual art, cinema, and conversational intelligence dissolve into one unified, sovereign polymath."
-            </p>
+                <div className="space-y-4 relative z-10">
+                  <div className="flex items-center justify-between">
+                    <div className="w-12 h-12 rounded-2xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center">
+                      <Globe className="w-6 h-6 text-cyan-400 animate-spin-slow" />
+                    </div>
+                    <span className="px-3 py-1 rounded-full bg-cyan-400/10 text-cyan-300 font-mono text-[10px] font-extrabold border border-cyan-400/30">
+                      PARENT CONGLOMERATE
+                    </span>
+                  </div>
 
-            {/* Creator & Company Channels */}
-            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-              <a
-                href="https://giri-corporation.pages.dev/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-4 py-2 rounded-full bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-xs font-bold flex items-center gap-2 transition-all border border-cyan-500/30 shadow-sm"
-                title="Official Giri Corporation Website"
-              >
-                <Globe className="w-3.5 h-3.5 text-cyan-400" />
-                <span>Giri Corporation</span>
-              </a>
+                  <div>
+                    <h4 className="text-xl font-black text-white">Giri Corporation</h4>
+                    <p className="text-cyan-400/90 text-xs font-mono font-bold mt-0.5">
+                      THINK • CREATE • EXPLORE
+                    </p>
+                  </div>
 
-              <a
-                href="https://x.com/AbhinavGiri45"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-bold flex items-center gap-2 transition-all border border-white/10"
-              >
-                <XTwitterIcon className="w-3.5 h-3.5" />
-                <span>@AbhinavGiri45 on 𝕏</span>
-              </a>
+                  <p className="text-gray-300 text-xs sm:text-sm leading-relaxed font-sans">
+                    Pioneering sovereign intelligence, sovereign operating systems, next-generation deep technology, and private machine workstations designed to free human intellect from monolithic corporate subscriptions.
+                  </p>
 
-              <a
-                href="https://github.com/abhinavgiri45/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-bold flex items-center gap-2 transition-all border border-white/10"
-              >
-                <GithubIcon className="w-3.5 h-3.5" />
-                <span>@abhinavgiri45 on GitHub</span>
-              </a>
+                  <div className="pt-2 flex items-center gap-2 text-xs font-mono text-gray-400">
+                    <span className="text-emerald-400 font-bold">● Sovereign</span>
+                    <span>•</span>
+                    <span className="text-cyan-300 font-bold">● Air-Gapped Ready</span>
+                    <span>•</span>
+                    <span className="text-purple-400 font-bold">● Bharat HQ</span>
+                  </div>
+                </div>
 
-              <a
-                href="https://instagram.com/abhinavgiri45"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-4 py-2 rounded-full bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 text-xs font-bold flex items-center gap-2 transition-all border border-pink-500/30"
-              >
-                <InstagramIcon className="w-3.5 h-3.5" />
-                <span>@abhinavgiri45 on Instagram</span>
-              </a>
+                <div className="pt-6 relative z-10">
+                  <a
+                    href="https://giri-corporation.pages.dev/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-cyan-500/20 to-emerald-500/20 hover:from-cyan-500/30 hover:to-emerald-500/30 text-cyan-200 hover:text-white border border-cyan-400/50 hover:border-cyan-300 text-xs font-bold font-mono transition-all flex items-center justify-center gap-2 group-hover:shadow-glow-cyan"
+                  >
+                    <span>Visit Giri Corporation Portal</span>
+                    <ExternalLink className="w-3.5 h-3.5 text-cyan-400" />
+                  </a>
+                </div>
+              </div>
+
+              {/* Card 2: Founder & Chief Architect */}
+              <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-b from-[#140E2A] to-[#070514] border border-purple-500/40 shadow-2xl relative overflow-hidden group hover:border-purple-300 transition-all flex flex-col justify-between">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-purple-500/10 rounded-full blur-2xl pointer-events-none group-hover:bg-purple-500/20 transition-all" />
+
+                <div className="space-y-4 relative z-10">
+                  <div className="flex items-center justify-between">
+                    <div className="w-12 h-12 rounded-2xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center">
+                      <Sparkles className="w-6 h-6 text-purple-400" />
+                    </div>
+                    <span className="px-3 py-1 rounded-full bg-purple-400/10 text-purple-300 font-mono text-[10px] font-extrabold border border-purple-400/30">
+                      FOUNDER & CHIEF ARCHITECT
+                    </span>
+                  </div>
+
+                  <div>
+                    <h4 className="text-xl font-black text-white">Abhinav Giri</h4>
+                    <p className="text-purple-300/90 text-xs font-mono font-bold mt-0.5">
+                      Systems Architect & Creator
+                    </p>
+                  </div>
+
+                  <blockquote className="text-gray-300 text-xs sm:text-sm leading-relaxed font-sans italic border-l-2 border-purple-400/60 pl-3">
+                    "Girionix AI was engineered with the conviction that true human creativity reaches its peak when the barriers between programming, mathematical rigor, visual art, cinema, and conversational intelligence dissolve into one unified, sovereign polymath."
+                  </blockquote>
+                </div>
+
+                {/* Founder Channels */}
+                <div className="pt-6 relative z-10 space-y-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <a
+                      href="https://x.com/AbhinavGiri45"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 min-w-[120px] py-2 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold font-mono flex items-center justify-center gap-1.5 border border-white/10 transition-colors"
+                    >
+                      <XTwitterIcon className="w-3.5 h-3.5" />
+                      <span>@AbhinavGiri45</span>
+                    </a>
+
+                    <a
+                      href="https://github.com/abhinavgiri45/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 min-w-[120px] py-2 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold font-mono flex items-center justify-center gap-1.5 border border-white/10 transition-colors"
+                    >
+                      <GithubIcon className="w-3.5 h-3.5" />
+                      <span>@abhinavgiri45</span>
+                    </a>
+
+                    <a
+                      href="https://instagram.com/abhinavgiri45"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="py-2 px-3 rounded-xl bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 text-xs font-bold font-mono flex items-center justify-center gap-1.5 border border-pink-500/30 transition-colors"
+                    >
+                      <InstagramIcon className="w-3.5 h-3.5" />
+                      <span>Instagram</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
             </div>
           </section>
         </div>
