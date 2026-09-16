@@ -53,14 +53,14 @@ export default function StudioDedicatedBar({
         {/* Left: Studio Domain Tabs */}
         <div className="flex items-center gap-1 overflow-x-auto py-0.5 no-scrollbar touch-scroll max-w-full">
           {tabs.map((tab) => {
-            const isActive = activeStudioTab === tab.id || (tab.id === 'ai-studio' && activeStudioTab === 'google-studio');
+            const isActive = activeStudioTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveStudioTab(tab.id)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono transition-all whitespace-nowrap cursor-pointer ${
                   isActive
-                    ? (tab.id === 'ai-studio' || tab.id === 'google-studio') ? 'bg-gradient-to-r from-blue-500/25 via-cyan-500/25 to-purple-500/25 text-cyan-200 border border-cyan-400/50 shadow-glow-cyan font-bold scale-[1.02]'
+                    ? tab.id === 'ai-studio' ? 'bg-gradient-to-r from-blue-500/25 via-cyan-500/25 to-purple-500/25 text-cyan-200 border border-cyan-400/50 shadow-glow-cyan font-bold scale-[1.02]'
                     : tab.id === 'code' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-glow-cyan font-bold scale-[1.02]'
                     : tab.id === 'script' ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 shadow-glow-cyan font-bold scale-[1.02]'
                     : tab.id === 'math' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-glow-purple font-bold scale-[1.02]'

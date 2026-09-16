@@ -189,6 +189,11 @@ class SpeechService {
     this.activeCallbacks = callbacks;
     const { onResult, onEnd, onError, onSpeechFinalized, lang, onVolumeChange, silenceTimeoutMs = 1200 } = callbacks;
 
+    if (this.isListening) {
+      // Already actively listening
+      return;
+    }
+
     this.desiredListening = true;
     this.isProcessing = false;
     clearTimeout(this.silenceTimer);
@@ -203,7 +208,7 @@ class SpeechService {
     const targetLang = lang || this.currentLanguage || 'en-US';
     this.currentLanguage = targetLang;
 
-    // Create fresh instance with clean event handlers
+    // Clean up old recognition safely without triggering error cascades
     if (this.recognition) {
       try {
         this.recognition.onstart = null;
@@ -263,7 +268,7 @@ class SpeechService {
           });
         }
 
-        // Natural human breath pause threshold (default 1400ms) prevents cutting off user speech
+        // Natural human breath pause threshold
         clearTimeout(this.silenceTimer);
         this.silenceTimer = setTimeout(() => {
           if (accumulatedText.trim() && !this.isSpeaking && !this.isProcessing) {
@@ -275,28 +280,34 @@ class SpeechService {
               onSpeechFinalized(finalized);
             }
           }
-        }, silenceTimeoutMs || 1400);
+        }, silenceTimeoutMs || 1200);
       }
     };
 
     this.recognition.onerror = (event) => {
-      console.warn('Speech recognition status:', event.error);
-      const isFatal = event.error === 'not-allowed' || event.error === 'service-not-allowed';
+      const err = event.error;
+      // Normal browser idle/abort events
+      if (err === 'no-speech' || err === 'aborted') {
+        return;
+      }
+      console.warn('Speech recognition notice:', err);
+      const isFatal = err === 'not-allowed' || err === 'service-not-allowed';
       if (isFatal) {
         this.desiredListening = false;
         this.isListening = false;
-        if (onError) onError(event.error);
+        this.isStarting = false;
+        if (onError) onError(err);
         return;
       }
 
-      // Automatically recover on non-fatal errors (no-speech, network, aborted)
-      if (this.desiredListening && !this.isSpeaking && !this.isProcessing) {
+      // Recover safely on recoverable errors
+      if (this.desiredListening && !this.isSpeaking && !this.isProcessing && !this.isStarting) {
         clearTimeout(this.restartDebounceTimer);
         this.restartDebounceTimer = setTimeout(() => {
-          if (this.desiredListening && !this.isSpeaking && !this.isProcessing) {
+          if (this.desiredListening && !this.isSpeaking && !this.isProcessing && !this.isListening) {
             this.startListening(this.activeCallbacks || callbacks);
           }
-        }, 150);
+        }, 250);
       }
     };
 
@@ -304,14 +315,14 @@ class SpeechService {
       this.isListening = false;
       this.isStarting = false;
 
-      // Seamless auto-restart for infinite hands-free multi-turn dialogues
+      // Auto-restart for hands-free conversations if desired and idle
       if (this.desiredListening && !this.isSpeaking && !this.isProcessing) {
         clearTimeout(this.restartDebounceTimer);
         this.restartDebounceTimer = setTimeout(() => {
-          if (this.desiredListening && !this.isSpeaking && !this.isProcessing) {
+          if (this.desiredListening && !this.isSpeaking && !this.isProcessing && !this.isListening) {
             this.startListening(this.activeCallbacks || callbacks);
           }
-        }, 100);
+        }, 150);
       } else if (onEnd) {
         onEnd();
       }
@@ -321,19 +332,18 @@ class SpeechService {
       this.isStarting = true;
       this.recognition.start();
     } catch (e) {
-      console.warn('Recognition start caught:', e?.message);
       this.isStarting = false;
       if (this.desiredListening && !this.isSpeaking && !this.isProcessing) {
         setTimeout(() => {
-          if (this.desiredListening && !this.isSpeaking && !this.isProcessing) {
+          if (this.desiredListening && !this.isSpeaking && !this.isProcessing && !this.isListening) {
             try { this.recognition?.start(); } catch (_) {}
           }
-        }, 200);
+        }, 300);
       }
     }
   }
 
-  stopListening() {
+  stopListening(releaseMic = true) {
     this.desiredListening = false;
     this.isListening = false;
     this.isProcessing = false;
@@ -351,7 +361,9 @@ class SpeechService {
       } catch (_) {}
       this.recognition = null;
     }
-    this.stopAudioAnalyzer();
+    if (releaseMic) {
+      this.stopAudioAnalyzer();
+    }
   }
 
   stopSpeaking() {
@@ -453,33 +465,37 @@ class SpeechService {
     const profile = HUMAN_VOICE_PROFILES.find(p => p.id === profileId) || HUMAN_VOICE_PROFILES[0];
     const isHindi = targetLang === 'hi-IN' || profile.lang === 'hi-IN';
     const isIndianEn = targetLang === 'en-IN' || profile.lang === 'en-IN';
-    const wantsMale = profile.gender === 'male';
+    // Exclude robotic legacy desktop voices (e.g. SAPI5 "Microsoft David Desktop", "Zira Desktop", eSpeak)
+    const isRoboticDesktop = (name) => {
+      const lower = name.toLowerCase();
+      return lower.includes('desktop') || lower.includes('sapi') || lower.includes('espeak');
+    };
 
     // 1. High-Fidelity Hindi Neural/Natural Voice Matching
     if (isHindi) {
-      const topHindiKeywords = ['Natural', 'Neural', 'Swara', 'Kalpana', 'Madhur', 'हिन्दी', 'hi-IN', 'hi_IN', 'Hindi'];
+      const topHindiKeywords = ['Natural', 'Neural', 'Google', 'Swara', 'Kalpana', 'Madhur', 'हिन्दी', 'hi-IN', 'hi_IN', 'Hindi'];
       for (const kw of topHindiKeywords) {
-        const match = this.voices.find(v => (v.lang.includes('hi') || v.name.toLowerCase().includes('hindi')) && v.name.toLowerCase().includes(kw.toLowerCase()));
+        const match = this.voices.find(v => (v.lang.includes('hi') || v.name.toLowerCase().includes('hindi')) && v.name.toLowerCase().includes(kw.toLowerCase()) && !isRoboticDesktop(v.name));
         if (match) return match;
       }
-      const genericHindi = this.voices.find(v => v.lang.includes('hi') || v.name.toLowerCase().includes('hindi'));
+      const genericHindi = this.voices.find(v => (v.lang.includes('hi') || v.name.toLowerCase().includes('hindi')) && !isRoboticDesktop(v.name));
       if (genericHindi) return genericHindi;
     }
 
     // 2. High-Fidelity Indian English / Hinglish Voice Matching
     if (isIndianEn) {
       const topIndianKeywords = wantsMale
-        ? ['Prabhat', 'Ravi', 'Natural', 'Neural', 'en-IN', 'India']
-        : ['Neerja', 'Aarti', 'Natural', 'Neural', 'en-IN', 'India'];
+        ? ['Prabhat', 'Ravi', 'Google', 'Natural', 'Neural', 'India', 'en-IN']
+        : ['Neerja', 'Aarti', 'Google', 'Natural', 'Neural', 'India', 'en-IN'];
       for (const kw of topIndianKeywords) {
-        const match = this.voices.find(v => (v.lang === 'en-IN' || v.lang === 'en_IN' || v.name.toLowerCase().includes('india')) && v.name.toLowerCase().includes(kw.toLowerCase()));
+        const match = this.voices.find(v => (v.lang === 'en-IN' || v.lang === 'en_IN' || v.name.toLowerCase().includes('india')) && v.name.toLowerCase().includes(kw.toLowerCase()) && !isRoboticDesktop(v.name));
         if (match) return match;
       }
-      const genericIndian = this.voices.find(v => v.lang === 'en-IN' || v.lang === 'en_IN' || v.name.toLowerCase().includes('india'));
+      const genericIndian = this.voices.find(v => (v.lang === 'en-IN' || v.lang === 'en_IN' || v.name.toLowerCase().includes('india')) && !isRoboticDesktop(v.name));
       if (genericIndian) return genericIndian;
     }
 
-    // 3. Top-Tier Human Natural & Neural English Voices (Online Natural, Enhanced, Siri, Studio)
+    // 3. Top-Tier Human Natural & Neural English Voices (Online Natural, Google, Siri, Enhanced)
     const priorityKeywords = wantsMale
       ? [
           'Microsoft Guy Online (Natural)',
@@ -487,40 +503,42 @@ class SpeechService {
           'Microsoft Eric Online (Natural)',
           'Microsoft Roger Online (Natural)',
           'Microsoft Steffan Online (Natural)',
+          'Google US English',
+          'Google UK English Male',
           'Alex',
           'Daniel (Enhanced)',
           'Daniel',
-          'UK English Male',
-          'US English Male',
           'Natural',
-          'Neural',
-          'Male'
+          'Neural'
         ]
       : [
           'Microsoft Jenny Online (Natural)',
           'Microsoft Aria Online (Natural)',
           'Microsoft Sonia Online (Natural)',
           'Microsoft Michelle Online (Natural)',
+          'Google US English',
+          'Google UK English Female',
           'Samantha (Enhanced)',
           'Samantha',
           'Siri',
           'Karen (Enhanced)',
           'Moira (Enhanced)',
-          'UK English Female',
-          'US English Female',
           'Natural',
-          'Neural',
-          'Female'
+          'Neural'
         ];
 
     for (const keyword of priorityKeywords) {
-      const matched = this.voices.find(v => v.name.toLowerCase().includes(keyword.toLowerCase()) && v.lang.startsWith('en'));
+      const matched = this.voices.find(v => v.name.toLowerCase().includes(keyword.toLowerCase()) && v.lang.startsWith('en') && !isRoboticDesktop(v.name));
       if (matched) return matched;
     }
 
     // Filter for any high-quality natural/neural voice before standard robotic voices
-    const neuralFallback = this.voices.find(v => (v.name.includes('Natural') || v.name.includes('Neural') || v.name.includes('Enhanced')) && v.lang.startsWith('en'));
+    const neuralFallback = this.voices.find(v => (v.name.includes('Natural') || v.name.includes('Neural') || v.name.includes('Enhanced') || v.name.includes('Google')) && v.lang.startsWith('en') && !isRoboticDesktop(v.name));
     if (neuralFallback) return neuralFallback;
+
+    // Filter non-robotic English voices
+    const naturalEn = this.voices.find(v => v.lang.startsWith('en') && !isRoboticDesktop(v.name));
+    if (naturalEn) return naturalEn;
 
     return this.voices.find(v => v.lang.startsWith('en')) || this.voices[0] || null;
   }

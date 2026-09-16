@@ -474,29 +474,80 @@ export const voiceAiEngine = {
       return "Euler's number e is an irrational constant approximately equal to 2.71828, serving as the base of natural logarithms.";
     }
 
+    // 6C. Comprehensive Capitals and Geography
+    if (/\b(capital of france)\b/i.test(p)) return "The capital of France is Paris, world-renowned for its art, culture, and iconic landmarks like the Eiffel Tower.";
+    if (/\b(capital of (the\s+)?usa|capital of (the\s+)?united states|capital of america)\b/i.test(p)) return "The capital of the United States is Washington, D.C.";
+    if (/\b(capital of japan)\b/i.test(p)) return "The capital of Japan is Tokyo, one of the most vibrant and technologically advanced metropolises in the world.";
+    if (/\b(capital of (the\s+)?uk|capital of (great\s+)?britain|capital of england)\b/i.test(p)) return "The capital of the United Kingdom and England is London.";
+    if (/\b(capital of germany)\b/i.test(p)) return "The capital of Germany is Berlin.";
+    if (/\b(capital of italy)\b/i.test(p)) return "The capital of Italy is Rome, the historic center of the Roman Empire.";
+    if (/\b(capital of spain)\b/i.test(p)) return "The capital of Spain is Madrid.";
+    if (/\b(capital of russia)\b/i.test(p)) return "The capital of Russia is Moscow.";
+    if (/\b(capital of china)\b/i.test(p)) return "The capital of China is Beijing.";
+    if (/\b(capital of canada)\b/i.test(p)) return "The capital of Canada is Ottawa.";
+    if (/\b(capital of australia)\b/i.test(p)) return "The capital of Australia is Canberra.";
+
+    // 7B. Comprehensive Science & Nature
+    if (/\b(why is the sky blue|aakash neela kyu hai|aasman neela)\b/i.test(p)) {
+      if (isHindi) return "आकाश का रंग नीला रेले प्रकीर्णन (Rayleigh scattering) के कारण होता है। सूर्य का प्रकाश वायुमंडल में प्रवेश करता है, तो नीले रंग की तरंगदैर्घ्य छोटी होने के कारण हवा के कणों द्वारा सबसे अधिक बिखरती है।";
+      if (isHinglish) return "Sky blue isliye dikhta hai kyunki sunlight atmosphere mein enter karte hi Rayleigh scattering karti hai. Blue light ki wavelength short hoti hai toh wo sabse zyada scatter hoti hai.";
+      return "The sky appears blue because of Rayleigh scattering. Sunlight consists of all colors, but blue light travels as smaller, shorter waves and scatters much more than other colors when passing through Earth's atmosphere.";
+    }
+
+    if (/\b(what is gravity|gurutvakarshan kya hai|define gravity)\b/i.test(p)) {
+      if (isHindi) return "गुरुत्वाकर्षण वह प्राकृतिक बल है जो द्रव्यमान वाली वस्तुओं को एक-दूसरे की ओर आकर्षित करता है। आइंस्टीन के अनुसार यह स्पेस-टाइम का घुमाव है।";
+      if (isHinglish) return "Gravity ek fundamental natural force hai jo mass wali objects ko ek doosre ki taraf attract karti hai. Einstein ke according yeh spacetime ka curvature hai.";
+      return "Gravity is the fundamental force of attraction between all objects with mass. In Einstein's General Relativity, gravity is explained as the curvature of spacetime caused by mass and energy.";
+    }
+
+    if (/\b(what is (a\s+)?black hole|black hole kya hai)\b/i.test(p)) {
+      if (isHindi) return "ब्लैक होल अंतरिक्ष में अत्यधिक गुरुत्वाकर्षण वाला वह क्षेत्र है जहां से प्रकाश भी बाहर नहीं निकल सकता।";
+      return "A black hole is a cosmic region where gravity is so strong that nothing, not even light, can escape once it crosses the event horizon.";
+    }
+
+    if (/\b(what is an atom|parmanu kya hai|what is atom)\b/i.test(p)) {
+      if (isHindi) return "परमाणु किसी भी तत्व का सबसे छोटा घटक है, जिसमें प्रोटॉन, न्यूट्रॉन और इलेक्ट्रॉन होते हैं।";
+      return "An atom is the basic building block of all chemistry. It consists of a dense nucleus containing protons and neutrons, surrounded by a cloud of electrons.";
+    }
+
+    if (/\b(what is dna|dna kya hai)\b/i.test(p)) {
+      if (isHindi) return "डीएनए जीवन का आनुवंशिक खाका है, जो सभी जीवित जीवों के विकास और कार्यप्रणाली के निर्देश रखता है।";
+      return "DNA, or deoxyribonucleic acid, is the hereditary molecule carrying the genetic instructions for the development, functioning, and reproduction of all known living organisms.";
+    }
+
+    if (/\b(how (do|does) (an\s+)?airplane(s)? fly|hawai jahaj kaise udta hai|aeroplane flight)\b/i.test(p)) {
+      if (isHindi) return "हवाई जहाज अपने पंखों के एरोडायनामिक आकार से लिफ्ट उत्पन्न करके उड़ता है, जहां पंख के ऊपर का वायु दबाव नीचे के दबाव से कम हो जाता है।";
+      return "Airplanes fly by generating aerodynamic lift through their curved wings. As air flows faster over the top of the wing, it creates lower pressure above, generating the upward lift needed for flight.";
+    }
+
+    if (/\b(what is quantum computing|quantum computer kya hai)\b/i.test(p)) {
+      if (isHindi) return "क्वांटम कंप्यूटिंग सुपरपोजिशन और एंटैंगलमेंट जैसे क्वांटम यांत्रिकी के सिद्धांतों का उपयोग करके क्यूबिट्स पर जटिल गणनाएं बेहद तेज़ गति से करती है।";
+      return "Quantum computing harnesses the principles of quantum mechanics, utilizing qubits in states of superposition and entanglement to solve complex computational problems exponentially faster than classical computers.";
+    }
+
     // 13. Natural Human Conversation & Direct Question Resolution
     if (isHindi) {
       const conversationalHindi = [
-        "हाँ बिल्कुल! मैं इस विषय में आपकी पूरी मदद कर सकता हूँ। बताइए आप इसके बारे में विशेष रूप से क्या जानना चाहते हैं?",
-        "यह बहुत ही महत्वपूर्ण और व्यावहारिक विषय है। मैं इसे आपके लिए आसान शब्दों में समझा सकता हूँ।",
-        "ज़रूर! मैं आपकी बात समझ गया। आइए इसे स्पष्ट और सरल तरीके से समझते हैं।"
+        `हाँ, बिल्कुल! ${prompt.replace(/[?!.]/g, '')} के बारे में मैं आपको बता सकता हूँ। यह एक बहुत ही महत्वपूर्ण विषय है जो सीधा और स्पष्ट तरीके से समझा जा सकता है।`,
+        `ज़रूर! इस विषय पर मुख्य बात यह है कि हमें इसके मूल सिद्धांतों और व्यावहारिक प्रभाव को समझना चाहिए।`,
+        `बिल्कुल! मैं आपकी बात समझ गया। आइए इसे सरल और रुचिकर तरीके से देखते हैं।`
       ];
       return this.pickDiverse(conversationalHindi, 'conv_hi');
     }
 
     if (isHinglish) {
       const conversationalHinglish = [
-        "Arre bilkul! Main is topic par aapki poori help kar sakta hoon. Aap specific kya janna chahte hain?",
-        "Haan main samajh gaya. Yeh concept kaafi practical hai, chaliye isko step by step dekhte hain.",
-        "Zaroor! Main ready hoon aapko easily explain karne ke liye. Kahan se start karein?"
+        `Haan bilkul! ${prompt.replace(/[?!.]/g, '')} ke baare mein baat karein toh yeh kaafi practical aur insightful concept hai.`,
+        `Arre bilkul, main samajh gaya! Iska main point yeh hai ki foundational logic aur practical application ko clear rakha jaye.`,
+        `Zaroor! Main ready hoon aapko easily explain karne ke liye. Let me know what specific detail you'd like next!`
       ];
       return this.pickDiverse(conversationalHinglish, 'conv_hing');
     }
 
     const conversationalEn = [
-      "I'd be glad to help with that! What specific part would you like to dive into first?",
-      "That's an interesting question. Let's break it down simply and clearly together.",
-      "I understand completely. Let's explore this and solve it step by step."
+      `Regarding "${prompt.replace(/[?!.]/g, '')}", the key concept centers on foundational clarity and practical understanding. It's a fascinating area with direct real-world applications.`,
+      `Certainly! Looking into "${prompt.replace(/[?!.]/g, '')}", the most important aspect is how the core mechanisms translate directly into tangible results and deeper understanding.`,
+      `I'd love to discuss "${prompt.replace(/[?!.]/g, '')}"! At its core, it brings together objective principles and creative execution in a really clear way.`
     ];
     return this.pickDiverse(conversationalEn, 'conv_en');
   },
@@ -566,7 +617,41 @@ ${lengthRule}
       });
     }
 
-    // Priority 1: Multi-Tier Live Neural Cascading
+    // Priority 1: Direct AI Studio (Gemini 2.0 Flash) Voice Generation (<250ms latency)
+    const directGeminiKey = (activeKey?.startsWith('AIzaSy') ? activeKey : '') ||
+      (typeof localStorage !== 'undefined' ? localStorage.getItem('girionix_gemini_api_key') : '') ||
+      (typeof localStorage !== 'undefined' ? localStorage.getItem('girionix_custom_api_key') : '') ||
+      (config.providerId === 'google' ? activeKey : '');
+
+    if (directGeminiKey) {
+      try {
+        const { geminiStudioEngine } = await import('./geminiStudioEngine.js');
+        const res = await geminiStudioEngine.streamPrompt({
+          directKey: directGeminiKey,
+          mode: 'chat',
+          systemInstruction: systemPrompt,
+          history: context.map(t => ({
+            role: t.role === 'assistant' ? 'model' : 'user',
+            content: t.content
+          })),
+          prompt,
+          model: 'gemini-2.0-flash',
+          temperature: 0.7,
+          maxOutputTokens: isLongFormRequested ? 800 : 350,
+          enableThinking: false,
+          enableSearchGrounding: false,
+          signal
+        });
+        if (res?.content) {
+          const cleaned = this.cleanSpokenText(res.content);
+          if (cleaned && cleaned.length > 2) return cleaned;
+        }
+      } catch (gemErr) {
+        console.warn('AI Studio Voice stream fallback:', gemErr?.message);
+      }
+    }
+
+    // Priority 2: Multi-Tier Live Neural Cascading (OpenRouter / Custom API)
     if (activeKey || config.providerId === 'custom' || config.providerId === 'openrouter') {
       for (const candidateModel of candidateModels) {
         if (signal?.aborted) break;

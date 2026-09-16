@@ -201,6 +201,7 @@ export const geminiStudioEngine = {
     enableThinking = true,
     enableSearchGrounding = true,
     enableJsonMode = false,
+    directKey = null,
     onToken,
     onThinking,
     onMetrics,
@@ -228,10 +229,10 @@ export const geminiStudioEngine = {
       }
     };
 
-    const directKey = this.getApiKey();
+    const activeKey = directKey || this.getApiKey();
 
     // 1. Direct Official Gemini API SSE Streaming
-    if (directKey) {
+    if (activeKey) {
       try {
         const resolvedModel = model.startsWith('gemini-') ? model : 'gemini-2.5-pro';
         // Build Gemini API contents array
@@ -308,7 +309,7 @@ export const geminiStudioEngine = {
           requestPayload.tools = [{ google_search: {} }];
         }
 
-        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${resolvedModel}:streamGenerateContent?key=${encodeURIComponent(directKey)}&alt=sse`;
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${resolvedModel}:streamGenerateContent?key=${encodeURIComponent(activeKey)}&alt=sse`;
 
         const response = await fetch(endpoint, {
           method: 'POST',

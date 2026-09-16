@@ -32,7 +32,7 @@ export default function StudioPanel({
 
       {/* Main Studio Viewport */}
       <div className="flex-1 overflow-hidden relative">
-        {(!activeStudioTab || activeStudioTab === 'ai-studio' || activeStudioTab === 'google-studio' || activeStudioTab === 'freeform' || activeStudioTab === 'structured') && (
+        {(!activeStudioTab || activeStudioTab === 'ai-studio' || activeStudioTab === 'freeform' || activeStudioTab === 'structured') && (
           <AIStudio 
             activeModel={activeModel}
             isTitanMode={isTitanMode}

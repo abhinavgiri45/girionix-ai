@@ -131,6 +131,23 @@ export default function ChatView({
   const textareaRef = useRef(null);
   const chatScrollContainerRef = useRef(null);
   const isUserNearBottomRef = useRef(true);
+  const engineDropdownRef = useRef(null);
+
+  // Close engine dropdown on outside click anywhere on the page
+  useEffect(() => {
+    if (!isEngineDropdownOpen) return;
+    const handleClickOutside = (e) => {
+      if (engineDropdownRef.current && !engineDropdownRef.current.contains(e.target)) {
+        setIsEngineDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [isEngineDropdownOpen]);
 
   // Background auto-upgrade check on app startup
   useEffect(() => {
@@ -301,16 +318,59 @@ export default function ChatView({
       const userLocale = typeof navigator !== 'undefined' ? navigator.language : 'en-US';
       speech.startListening({
         lang: userLocale.startsWith('hi') ? 'hi-IN' : userLocale.includes('IN') ? 'en-IN' : 'en-US',
-        silenceTimeoutMs: 1400,
+        silenceTimeoutMs: 1300,
         onResult: ({ transcript }) => {
           if (transcript) setInput(transcript);
         },
         onSpeechFinalized: (finalTranscript) => {
-          if (finalTranscript) setInput(finalTranscript);
+          speech.stopListening();
+          setIsListening(false);
+          if (!finalTranscript) return;
+
+          const lower = finalTranscript.toLowerCase().trim();
+
+          // Built-in Voice Commands
+          if (lower === 'clear chat' || lower === 'clear all' || lower === 'delete chat' || lower === 'chat saaf karo' || lower === 'clear conversation') {
+            handleClearChat();
+            speech.speak('Chat cleared.');
+            setInput('');
+            return;
+          }
+
+          if (lower === 'new chat' || lower === 'new session' || lower === 'start fresh' || lower === 'naya chat') {
+            onCreateNewSession();
+            speech.speak('Started a new chat session.');
+            setInput('');
+            return;
+          }
+
+          if (lower === 'stop' || lower === 'stop speaking' || lower === 'cancel' || lower === 'chup ho jao') {
+            speech.stopSpeaking();
+            handleStop();
+            setInput('');
+            return;
+          }
+
+          if (lower.startsWith('web search ') || lower.startsWith('search web for ') || lower.startsWith('search the web for ')) {
+            const query = lower.replace(/^(web search|search web for|search the web for)\s+/i, '');
+            setWebSearchEnabled(true);
+            setInput(query);
+            handleSend(query);
+            return;
+          }
+
+          // Voice input captured: auto-send
+          setInput(finalTranscript);
+          handleSend(finalTranscript);
+        },
+        onError: (err) => {
+          console.warn('Voice input notice:', err);
+          speech.stopListening();
           setIsListening(false);
         },
-        onError: () => setIsListening(false),
-        onEnd: () => setIsListening(false)
+        onEnd: () => {
+          setIsListening(false);
+        }
       });
     }
   };
@@ -571,6 +631,8 @@ export default function ChatView({
           history: updatedMessages,
           model: effectiveModel?.id || 'girionix-titan-70b',
           isTitanLite: effectiveModel?.id === 'girionix-titan-lite' || effectiveModel?.category === 'titan-lite',
+          webSearchEnabled: webSearchEnabled,
+          useThinking: useThinking,
           onReasoning: (reasoningText) => {
             setSessions(prev => prev.map(s => s.id === activeSessionId ? {
               ...s,
@@ -913,7 +975,11 @@ export default function ChatView({
                 value={input}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
-                placeholder="Ask anything, write 'create a image of...', 'create a video of...', 'write code for...', or '/' for commands..."
+                placeholder={
+                  isListening 
+                    ? "🎙️ Listening... Speak your prompt or voice command ('clear chat', 'new chat', 'stop')..." 
+                    : "Ask anything, write 'create a image of...', 'create a video of...', 'write code for...', or '/' for commands..."
+                }
                 rows={1}
                 className="flex-1 bg-transparent text-base sm:text-sm text-white placeholder-gray-500 px-3 py-1.5 focus:outline-none resize-none leading-relaxed max-h-44 overflow-y-auto"
               />
@@ -965,7 +1031,7 @@ export default function ChatView({
           <div className="flex flex-wrap items-center justify-between gap-2 px-1 text-[11px] font-mono text-gray-400 py-1 w-full relative z-20">
             <div className="flex items-center gap-1.5 sm:gap-2.5 flex-wrap shrink-0">
               {/* Engine Selector */}
-              <div className="relative">
+              <div className="relative" ref={engineDropdownRef}>
                 <button
                   type="button"
                   onClick={(e) => {
@@ -984,15 +1050,7 @@ export default function ChatView({
                 </button>
 
                 {isEngineDropdownOpen && (
-                  <>
-                    <div 
-                      className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[1px]" 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsEngineDropdownOpen(false);
-                      }} 
-                    />
-                    <div className="absolute bottom-full left-0 mb-2 w-[calc(100vw-2rem)] sm:w-84 max-w-sm rounded-2xl bg-[#070913] border border-white/15 p-2 shadow-2xl z-50 space-y-1 backdrop-blur-xl max-h-[75vh] flex flex-col">
+                  <div className="absolute bottom-full left-0 mb-2 w-[calc(100vw-2rem)] sm:w-84 max-w-sm rounded-2xl bg-[#070913] border border-white/15 p-2 shadow-2xl z-50 space-y-1 backdrop-blur-xl max-h-[75vh] flex flex-col animate-fadeIn">
                       <div className="px-2.5 py-1 text-[10px] font-mono text-gray-400 uppercase border-b border-white/10 flex justify-between items-center shrink-0">
                         <span>{isTitanMode ? '⚡ Titan 100% Offline Models' : '🌐 Standard AI Models'}</span>
                         {isTitanMode ? (
@@ -1081,7 +1139,6 @@ export default function ChatView({
                         </div>
                       )}
                     </div>
-                  </>
                 )}
               </div>
 

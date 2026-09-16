@@ -84,7 +84,7 @@ export const SUPPORTED_PROVIDERS = [
   { id: 'deepseek', name: 'DeepSeek Direct API', defaultBaseUrl: 'https://api.deepseek.com/v1', defaultPlaceholder: 'sk-...' },
   { id: 'anthropic', name: 'Anthropic Direct API', defaultBaseUrl: 'https://api.anthropic.com/v1', defaultPlaceholder: 'sk-ant-...' },
   { id: 'openai', name: 'OpenAI Direct API', defaultBaseUrl: 'https://api.openai.com/v1', defaultPlaceholder: 'sk-proj-...' },
-  { id: 'google', name: 'Gemini AI Direct', defaultBaseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai', defaultPlaceholder: 'AIzaSy...' }
+  { id: 'google', name: 'AI Studio Direct (Gemini)', defaultBaseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai', defaultPlaceholder: 'AIzaSy...' }
 ];
 
 export const universalApiEngine = {
@@ -95,7 +95,7 @@ export const universalApiEngine = {
     if (!key || typeof key !== 'string') return null;
     const k = key.trim();
     if (k.startsWith('AIzaSy')) {
-      return { providerId: 'google', baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai', name: 'Gemini AI Direct' };
+      return { providerId: 'google', baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai', name: 'AI Studio Direct (Gemini)' };
     }
     if (k.startsWith('gsk_')) {
       return { providerId: 'groq', baseUrl: 'https://api.groq.com/openai/v1', name: 'Groq Cloud' };

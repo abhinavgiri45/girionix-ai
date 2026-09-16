@@ -1,6 +1,17 @@
 {
   "rewrites": [
     { "source": "/api/replicate/:path*", "destination": "https://api.replicate.com/v1/:path*" },
+    { "source": "/downloads/Girionix_AI_Titan_Setup.exe", "destination": "/downloads/Girionix_AI_Setup.exe" },
+    { "source": "/downloads/Girionix_AI_Titan_Lite_Setup.exe", "destination": "/downloads/Girionix_AI_Setup.exe" },
+    { "source": "/downloads/Girionix_AI_Titan_Linux.AppImage", "destination": "/downloads/Girionix_AI_Linux.AppImage" },
+    { "source": "/downloads/Girionix_AI_Titan_Lite_Linux.AppImage", "destination": "/downloads/Girionix_AI_Linux.AppImage" },
+    { "source": "/downloads/Girionix_AI_Titan.apk", "destination": "/downloads/Girionix_AI.apk" },
+    { "source": "/downloads/Girionix_AI_Titan_Lite.apk", "destination": "/downloads/Girionix_AI.apk" },
+    { "source": "/downloads/Girionix_AI_Titan_macOS.dmg", "destination": "/downloads/Girionix_AI_macOS.dmg" },
+    { "source": "/downloads/Girionix_AI_Titan_Lite_macOS.dmg", "destination": "/downloads/Girionix_AI_macOS.dmg" },
+    { "source": "/downloads/Girionix_AI_macOS.zip", "destination": "/downloads/Girionix_AI_macOS.dmg" },
+    { "source": "/downloads/Girionix_AI_Titan_iOS.mobileconfig", "destination": "/downloads/Girionix_AI_iOS.mobileconfig" },
+    { "source": "/downloads/Girionix_AI_Titan_Lite_iOS.mobileconfig", "destination": "/downloads/Girionix_AI_iOS.mobileconfig" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

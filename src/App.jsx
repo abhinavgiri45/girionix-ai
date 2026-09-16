@@ -328,7 +328,7 @@ export default function App() {
                   : 'text-gray-400 hover:text-white bg-white/[0.03]'
               }`}
             >
-              <span>{(activeStudioTab === 'ai-studio' || activeStudioTab === 'google-studio') ? '✦ AI Studio' : `💻 Studio (${activeStudioTab.toUpperCase()})`}</span>
+              <span>{activeStudioTab === 'ai-studio' ? '✦ AI Studio' : `💻 Studio (${activeStudioTab.toUpperCase()})`}</span>
             </button>
           </div>
         )}

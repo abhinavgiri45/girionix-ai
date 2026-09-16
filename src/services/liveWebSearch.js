@@ -1,9 +1,20 @@
 /**
  * Girionix AI — Live Real-Time Web Search & Grounding Service
  * Provides instant live web search results directly in the browser
- * using high-availability, open CORS endpoints (Wikipedia, Algolia HN).
+ * using high-availability, open CORS endpoints (DuckDuckGo, Wikipedia, Algolia HN).
  * Zero API keys required; 100% reliable.
  */
+
+function getTimeoutSignal(ms = 3500) {
+  try {
+    if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
+      return AbortSignal.timeout(ms);
+    }
+  } catch (_) {}
+  const ctrl = new AbortController();
+  setTimeout(() => ctrl.abort(), ms);
+  return ctrl.signal;
+}
 
 export const liveWebSearch = {
   /**
@@ -20,12 +31,52 @@ export const liveWebSearch = {
   },
 
   /**
+   * Search DuckDuckGo Instant Answer API for direct factual encyclopedic definitions
+   */
+  async searchDuckDuckGo(query) {
+    try {
+      const url = `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`;
+      const res = await fetch(url, { signal: getTimeoutSignal(3500) });
+      if (!res.ok) return [];
+      const data = await res.json();
+      const results = [];
+
+      if (data.AbstractText && data.AbstractText.trim()) {
+        results.push({
+          title: data.Heading || query,
+          url: data.AbstractURL || 'https://duckduckgo.com/?q=' + encodeURIComponent(query),
+          snippet: data.AbstractText.trim(),
+          source: data.AbstractSource || 'DuckDuckGo Knowledge Graph',
+          isDirectAnswer: true
+        });
+      }
+
+      if (Array.isArray(data.RelatedTopics)) {
+        for (const topic of data.RelatedTopics.slice(0, 2)) {
+          if (topic.Text && topic.FirstURL) {
+            results.push({
+              title: topic.Text.split(' - ')[0] || query,
+              url: topic.FirstURL,
+              snippet: topic.Text,
+              source: 'DuckDuckGo Direct Facts'
+            });
+          }
+        }
+      }
+
+      return results;
+    } catch (_) {
+      return [];
+    }
+  },
+
+  /**
    * Search Wikipedia for real-time encyclopedia articles and summaries
    */
   async searchWikipedia(query) {
     try {
       const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&utf8=&format=json&origin=*`;
-      const res = await fetch(searchUrl, { signal: AbortSignal.timeout(3500) });
+      const res = await fetch(searchUrl, { signal: getTimeoutSignal(3500) });
       if (!res.ok) return [];
       const data = await res.json();
       const hits = data?.query?.search || [];
@@ -61,15 +112,15 @@ export const liveWebSearch = {
   async searchTechNews(query) {
     try {
       const url = `https://hn.algolia.com/api/v1/search?query=${encodeURIComponent(query)}&tags=story&hitsPerPage=3`;
-      const res = await fetch(url, { signal: AbortSignal.timeout(3500) });
+      const res = await fetch(url, { signal: getTimeoutSignal(3500) });
       if (!res.ok) return [];
       const data = await res.json();
       const hits = data?.hits || [];
-      return hits.slice(0, 3).map(h => ({
+      return hits.slice(0, 2).map(h => ({
         title: h.title,
         url: h.url || `https://news.ycombinator.com/item?id=${h.objectID}`,
         snippet: `Points: ${h.points || 0} | Comments: ${h.num_comments || 0} | Author: ${h.author}`,
-        source: 'Live Tech & News',
+        source: 'Live Tech & Discussions',
         timestamp: h.created_at
       }));
     } catch (_) {
@@ -81,26 +132,34 @@ export const liveWebSearch = {
    * Primary unified search executor
    */
   async performSearch(query) {
-    const keywords = this.extractSearchKeywords(query);
+    const rawQuery = (query || '').trim();
+    const keywords = this.extractSearchKeywords(rawQuery) || rawQuery;
     if (!keywords) return null;
 
     try {
-      const [wikiResults, techResults] = await Promise.allSettled([
+      const [ddgResults, wikiResults, techResults] = await Promise.allSettled([
+        this.searchDuckDuckGo(keywords),
         this.searchWikipedia(keywords),
         this.searchTechNews(keywords)
       ]);
 
+      const validDdg = ddgResults.status === 'fulfilled' ? ddgResults.value : [];
       const validWiki = wikiResults.status === 'fulfilled' ? wikiResults.value : [];
       const validTech = techResults.status === 'fulfilled' ? techResults.value : [];
 
-      const combined = [...validWiki, ...validTech].slice(0, 4);
+      const combined = [...validDdg, ...validWiki, ...validTech].slice(0, 4);
 
       if (combined.length === 0) {
         return null;
       }
 
+      // Extract direct factual summary text
+      const directHit = combined.find(c => c.snippet && c.snippet.length > 30);
+      const factualSummary = directHit ? directHit.snippet : combined[0]?.snippet || '';
+
       return {
         query: keywords,
+        factualSummary,
         results: combined,
         formattedSourcesMarkdown: combined.map((r, i) => 
           `[${i + 1}] **[${r.title}](${r.url})** — *${r.source}*\n> ${r.snippet}`
@@ -111,4 +170,5 @@ export const liveWebSearch = {
     }
   }
 };
+
 

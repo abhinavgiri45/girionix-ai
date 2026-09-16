@@ -572,7 +572,7 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
             {/* Interactive Studio Stage Card */}
             <div className="p-6 sm:p-8 rounded-3xl bg-[#070913] border border-cyan-500/30 shadow-2xl space-y-6">
               {/* STAGE 0: AI STUDIO FLAGSHIP */}
-              {(interactiveStudio === 'ai-studio' || interactiveStudio === 'google-studio') && (
+              {interactiveStudio === 'ai-studio' && (
                 <div className="space-y-5 animate-fadeIn">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
                     <div className="flex items-center gap-3">

@@ -347,8 +347,8 @@ You can click **▶ Run Code** above to execute this code right inside the in-br
         finishReason: null,
         isStreaming: true,
         groundingSources: enableSearchGrounding ? [
-          { title: "DeepMind Gemini 2.5", url: "https://deepmind.google/technologies/gemini/" },
-          { title: "AI for Developers", url: "https://ai.google.dev/" }
+          { title: "Gemini 2.5 Architecture", url: "https://gemini.com" },
+          { title: "AI Studio Developer Portal", url: "https://aistudio.com" }
         ] : []
       };
 

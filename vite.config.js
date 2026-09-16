@@ -9,8 +9,24 @@ const downloadsMiddlewarePlugin = () => ({
   configureServer(server) {
     server.middlewares.use((req, res, next) => {
       const url = req.url || '';
-      if (url.startsWith('/downloads/')) {
-        const cleanFileName = decodeURIComponent(url.replace('/downloads/', '').split('?')[0]);
+      if (url.includes('/downloads/')) {
+        let cleanFileName = decodeURIComponent(url.replace('/downloads/', '').split('?')[0]);
+        const aliasMap = {
+          'Girionix_AI_Titan_Setup.exe': 'Girionix_AI_Setup.exe',
+          'Girionix_AI_Titan_Lite_Setup.exe': 'Girionix_AI_Setup.exe',
+          'Girionix_AI_Titan_Linux.AppImage': 'Girionix_AI_Linux.AppImage',
+          'Girionix_AI_Titan_Lite_Linux.AppImage': 'Girionix_AI_Linux.AppImage',
+          'Girionix_AI_Titan.apk': 'Girionix_AI.apk',
+          'Girionix_AI_Titan_Lite.apk': 'Girionix_AI.apk',
+          'Girionix_AI_Titan_macOS.dmg': 'Girionix_AI_macOS.dmg',
+          'Girionix_AI_Titan_Lite_macOS.dmg': 'Girionix_AI_macOS.dmg',
+          'Girionix_AI_macOS.zip': 'Girionix_AI_macOS.dmg',
+          'Girionix_AI_Titan_iOS.mobileconfig': 'Girionix_AI_iOS.mobileconfig',
+          'Girionix_AI_Titan_Lite_iOS.mobileconfig': 'Girionix_AI_iOS.mobileconfig'
+        };
+        if (aliasMap[cleanFileName]) {
+          cleanFileName = aliasMap[cleanFileName];
+        }
         const filePath = path.join(process.cwd(), 'public', 'downloads', cleanFileName);
 
         if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {

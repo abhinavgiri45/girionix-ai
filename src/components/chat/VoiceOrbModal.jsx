@@ -74,6 +74,12 @@ export default function VoiceOrbModal({ isOpen, onClose, onExportToChat }) {
       },
       onError: (err) => {
         console.warn('Speech recognition status:', err);
+        if (err === 'not-allowed' || err === 'service-not-allowed') {
+          if (isMountedRef.current) {
+            setTranscript('Microphone access blocked. Please enable microphone permissions in your browser.');
+            setConnectionStatus('ready');
+          }
+        }
       },
       onEnd: () => {
         // SpeechService handles automatic continuous restart internally
@@ -85,7 +91,8 @@ export default function VoiceOrbModal({ isOpen, onClose, onExportToChat }) {
   const processSpokenPrompt = async (userPrompt, currentLang) => {
     if (!userPrompt || !isMountedRef.current) return;
 
-    speech.stopListening();
+    // Keep mic stream alive during AI thinking/speaking turn
+    speech.stopListening(false);
     setConnectionStatus('thinking');
     setTranscript(userPrompt);
 
