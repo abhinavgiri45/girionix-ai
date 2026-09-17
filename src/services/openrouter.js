@@ -203,12 +203,20 @@ export const openrouter = {
           }));
 
           let resolvedModel = 'gemini-2.5-flash';
-          if (model.includes('flash-thinking')) resolvedModel = 'gemini-2.0-flash-thinking-exp';
-          else if (model.includes('2.5-pro')) resolvedModel = 'gemini-2.5-pro';
-          else if (model.includes('2.5-flash')) resolvedModel = 'gemini-2.5-flash';
-          else if (model.includes('2.0-flash')) resolvedModel = 'gemini-2.0-flash';
-          else if (model.includes('1.5-pro')) resolvedModel = 'gemini-1.5-pro';
-          else if (model.includes('1.5-flash')) resolvedModel = 'gemini-1.5-flash';
+          const lowerM = (model || '').toLowerCase();
+          if (lowerM.includes('flash-thinking') || lowerM.includes('thinking-exp') || lowerM.includes('r1') || lowerM.includes('o3-mini') || lowerM.includes('math-x')) {
+            resolvedModel = 'gemini-2.0-flash-thinking-exp';
+          } else if (lowerM.includes('2.5-pro') || lowerM === 'girionix-pro' || lowerM.includes('claude') || lowerM.includes('gpt-4o')) {
+            resolvedModel = 'gemini-2.5-pro';
+          } else if (lowerM.includes('2.5-flash') || lowerM === 'girionix-lite' || lowerM.includes('lite') || lowerM.includes('llama')) {
+            resolvedModel = 'gemini-2.5-flash';
+          } else if (lowerM.includes('2.0-flash')) {
+            resolvedModel = 'gemini-2.0-flash';
+          } else if (lowerM.includes('1.5-pro')) {
+            resolvedModel = 'gemini-1.5-pro';
+          } else if (lowerM.includes('1.5-flash')) {
+            resolvedModel = 'gemini-1.5-flash';
+          }
 
           const res = await geminiStudioEngine.streamPrompt({
             directKey: activeKey,

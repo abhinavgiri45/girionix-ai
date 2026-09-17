@@ -176,8 +176,34 @@ You can click **▶ Run Code** above to execute this code right inside the in-br
   );
   const [structuredOutput, setStructuredOutput] = useState(null);
 
-  // Run Settings State
-  const [selectedModel, setSelectedModel] = useState('gemini-2.5-pro');
+  // Run Settings State with Deep Cross-Component Synchronization
+  const [selectedModel, setSelectedModel] = useState(() => {
+    return activeModel?.id || storage.getActiveModelId() || 'gemini-2.5-pro';
+  });
+
+  // Deep sync when activeModel prop updates
+  useEffect(() => {
+    if (activeModel?.id && activeModel.id !== selectedModel) {
+      setSelectedModel(activeModel.id);
+    }
+  }, [activeModel?.id]);
+
+  // Deep sync when external event changes active model in storage
+  useEffect(() => {
+    const handleModelSync = (e) => {
+      const modelId = e.detail?.modelId;
+      if (modelId && modelId !== selectedModel) {
+        setSelectedModel(modelId);
+      }
+    };
+    window.addEventListener('girionix:model-sync', handleModelSync);
+    return () => window.removeEventListener('girionix:model-sync', handleModelSync);
+  }, [selectedModel]);
+
+  const handleSelectModel = (newModelId) => {
+    setSelectedModel(newModelId);
+    storage.setActiveModelId(newModelId);
+  };
   const [temperature, setTemperature] = useState(1.0);
   const [topP, setTopP] = useState(0.95);
   const [topK, setTopK] = useState(40);
@@ -1397,7 +1423,7 @@ println(response.text)
             <div className="relative">
               <select
                 value={selectedModel}
-                onChange={(e) => setSelectedModel(e.target.value)}
+                onChange={(e) => handleSelectModel(e.target.value)}
                 className="w-full bg-[#131314] border border-[#444746] rounded-xl p-2.5 text-xs text-[#e3e3e3] focus:outline-none focus:border-[#a8c7fa] cursor-pointer appearance-none font-sans"
               >
                 {OFFICIAL_GEMINI_MODELS.map(m => (
@@ -1405,6 +1431,11 @@ println(response.text)
                     {m.name} ({m.badge})
                   </option>
                 ))}
+                {!OFFICIAL_GEMINI_MODELS.some(m => m.id === selectedModel) && (
+                  <option value={selectedModel} className="bg-[#1e1f20] text-[#e3e3e3]">
+                    {selectedModel} (Active Engine)
+                  </option>
+                )}
               </select>
               <ChevronDown className="w-3.5 h-3.5 text-[#8e918f] absolute right-3 top-3 pointer-events-none" />
             </div>
@@ -1706,7 +1737,7 @@ println(response.text)
               <label className="text-[11px] text-[#c4c7c5] font-medium">Model</label>
               <select
                 value={selectedModel}
-                onChange={(e) => setSelectedModel(e.target.value)}
+                onChange={(e) => handleSelectModel(e.target.value)}
                 className="w-full bg-[#131314] border border-[#444746] rounded-xl p-3 text-sm text-[#e3e3e3] focus:outline-none font-sans"
               >
                 {OFFICIAL_GEMINI_MODELS.map(m => (
@@ -1714,6 +1745,11 @@ println(response.text)
                     {m.name} ({m.badge})
                   </option>
                 ))}
+                {!OFFICIAL_GEMINI_MODELS.some(m => m.id === selectedModel) && (
+                  <option value={selectedModel} className="bg-[#1e1f20] text-[#e3e3e3]">
+                    {selectedModel} (Active Engine)
+                  </option>
+                )}
               </select>
             </div>
 

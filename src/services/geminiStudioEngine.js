@@ -26,6 +26,8 @@ export const OFFICIAL_GEMINI_MODELS = [
     contextWindow: 1048576,
     supportsThinking: true,
     speedTier: 'balanced',
+    badge: '2.5 Flagship Reasoning',
+    desc: 'Most intelligent Gemini model with deep thinking, coding prowess, and 1M+ context window.',
     description: 'Most intelligent Gemini model with deep thinking, coding prowess, and 1M+ context window.'
   },
   {
@@ -35,6 +37,8 @@ export const OFFICIAL_GEMINI_MODELS = [
     contextWindow: 1048576,
     supportsThinking: true,
     speedTier: 'ultra-fast',
+    badge: '2.5 Sub-second',
+    desc: 'Sub-second multimodal reasoning model optimized for high-volume developer workloads.',
     description: 'Sub-second multimodal reasoning model optimized for high-volume developer workloads.'
   },
   {
@@ -44,6 +48,8 @@ export const OFFICIAL_GEMINI_MODELS = [
     contextWindow: 1048576,
     supportsThinking: true,
     speedTier: 'fast',
+    badge: 'Thinking Exp',
+    desc: 'Experimental model trained to explicitly surface thinking tokens before generating answers.',
     description: 'Experimental model trained to explicitly surface thinking tokens before generating answers.'
   },
   {
@@ -53,6 +59,8 @@ export const OFFICIAL_GEMINI_MODELS = [
     contextWindow: 1048576,
     supportsThinking: false,
     speedTier: 'ultra-fast',
+    badge: '2.0 Multimodal',
+    desc: 'Fast multimodal generation with real-time web search grounding.',
     description: 'Fast multimodal generation with real-time web search grounding.'
   },
   {
@@ -62,6 +70,8 @@ export const OFFICIAL_GEMINI_MODELS = [
     contextWindow: 1048576,
     supportsThinking: false,
     speedTier: 'lightweight',
+    badge: '2.0 Lite',
+    desc: 'Extremely lightweight, lowest latency model for rapid prototyping.',
     description: 'Extremely lightweight, lowest latency model for rapid prototyping.'
   },
   {
@@ -71,6 +81,8 @@ export const OFFICIAL_GEMINI_MODELS = [
     contextWindow: 2097152,
     supportsThinking: false,
     speedTier: 'deep',
+    badge: '2M Long Context',
+    desc: 'Proven 2M token context window workhorse for document analysis and repo-level coding.',
     description: 'Proven 2M token context window workhorse for document analysis and repo-level coding.'
   },
   {
@@ -80,6 +92,8 @@ export const OFFICIAL_GEMINI_MODELS = [
     contextWindow: 1048576,
     supportsThinking: false,
     speedTier: 'ultra-fast',
+    badge: 'Lightweight',
+    desc: 'Lightweight high-throughput model.',
     description: 'Lightweight high-throughput model.'
   }
 ];

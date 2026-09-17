@@ -89,15 +89,63 @@ export const TITAN_AI_MODELS = [
 
 export const AI_MODELS = [
   {
+    id: "gemini-2.5-pro",
+    name: "⚡ Gemini 2.5 Pro",
+    provider: "Google DeepMind Flagship",
+    category: "reasoning",
+    tag: "⚡ Frontier Reasoning • 2M Context",
+    badgeColor: "cyan",
+    description: "Google's premier frontier model. Unrivaled long-context understanding, deep step-by-step thinking, multimodal analysis, and superhuman coding.",
+    contextWindow: 2000000,
+    speed: "⚡ Fast & Analytical",
+    pricing: "Frontier",
+    supportsReasoning: true,
+    supportsVision: true,
+    isPro: true,
+    isAutoUpgrade: true,
+    recommendedFor: ["Superhuman Reasoning", "Complex Code Refactoring", "Deep Mathematical Proofs", "2M Long Document Analysis"]
+  },
+  {
+    id: "gemini-2.5-flash",
+    name: "⚡ Gemini 2.5 Flash",
+    provider: "Google DeepMind Ultra-Fast",
+    category: "fast",
+    tag: "Sub-Second Speed • Adaptive Thinking",
+    badgeColor: "cyan",
+    description: "Next-generation workhorse model with breakthrough speed, native multimodal comprehension, and dynamic latency optimization.",
+    contextWindow: 1000000,
+    speed: "⚡ Sub-Second Ultra-Fast",
+    pricing: "Free / Fast",
+    supportsReasoning: true,
+    supportsVision: true,
+    isLite: true,
+    recommendedFor: ["Rapid Conversational Q&A", "Real-Time Streaming", "Code Debugging", "High-Volume Tasks"]
+  },
+  {
+    id: "gemini-2.0-flash-thinking-exp",
+    name: "⚡ Gemini 2.0 Flash Thinking",
+    provider: "Google DeepMind Reasoning",
+    category: "reasoning",
+    tag: "Transparent Chain-of-Thought",
+    badgeColor: "purple",
+    description: "Exposes raw internal thinking process before generating final answers. Ideal for solving competitive programming and complex STEM proofs.",
+    contextWindow: 1000000,
+    speed: "Deep Reasoning",
+    pricing: "Reasoning",
+    supportsReasoning: true,
+    supportsVision: true,
+    isPro: true,
+    recommendedFor: ["Math Olympiad Proofs", "Algorithmic Logic", "Transparent Reasoning"]
+  },
+  {
     id: "girionix-pro",
-    openRouterModel: "minimax/minimax-m3:free",
     name: "⚡ Girionix Pro",
     provider: "Girionix Dynamic Neural Core",
     category: "reasoning",
     tag: "⚡ Flagship Frontier Intelligence",
     badgeColor: "cyan",
-    description: "Flagship intelligence engine. Autonomous model router combining deep chain-of-thought reasoning, Olympiad mathematics, superhuman code architecture, and multi-modal synthesis.",
-    contextWindow: 200000,
+    description: "Flagship intelligence engine. Autonomous multi-model router combining deep chain-of-thought reasoning, Olympiad mathematics, and superhuman code architecture.",
+    contextWindow: 2000000,
     speed: "⚡ Dynamic Peak Velocity",
     pricing: "Universal Flagship",
     supportsReasoning: true,
@@ -107,9 +155,83 @@ export const AI_MODELS = [
     recommendedFor: ["Superhuman Reasoning", "Complex Coding & Architecture", "Math Olympiad Proofs", "Always-Latest Frontier Intelligence"]
   },
   {
+    id: "anthropic/claude-3.7-sonnet",
+    name: "⚡ Claude 3.7 Sonnet",
+    provider: "Anthropic / Girionix",
+    category: "coding",
+    tag: "Hybrid Extended Thinking & Architecture",
+    badgeColor: "cyan",
+    description: "State-of-the-art software engineering and hybrid reasoning engine with deep multi-file fullstack code synthesis.",
+    contextWindow: 200000,
+    speed: "Fast",
+    pricing: "Standard",
+    supportsReasoning: true,
+    supportsVision: true,
+    recommendedFor: ["Superhuman Coding", "Fullstack Architecture", "System Design"]
+  },
+  {
+    id: "openai/gpt-4o",
+    name: "⚡ GPT-4o Omni",
+    provider: "OpenAI / Girionix",
+    category: "multimodal",
+    tag: "Flagship Omnimodal Intelligence",
+    badgeColor: "blue",
+    description: "High-intelligence flagship omnimodal model with supreme general fluency, vision, creative writing, and prompt synthesis.",
+    contextWindow: 128000,
+    speed: "Fast",
+    pricing: "Standard",
+    supportsReasoning: false,
+    supportsVision: true,
+    recommendedFor: ["Omni Chat", "Vision Analysis", "Creative Storytelling"]
+  },
+  {
+    id: "deepseek/deepseek-r1",
+    name: "⚡ DeepSeek R1",
+    provider: "DeepSeek / Open Weights",
+    category: "reasoning",
+    tag: "Open Chain-of-Thought Olympiad Reasoning",
+    badgeColor: "purple",
+    description: "High-intelligence open-weights reasoning model with extensive internal deliberation and mathematical derivation.",
+    contextWindow: 128000,
+    speed: "Deliberate Reasoning",
+    pricing: "Low",
+    supportsReasoning: true,
+    supportsVision: false,
+    recommendedFor: ["Pure STEM Logic", "Mathematical Proofs", "Step-by-step Thinking"]
+  },
+  {
+    id: "openai/o3-mini",
+    name: "⚡ OpenAI o3-mini",
+    provider: "OpenAI / Girionix",
+    category: "reasoning",
+    tag: "High-Speed STEM & Formal Logic",
+    badgeColor: "emerald",
+    description: "Cost-efficient STEM reasoning model specialized in competitive programming, formal verification, and algorithmic problems.",
+    contextWindow: 200000,
+    speed: "Very Fast",
+    pricing: "Low",
+    supportsReasoning: true,
+    supportsVision: false,
+    recommendedFor: ["Speed STEM", "Python Optimization", "Logic Proofs"]
+  },
+  {
+    id: "meta-llama/llama-3.3-70b-instruct",
+    name: "⚡ Llama 3.3 70B",
+    provider: "Meta / Groq Cloud",
+    category: "fast",
+    tag: "Ultra-Fast Open Weights 500+ tok/s",
+    badgeColor: "teal",
+    description: "State-of-the-art open model operating at extreme speed via Groq LPUs or open cloud gateways.",
+    contextWindow: 128000,
+    speed: "⚡ 500+ tok/s Ultra-Fast",
+    pricing: "Free / Fast",
+    supportsReasoning: false,
+    supportsVision: false,
+    recommendedFor: ["Instant Real-World Q&A", "High-Velocity Parsing", "Open Weights"]
+  },
+  {
     id: "girionix-lite",
-    openRouterModel: "google/gemini-2.0-flash-001",
-    name: "Girionix Lite",
+    name: "🌱 Girionix Lite",
     provider: "DeepMind Frontier Ultra-Fast",
     category: "fast",
     tag: "Sub-Second Ultra-Fast & Grounded Knowledge",
@@ -122,54 +244,6 @@ export const AI_MODELS = [
     supportsVision: true,
     isLite: true,
     recommendedFor: ["Instant Real-World Q&A", "Factual Inquiries", "High-Speed Chat", "Accurate Real-Time Answers"]
-  },
-  {
-    id: "anthropic/claude-3.7-sonnet",
-    openRouterModel: "anthropic/claude-3.7-sonnet",
-    name: "Girionix CodeMaster",
-    provider: "Girionix Neural Network",
-    category: "coding",
-    tag: "Hybrid Thinking & Code Synthesis",
-    badgeColor: "cyan",
-    description: "State-of-the-art programming engine with hybrid standard/extended thinking modes and multi-file fullstack code synthesis.",
-    contextWindow: 200000,
-    speed: "Fast",
-    pricing: "Standard",
-    supportsReasoning: true,
-    supportsVision: true,
-    recommendedFor: ["Superhuman Coding", "Fullstack Architecture", "Debugging"]
-  },
-  {
-    id: "openai/o3-mini",
-    openRouterModel: "openai/o3-mini",
-    name: "Girionix Math-X",
-    provider: "Girionix Neural Network",
-    category: "reasoning",
-    tag: "STEM & High-Speed Proofs",
-    badgeColor: "emerald",
-    description: "High-intelligence reasoning engine specialized in STEM, algorithmic logic, and multi-step mathematical Olympiad proofs.",
-    contextWindow: 200000,
-    speed: "Very Fast",
-    pricing: "Low",
-    supportsReasoning: true,
-    supportsVision: false,
-    recommendedFor: ["Speed STEM", "Python Optimization", "Logic Proofs"]
-  },
-  {
-    id: "openai/gpt-4o",
-    openRouterModel: "openai/gpt-4o",
-    name: "Girionix Omni",
-    provider: "Girionix Neural Network",
-    category: "multimodal",
-    tag: "Flagship Multimodal",
-    badgeColor: "blue",
-    description: "Omnimodal flagship model with supreme general intelligence, vision, creative writing, and prompt synthesis.",
-    contextWindow: 128000,
-    speed: "Fast",
-    pricing: "Standard",
-    supportsReasoning: false,
-    supportsVision: true,
-    recommendedFor: ["Omni Chat", "Vision Analysis", "Creative Storytelling"]
   }
 ];
 
@@ -398,3 +472,10 @@ export function getDedicatedStudioModel(tabId, isTitan = false) {
     hardwareProvider: domain.provider
   };
 }
+
+export function findModelById(id) {
+  if (!id) return AI_MODELS[0];
+  const all = [...TITAN_AI_MODELS, ...AI_MODELS];
+  return all.find(m => m.id === id) || AI_MODELS[0];
+}
+

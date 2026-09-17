@@ -32,8 +32,7 @@ import {
   RefreshCw,
   FileCode,
   Share2,
-  Lightbulb,
-  Key
+  Lightbulb
 } from 'lucide-react';
 import MessageItem from './MessageItem';
 import VoiceOrbModal from './VoiceOrbModal';
@@ -121,6 +120,23 @@ export default function ChatView({
   const [isPromptLibraryOpen, setIsPromptLibraryOpen] = useState(false);
   const [isSyncingModels, setIsSyncingModels] = useState(false);
   const [syncFeedback, setSyncFeedback] = useState(null);
+  const [modelToast, setModelToast] = useState(null);
+
+  // Synchronize activeModel when storage or another component changes it
+  useEffect(() => {
+    const handleModelSync = (e) => {
+      const modelId = e.detail?.modelId;
+      if (modelId && (!activeModel || activeModel.id !== modelId)) {
+        const pool = isTitanMode ? TITAN_AI_MODELS : AI_MODELS;
+        const matched = pool.find(m => m.id === modelId) || AI_MODELS.find(m => m.id === modelId);
+        if (matched) {
+          setActiveModel(matched);
+        }
+      }
+    };
+    window.addEventListener('girionix:model-sync', handleModelSync);
+    return () => window.removeEventListener('girionix:model-sync', handleModelSync);
+  }, [activeModel, isTitanMode, setActiveModel]);
 
   const [promptHistory, setPromptHistory] = useState([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
@@ -1179,6 +1195,8 @@ export default function ChatView({
                                 setActiveModel(m);
                                 storage.setActiveModelId(m.id);
                                 setIsEngineDropdownOpen(false);
+                                setModelToast(`⚡ Active Engine: ${m.name}`);
+                                setTimeout(() => setModelToast(null), 2500);
                               }}
                               className={`w-full text-left p-2.5 rounded-xl flex items-center justify-between text-xs transition-all cursor-pointer ${
                                 activeModel.id === m.id 
@@ -1232,8 +1250,14 @@ export default function ChatView({
                               setSyncFeedback(null);
                               const res = await universalApiEngine.syncLatestModels();
                               setIsSyncingModels(false);
-                              setSyncFeedback(res.success ? `✅ Synced (${res.totalModelsAvailable} models)` : '⚠️ Synced fallback');
-                              setTimeout(() => setSyncFeedback(null), 3000);
+                              const count = res.totalModelsAvailable || 12;
+                              const prov = res.provider || 'Google & OpenRouter';
+                              setSyncFeedback(`✅ Synced (${count} models)`);
+                              setModelToast(`✅ Models Synced: ${count} engines available (${prov})`);
+                              setTimeout(() => {
+                                setSyncFeedback(null);
+                                setModelToast(null);
+                              }, 3500);
                             }}
                             disabled={isSyncingModels}
                             className="w-full py-1.5 px-2 rounded-xl bg-white/[0.03] hover:bg-cyan-500/10 text-cyan-300 hover:text-cyan-200 text-[11px] font-mono border border-cyan-500/20 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
@@ -1311,25 +1335,6 @@ export default function ChatView({
             </div>
 
             <div className="flex items-center gap-2">
-              {onOpenSettings && (
-                <button
-                  type="button"
-                  onClick={onOpenSettings}
-                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-[11px] font-mono font-semibold transition-all cursor-pointer select-none active:scale-95 ${
-                    storage.hasApiKey()
-                      ? 'bg-cyan-500/15 border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/25 shadow-sm'
-                      : 'bg-amber-500/15 border-amber-500/30 text-amber-300 hover:bg-amber-500/25 animate-pulse'
-                  }`}
-                  title={storage.hasApiKey() ? "Cloud Gateway Active (Gemini/OpenAI/Groq) • Click to configure" : "Connect your Google Gemini, OpenAI or Groq API Key for live responses"}
-                >
-                  {storage.hasApiKey() ? (
-                    <Zap className="w-3 h-3 text-cyan-400" />
-                  ) : (
-                    <Key className="w-3 h-3 text-amber-400" />
-                  )}
-                  <span>{storage.hasApiKey() ? 'API: Connected' : 'Connect API Key'}</span>
-                </button>
-              )}
               <span className="hidden sm:inline text-cyan-400/90 font-mono text-xs font-semibold">
                 ⚡ Girionix Pro Sovereign Engine
               </span>
@@ -1337,6 +1342,14 @@ export default function ChatView({
           </div>
         </div>
       </div>
+
+      {/* Visual Model Switch Confirmation Toast */}
+      {modelToast && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-[#0c1021]/95 border border-cyan-500/40 text-cyan-200 text-xs px-4 py-2 rounded-xl shadow-2xl backdrop-blur-md flex items-center gap-2 pointer-events-none transition-all duration-300">
+          <Zap className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+          <span>{modelToast}</span>
+        </div>
+      )}
 
       {/* Secondary Modals */}
       <FileUploadModal

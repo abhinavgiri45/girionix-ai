@@ -359,7 +359,15 @@ export const storage = {
   },
 
   getActiveModelId: () => safeGetItem(KEYS.ACTIVE_MODEL_ID) || 'girionix-pro',
-  setActiveModelId: (id) => safeSetItem(KEYS.ACTIVE_MODEL_ID, (id || '').trim()),
+  setActiveModelId: (id) => {
+    const trimmed = (id || '').trim();
+    safeSetItem(KEYS.ACTIVE_MODEL_ID, trimmed);
+    try {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('girionix:model-sync', { detail: { modelId: trimmed } }));
+      }
+    } catch (_) {}
+  },
 
   getWebSearchEnabled: () => {
     const val = safeGetItem(KEYS.WEB_SEARCH_ENABLED);

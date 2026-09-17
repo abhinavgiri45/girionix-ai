@@ -47,6 +47,22 @@ export default function App() {
       storage.setActiveModelId(model.id);
     }
   };
+
+  // Synchronize activeModel state across components when changed externally
+  useEffect(() => {
+    const handleModelSync = (e) => {
+      const modelId = e.detail?.modelId;
+      if (modelId && (!activeModel || activeModel.id !== modelId)) {
+        const pool = isTitanMode ? TITAN_AI_MODELS : AI_MODELS;
+        const matched = pool.find(m => m.id === modelId) || AI_MODELS.find(m => m.id === modelId);
+        if (matched) {
+          setActiveModel(matched);
+        }
+      }
+    };
+    window.addEventListener('girionix:model-sync', handleModelSync);
+    return () => window.removeEventListener('girionix:model-sync', handleModelSync);
+  }, [activeModel, isTitanMode]);
   const [layoutMode, setLayoutMode] = useState('chat'); // 'chat' | 'split' | 'studio'
   const [activeStudioTab, setActiveStudioTab] = useState('ai-studio'); // Flagship AI Studio by default
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);

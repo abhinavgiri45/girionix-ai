@@ -246,28 +246,6 @@ export default function Header({
           )
         )}
 
-        {/* Quick API Key / Cloud Engine Status */}
-        {onOpenSettings && (
-          <button
-            onClick={onOpenSettings}
-            className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
-              storage.hasApiKey()
-                ? 'bg-cyan-500/15 border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/25 shadow-sm'
-                : 'bg-amber-500/15 border-amber-500/30 text-amber-300 hover:bg-amber-500/25 animate-pulse'
-            }`}
-            title={storage.hasApiKey() ? 'Cloud API Active • Click to configure Gemini / OpenAI / Groq' : 'Click to connect your Gemini / OpenAI / Groq API Key'}
-          >
-            {storage.hasApiKey() ? (
-              <Zap className="w-3.5 h-3.5 text-cyan-400" />
-            ) : (
-              <Key className="w-3.5 h-3.5 text-amber-400" />
-            )}
-            <span className="hidden sm:inline">
-              {storage.hasApiKey() ? 'API Active' : 'Set API Key'}
-            </span>
-          </button>
-        )}
-
         {/* Unified Tools & Extra Features Dropdown */}
         <div className="relative" ref={dropdownRef}>
           <button
