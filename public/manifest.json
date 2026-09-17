@@ -27,7 +27,7 @@
       "description": "Start a fresh Girionix AI session"
     },
     {
-      "name": "Code Studio IDE",
+      "name": "Coding Studio",
       "url": "/?studio=code",
       "description": "Launch Sandboxed React 18 IDE"
     },
