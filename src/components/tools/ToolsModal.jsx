@@ -1023,8 +1023,8 @@ export default function ToolsModal({
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-cyan-600/30 via-blue-600/30 to-purple-600/30 hover:from-cyan-600/50 hover:via-blue-600/50 hover:to-purple-600/50 text-cyan-200 font-mono text-xs border border-cyan-500/40 shadow-lg shadow-cyan-500/10 transition-transform transform hover:scale-105"
                 >
-                  <Globe className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>🌐 Giri Corporation</span>
+                  <img src="/giri-corporation-logo.png" alt="Giri Corporation" className="w-4 h-4 object-contain rounded" />
+                  <span className="font-semibold">Giri Corporation</span>
                 </a>
 
                 <a

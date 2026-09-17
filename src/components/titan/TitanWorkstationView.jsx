@@ -291,8 +291,8 @@ draw();
         {/* Left: Brand Identity & Hardware Badge */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-black font-black shadow-glow-emerald">
-              <Cpu className="w-4 h-4 animate-pulse" />
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 p-1 flex items-center justify-center shadow-glow-emerald overflow-hidden">
+              <img src="/logo.png" alt="Girionix Titan" className="w-full h-full object-contain rounded-lg" />
             </div>
             <div>
               <div className="flex items-center gap-1.5 font-mono text-xs font-black tracking-wider text-white">
@@ -509,8 +509,8 @@ draw();
                         ) : msg.role === 'system' ? (
                           <span className="text-cyan-400">⚙️ System Notification</span>
                         ) : (
-                          <span className="text-emerald-300 flex items-center gap-1">
-                            <Cpu className="w-3 h-3 text-emerald-400 animate-pulse" />
+                          <span className="text-emerald-300 flex items-center gap-1.5">
+                            <img src="/logo.png" alt="Titan" className="w-3.5 h-3.5 object-contain rounded inline-block" />
                             <span>⚡ Titan Neural Engine ({profile === 'heavy' ? 'Heavy' : 'Lite'})</span>
                           </span>
                         )}

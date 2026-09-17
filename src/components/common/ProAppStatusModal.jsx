@@ -65,8 +65,8 @@ export default function ProAppStatusModal({ isOpen, onClose, userName = 'Abhinav
         {/* Header */}
         <div className="p-5 border-b border-white/10 flex items-center justify-between bg-white/[0.02]">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
-              <Crown className="w-6 h-6 animate-pulse" />
+            <div className="w-11 h-11 rounded-2xl bg-amber-500/15 border border-amber-500/30 p-1.5 flex items-center justify-center shrink-0 shadow-glow-amber">
+              <img src="/logo.png" alt="Girionix Pro" className="w-full h-full object-contain rounded-xl" />
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-extrabold text-white tracking-tight flex items-center gap-2">

@@ -78,8 +78,8 @@ export default function LocalNeuralModal({
 
         {/* Modal Header */}
         <div className="flex items-center gap-3.5">
-          <div className="p-3 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-glow-cyan">
-            <Cpu className="w-7 h-7 animate-pulse" />
+          <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 p-2 flex items-center justify-center shrink-0 shadow-glow-cyan">
+            <img src="/logo.png" alt="Girionix Local Core" className="w-full h-full object-contain rounded-lg" />
           </div>
           <div>
             <div className="flex items-center gap-2">

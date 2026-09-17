@@ -139,7 +139,7 @@ export default function AboutDeveloperModal({ isOpen, onClose, onOpenStudio }) {
                     className="text-xs font-mono text-cyan-300 hover:underline flex items-center gap-1 bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-0.5 rounded-lg font-medium"
                     title="Official Giri Corporation Website"
                   >
-                    <Globe className="w-3 h-3 text-cyan-400" />
+                    <img src="/giri-corporation-logo.png" alt="Giri Corporation" className="w-3.5 h-3.5 object-contain rounded" />
                     <span>Giri Corporation</span>
                   </a>
                   <a

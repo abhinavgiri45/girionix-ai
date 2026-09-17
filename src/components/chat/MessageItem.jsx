@@ -1208,8 +1208,8 @@ export default function MessageItem({
     }`}>
       {!isUser && (
         <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-cyan-400 via-purple-500 to-rose-500 p-0.5 flex-shrink-0 shadow-glow-cyan">
-          <div className="w-full h-full bg-[#07080F] rounded-[10px] flex items-center justify-center">
-            <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+          <div className="w-full h-full bg-[#07080F] rounded-[10px] flex items-center justify-center overflow-hidden p-1">
+            <img src="/logo.png" alt="Girionix AI" className="w-full h-full object-contain" />
           </div>
         </div>
       )}

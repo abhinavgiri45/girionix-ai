@@ -41,7 +41,7 @@ export default function WelcomeCards({ userName, onOpenAbout, onOpenWhySwitch })
           className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-xs font-semibold transition-all hover:scale-105 shadow-sm"
           title="Official Giri Corporation Website — Owner & Developer of Girionix AI"
         >
-          <Building2 className="w-3.5 h-3.5 text-cyan-400" />
+          <img src="/giri-corporation-logo.png" alt="Giri Corporation" className="w-3.5 h-3.5 object-contain rounded" />
           <span>Giri Corporation (Official) ↗</span>
         </a>
 

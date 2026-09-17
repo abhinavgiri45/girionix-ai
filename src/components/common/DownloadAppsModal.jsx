@@ -321,8 +321,8 @@ export default function DownloadAppsModal({ isOpen, onClose }) {
         {/* Top Header */}
         <div className="w-full flex items-center justify-between border-b border-white/10 pb-4">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
-              <Download className="w-6 h-6" />
+            <div className="w-11 h-11 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 p-1.5 flex items-center justify-center shrink-0 shadow-glow-cyan">
+              <img src="/logo.png" alt="Girionix Apps" className="w-full h-full object-contain rounded-xl" />
             </div>
             <div>
               <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">

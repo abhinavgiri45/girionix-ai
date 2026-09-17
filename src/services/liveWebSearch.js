@@ -24,18 +24,22 @@ export const liveWebSearch = {
   isConversationalOrNonSearchQuery(prompt) {
     if (!prompt) return true;
     const clean = prompt.trim().toLowerCase();
-    // 1. Common greetings
-    if (/^(hi|hello|hey|namaste|greetings|good\s+(morning|afternoon|evening|night)|yo|sup|hola)\b/i.test(clean)) return true;
+    // 1. Common greetings & pleasantries
+    if (/^(hi|hello|hey|namaste|greetings|good\s+(morning|afternoon|evening|night)|yo|sup|hola|heya)\b/i.test(clean)) return true;
     // 2. Personal & wellbeing questions
-    if (/^(how\s+are\s+(you|u|ya)|how\s+r\s+u|how's\s+it\s+going|how\s+do\s+you\s+do|what's\s+up|wassup|how\s+have\s+you\s+been)\b/i.test(clean)) return true;
+    if (/\b(how\s+are\s+(you|u|ya)|how\s+r\s+u|how's\s+it\s+going|how\s+do\s+you\s+do|what's\s+up|wassup|how\s+have\s+you\s+been)\b/i.test(clean)) return true;
     // 3. Identity questions
-    if (/^(who\s+are\s+you|what\s+is\s+your\s+name|who\s+created\s+you|who\s+made\s+you|what\s+can\s+you\s+do|introduce\s+yourself)\b/i.test(clean)) return true;
+    if (/\b(who\s+are\s+you|what\s+is\s+your\s+name|who\s+created\s+you|who\s+made\s+you|what\s+can\s+you\s+do|introduce\s+yourself|about\s+girionix|abhinav\s+giri|giri\s+corporation)\b/i.test(clean)) return true;
     // 4. Politeness, affirmations & farewells
-    if (/^(thank\s+you|thanks|thank\s+u|bye|goodbye|see\s+you|see\s+ya|ok|okay|cool|great|awesome|yes|no)\b/i.test(clean)) return true;
+    if (/\b(thank\s+you|thanks|thank\s+u|appreciate\s+it|bye|goodbye|see\s+you|see\s+ya|good\s+night|take\s+care)\b/i.test(clean)) return true;
     // 5. Jokes & humor
-    if (/^(tell\s+me\s+a\s+joke|make\s+me\s+laugh|say\s+something\s+funny|crack\s+a\s+joke)\b/i.test(clean)) return true;
-    // 6. Simple arithmetic/math expressions
-    if (/^[\d\s\+\-\*\/\^\(\)\.=]+$/.test(clean) && clean.length < 30) return true;
+    if (/\b(tell\s+me\s+a\s+joke|make\s+me\s+laugh|say\s+something\s+funny|crack\s+a\s+joke|joke)\b/i.test(clean)) return true;
+    // 6. Motivation & quotes
+    if (/\b(motivate\s+me|inspire\s+me|give\s+me\s+a\s+quote|quote)\b/i.test(clean)) return true;
+    // 7. Direct code requests
+    if (/\b(write\s+code|react\s+component|python\s+script|create\s+a\s+game|snake\s+game)\b/i.test(clean)) return true;
+    // 8. Simple arithmetic/math expressions
+    if (/^[\d\s\+\-\*\/\^\(\)\.%=]+$/.test(clean) && clean.length < 40) return true;
     return false;
   },
 
@@ -107,7 +111,13 @@ export const liveWebSearch = {
       const topHits = hits.slice(0, 3);
       const results = [];
 
-      for (const item of topHits) {
+      for (const item of hits) {
+        if (results.length >= 3) break;
+        if (!/\b(song|album|music|band|movie|film|track|singer)\b/i.test(query)) {
+          if (/\((song|album|single|EP|character|disambiguation|band|musician)\)/i.test(item.title)) {
+            continue;
+          }
+        }
         const cleanSnippet = (item.snippet || '')
           .replace(/<span class="searchmatch">/g, '**')
           .replace(/<\/span>/g, '**')

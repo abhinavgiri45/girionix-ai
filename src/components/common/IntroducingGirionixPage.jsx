@@ -381,7 +381,7 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
               className="px-3 py-1.5 rounded-full bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-emerald-500/20 hover:from-cyan-500/30 hover:to-emerald-500/30 text-cyan-200 hover:text-white border border-cyan-400/50 shadow-glow-cyan/30 transition-all text-xs font-bold font-mono flex items-center gap-1.5 hover:scale-105"
               title="Official Giri Corporation Website (giri-corporation.pages.dev)"
             >
-              <Globe className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+              <img src="/giri-corporation-logo.png" alt="Giri Corporation" className="w-4 h-4 object-contain rounded" />
               <span className="font-extrabold tracking-wide">Giri Corporation</span>
               <ExternalLink className="w-3 h-3 text-cyan-400 opacity-80" />
             </a>
@@ -482,7 +482,7 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
                 className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-emerald-500/20 border border-cyan-400/50 text-xs font-mono text-cyan-200 backdrop-blur-xl shadow-glow-cyan hover:border-cyan-300 hover:scale-105 transition-all group cursor-pointer"
                 title="Visit Official Giri Corporation Portal"
               >
-                <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse" />
+                <img src="/giri-corporation-logo.png" alt="Giri Corporation" className="w-5 h-5 object-contain rounded shadow-sm" />
                 <span className="font-extrabold text-white tracking-wide">A Sovereign Innovation of</span>
                 <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-teal-200 to-emerald-300 underline decoration-cyan-400/60 underline-offset-4">
                   Giri Corporation

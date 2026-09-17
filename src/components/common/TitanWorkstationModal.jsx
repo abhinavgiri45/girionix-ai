@@ -111,8 +111,8 @@ export default function TitanWorkstationModal({ isOpen, onClose, onActivateTitan
         {/* Header */}
         <div className="flex items-start justify-between border-b border-emerald-500/20 pb-5">
           <div className="flex items-center gap-3">
-            <div className="p-3 rounded-2xl bg-gradient-to-br from-emerald-500/30 to-teal-500/10 border border-emerald-500/40 text-emerald-300 shadow-glow-emerald">
-              <Cpu className="w-6 h-6 animate-pulse" />
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500/30 to-teal-500/10 border border-emerald-500/40 p-2 flex items-center justify-center shrink-0 shadow-glow-emerald">
+              <img src="/logo.png" alt="Girionix Titan" className="w-full h-full object-contain rounded-lg" />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">

@@ -359,6 +359,27 @@ export default function Header({
                   </div>
                 </button>
               )}
+
+              {/* 6. Giri Corporation Official Portal */}
+              <a
+                href="https://giri-corporation.pages.dev/"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setIsToolsDropdownOpen(false)}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left text-xs text-gray-200 hover:text-white hover:bg-cyan-500/15 transition-colors border-t border-white/5 pt-2"
+                title="Visit Official Giri Corporation Website"
+              >
+                <div className="p-1.5 rounded-lg bg-black/60 border border-white/10 flex items-center justify-center">
+                  <img src="/giri-corporation-logo.png" alt="Giri Corporation" className="w-4 h-4 object-contain rounded" />
+                </div>
+                <div>
+                  <div className="font-semibold text-white flex items-center gap-1.5">
+                    <span>Giri Corporation</span>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-mono font-bold">Portal</span>
+                  </div>
+                  <div className="text-[10px] text-gray-400">giri-corporation.pages.dev</div>
+                </div>
+              </a>
             </div>
           )}
         </div>

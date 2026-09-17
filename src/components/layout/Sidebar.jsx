@@ -108,7 +108,7 @@ export default function Sidebar({
             className="p-2.5 rounded-xl text-cyan-400 hover:text-white hover:bg-cyan-500/20 transition-colors flex items-center justify-center"
             title="Official Giri Corporation Website (giri-corporation.pages.dev)"
           >
-            <Globe className="w-5 h-5" />
+            <img src="/giri-corporation-logo.png" alt="Giri Corporation" className="w-5 h-5 object-contain rounded" />
           </a>
 
           <button
@@ -301,7 +301,7 @@ export default function Sidebar({
           title="Official Giri Corporation Website (giri-corporation.pages.dev)"
         >
           <div className="flex items-center gap-2">
-            <Globe className="w-3.5 h-3.5 text-cyan-400 group-hover:rotate-12 transition-transform" />
+            <img src="/giri-corporation-logo.png" alt="Giri Corporation" className="w-4 h-4 object-contain rounded shrink-0 group-hover:scale-110 transition-transform" />
             <div className="flex flex-col">
               <span className="text-xs font-medium text-gray-200 group-hover:text-cyan-300">Giri Corporation</span>
               <span className="text-[10px] font-mono text-cyan-400/70">Parent Organization ↗</span>
