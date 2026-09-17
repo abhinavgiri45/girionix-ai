@@ -609,7 +609,7 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
             <div className="p-1.5 rounded-2xl bg-[#090C16] border border-white/10 flex items-center justify-start sm:justify-center gap-1.5 overflow-x-auto shadow-2xl no-scrollbar scroll-smooth">
               {[
                 { id: 'ai-studio', label: '✦ AI Studio', color: 'cyan', icon: Sparkles, desc: 'Flagship Developer Environment' },
-                { id: 'code', label: '💻 Dev Runner', color: 'cyan', icon: Code2, desc: 'React 18 & TypeScript AST' },
+                { id: 'code', label: '💻 Coding Studio', color: 'cyan', icon: Code2, desc: 'React 18 & TypeScript AST' },
                 { id: 'script', label: '✍️ Script Writer', color: 'indigo', icon: ScrollText, desc: 'Fountain Screenplay & Story' },
                 { id: 'math', label: '📐 Olympiad Math', color: 'purple', icon: Sigma, desc: 'KaTeX & 3D Surfaces' },
                 { id: 'image', label: '🎨 8K VisionForge', color: 'rose', icon: ImageIcon, desc: 'FLUX.1 Cinema Ultra' },
@@ -755,7 +755,7 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
                       onClick={() => handleLaunch('code')}
                       className="px-4 py-2 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black font-bold text-xs flex items-center gap-1.5 shadow-glow-cyan cursor-pointer transition-all hover:scale-105"
                     >
-                      <span>Open in Full Code Studio</span>
+                      <span>Open in Coding Studio</span>
                       <ArrowUpRight className="w-3.5 h-3.5" />
                     </button>
                   </div>

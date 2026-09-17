@@ -266,8 +266,8 @@ export const STUDIO_MODES = [
   },
   {
     id: "code",
-    name: "Superhuman Dev Studio",
-    shortName: "Dev Runner",
+    name: "Coding Studio",
+    shortName: "Coding Studio",
     icon: "Code2",
     color: "cyan",
     description: "Full-stack code generator, live sandboxed web preview, and algorithmic complexity analyzer."

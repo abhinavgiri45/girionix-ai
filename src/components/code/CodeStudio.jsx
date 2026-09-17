@@ -382,23 +382,53 @@ export default function CodeStudio({ activeModel, injectedCode, isTitanMode = fa
   };
 
   const getSandboxHtml = () => {
-    const appFile = project.files.find(f => f.name === 'App.jsx')?.content || '';
+    const appFile = project.files.find(f => f.name === 'App.jsx')?.content || activeFile?.content || project.files[0]?.content || '';
     
+    // Extract potential React component candidate names from user code
+    const candidateMatches = appFile.match(/(?:function|class|const|let|var)\s+([A-Z][A-Za-z0-9_]*)/g) || [];
+    const candidateNames = Array.from(new Set(
+      candidateMatches.map(m => m.replace(/(?:function|class|const|let|var)\s+/, '').trim())
+    )).filter(name => !['React', 'ReactDOM', 'LucideIcons', 'Component', 'PureComponent', 'ErrorBoundary'].includes(name));
+
     // Clean and transform ES6 imports & exports for in-browser Babel execution
     let transformedCode = appFile
-      .replace(/import\s+React\s*,\s*\{([^}]+)\}\s+from\s+['"][^'"]+['"];?/g, 'const { $1 } = (window.React || {});')
+      // Remove TS type imports
+      .replace(/import\s+type\s+.*?;?/g, '')
+      .replace(/import\s*\*\s*as\s+React\s+from\s+['"][^'"]+['"];?/g, '')
+      // React imports: use var so re-declarations never throw SyntaxError
+      .replace(/import\s+React\s*,\s*\{([^}]+)\}\s+from\s+['"][^'"]+['"];?/g, 'var { $1 } = (window.React || {});')
       .replace(/import\s+React\s+from\s+['"][^'"]+['"];?/g, '')
-      .replace(/import\s*\{([^}]+)\}\s+from\s+['"]react['"];?/g, 'const { $1 } = (window.React || {});')
-      .replace(/import\s*\{([^}]+)\}\s+from\s+['"]lucide-react['"];?/g, 'const { $1 } = (window.LucideIcons || {});')
-      .replace(/import\s+([A-Za-z0-9_]+)\s+from\s+['"]lucide-react['"];?/g, 'const $1 = (window.LucideIcons && window.LucideIcons.$1) || (window.LucideIcons?.Sparkles);')
+      .replace(/import\s*\{([^}]+)\}\s+from\s+['"]react['"];?/g, 'var { $1 } = (window.React || {});')
+      // Lucide and icon imports
+      .replace(/import\s*\{([^}]+)\}\s+from\s+['"]lucide-react['"];?/g, 'var { $1 } = (window.LucideIcons || {});')
+      .replace(/import\s+([A-Za-z0-9_]+)\s+from\s+['"]lucide-react['"];?/g, 'var $1 = (window.LucideIcons && window.LucideIcons.$1) || (window.LucideIcons?.Sparkles);')
+      .replace(/import\s*\{([^}]+)\}\s+from\s+['"]react-icons\/?[^'"]*['"];?/g, 'var { $1 } = (window.LucideIcons || {});')
+      // Framer motion and animation mocks
+      .replace(/import\s*\{([^}]+)\}\s+from\s+['"]framer-motion['"];?/g, 'var { $1 } = (window.Motion || {});')
+      .replace(/import\s+([A-Za-z0-9_]+)\s+from\s+['"]framer-motion['"];?/g, 'var $1 = (window.Motion && window.Motion.$1) || window.Motion?.motion;')
+      .replace(/import\s+.*?from\s+['"]canvas-confetti['"];?/g, 'var confetti = window.confetti || (() => {});')
+      // Remove other CSS and external package imports gracefully
+      .replace(/import\s+['"][^'"]+\.css['"];?/g, '')
       .replace(/import\s+.*?from\s+['"][^'"]+['"];?/g, '')
+      // Strip named exports so Babel inside new Function doesn't choke on 'export'
+      .replace(/export\s+const\s+/g, 'var ')
+      .replace(/export\s+let\s+/g, 'var ')
+      .replace(/export\s+var\s+/g, 'var ')
+      .replace(/export\s+function\s+/g, 'function ')
+      .replace(/export\s+class\s+/g, 'class ')
+      .replace(/export\s+\{[^}]+\};?/g, '')
+      // Handle export default variants cleanly
       .replace(/export\s+default\s+function\s+([A-Za-z0-9_]+)/g, 'window.__DEFAULT_EXPORT__ = $1; function $1')
+      .replace(/export\s+default\s+function\s*\(/g, 'window.__DEFAULT_EXPORT__ = function(')
       .replace(/export\s+default\s+class\s+([A-Za-z0-9_]+)/g, 'window.__DEFAULT_EXPORT__ = $1; class $1')
       .replace(/export\s+default\s+([A-Za-z0-9_]+);?/g, 'window.__DEFAULT_EXPORT__ = $1;')
-      .replace(/export\s+default\s+/g, 'window.__DEFAULT_EXPORT__ = ')
-      .replace(/export\s+\{[^}]+\};?/g, '');
+      .replace(/export\s+default\s+/g, 'window.__DEFAULT_EXPORT__ = ');
 
     const escapedCode = JSON.stringify(transformedCode);
+
+    // Build return statement checking default export, App, candidates, and common component names
+    const candidateChecks = candidateNames.map(name => `(typeof ${name} !== "undefined" ? ${name} : null)`).join(' || ');
+    const returnStatement = `return window.__DEFAULT_EXPORT__ || (typeof App !== "undefined" ? App : null) || ${candidateChecks ? candidateChecks + ' || ' : ''}(typeof SnakeGame !== "undefined" ? SnakeGame : null) || (typeof StandaloneSnakeGame !== "undefined" ? StandaloneSnakeGame : null) || (typeof Dashboard !== "undefined" ? Dashboard : null) || (typeof QuantumVisualizer !== "undefined" ? QuantumVisualizer : null) || (typeof Component !== "undefined" ? Component : null) || (typeof Main !== "undefined" ? Main : null);`;
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -426,29 +456,43 @@ export default function CodeStudio({ activeModel, injectedCode, isTitanMode = fa
     console.error = (...args) => sendLog('error', args.join(' '));
     window.onerror = (msg, url, line) => { sendLog('error', msg + (line ? ' (Line ' + line + ')' : '')); return true; };
 
-    // Universal Lucide React SVG Icon Proxy Generator (Ensures Zero Icon Crash)
+    // Universal Lucide & React Icons SVG Proxy Generator (Ensures Zero Icon Crash)
     window.LucideIcons = new Proxy({}, {
       get: function(target, prop) {
+        if (typeof prop === 'symbol' || prop === 'then' || prop === 'toJSON') {
+          return target[prop];
+        }
         return function DynamicIcon(props) {
+          props = props || {};
           const className = props?.className || 'w-4 h-4 inline-block';
           const size = props?.size || 18;
+          const color = props?.color || 'currentColor';
           return React.createElement('svg', {
             xmlns: 'http://www.w3.org/2000/svg',
             width: size,
             height: size,
             viewBox: '0 0 24 24',
             fill: props?.fill || 'none',
-            stroke: 'currentColor',
+            stroke: color,
             strokeWidth: props?.strokeWidth || 2,
             strokeLinecap: 'round',
             strokeLinejoin: 'round',
             className: className,
             ...props
-          }, React.createElement('circle', { cx: 12, cy: 12, r: 9, strokeOpacity: 0.8 }),
-             React.createElement('path', { d: 'M12 8v8M8 12h8' }));
+          }, React.createElement('circle', { cx: 12, cy: 12, r: 9, strokeOpacity: 0.4 }),
+             React.createElement('path', { d: 'M12 8v8M8 12h8', strokeOpacity: 0.6 }));
         };
       }
     });
+
+    // Mock Framer Motion to prevent crashes in UI animations
+    window.Motion = {
+      motion: new Proxy({}, {
+        get: (target, prop) => (props) => React.createElement(prop, props)
+      }),
+      AnimatePresence: ({ children }) => children
+    };
+    window.confetti = () => {};
   </script>
 </head>
 <body>
@@ -508,11 +552,13 @@ export default function CodeStudio({ activeModel, injectedCode, isTitanMode = fa
           filename: 'App.jsx'
         }).code;
 
-        // Execute Transformed Code
-        const execFn = new Function('React', 'ReactDOM', 'LucideIcons', 'useState', 'useEffect', 'useRef', 'useMemo', 'useCallback', transformed + '\\nreturn window.__DEFAULT_EXPORT__ || (typeof App !== "undefined" ? App : null) || (typeof SnakeGame !== "undefined" ? SnakeGame : null) || (typeof Dashboard !== "undefined" ? Dashboard : null) || (typeof QuantumVisualizer !== "undefined" ? QuantumVisualizer : null);');
-        const Component = execFn(React, ReactDOM, window.LucideIcons, useState, useEffect, useRef, useMemo, useCallback);
+        // Execute Transformed Code without formal parameter collisions
+        // Inject hooks with var so redeclaration never causes SyntaxError
+        const functionBody = 'var { useState, useEffect, useRef, useMemo, useCallback, useContext, useReducer, useId, useLayoutEffect } = (window.React || {});\\n' + transformed + '\\n' + ${JSON.stringify(returnStatement)};
+        const execFn = new Function('React', 'ReactDOM', 'LucideIcons', functionBody);
+        const Component = execFn(window.React, window.ReactDOM, window.LucideIcons);
 
-        if (Component) {
+        if (Component && (typeof Component === 'function' || typeof Component === 'object')) {
           const root = ReactDOM.createRoot(document.getElementById('root'));
           root.render(React.createElement(ErrorBoundary, null, React.createElement(Component)));
         } else {
@@ -535,7 +581,7 @@ export default function CodeStudio({ activeModel, injectedCode, isTitanMode = fa
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 font-bold">
             <Code2 className="w-4 h-4" />
-            <span>React 18 Live IDE</span>
+            <span>Coding Studio • React 18 Live IDE</span>
           </div>
 
           <div className="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/5">

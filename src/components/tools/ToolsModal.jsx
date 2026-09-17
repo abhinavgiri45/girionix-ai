@@ -406,7 +406,7 @@ export default function ToolsModal({
                     <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300">Live React 18</span>
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-white group-hover:text-cyan-300">Dev Runner & Code Studio</h3>
+                    <h3 className="text-sm font-bold text-white group-hover:text-cyan-300">Coding Studio</h3>
                     <div className="text-[10px] font-mono text-cyan-400 font-bold">⚡ Model: Girionix CodeMaster Ultra (70B)</div>
                   </div>
                   <p className="text-xs text-gray-400 leading-relaxed">

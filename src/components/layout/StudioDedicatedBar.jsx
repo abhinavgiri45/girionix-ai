@@ -36,7 +36,7 @@ export default function StudioDedicatedBar({
 
   const tabs = [
     { id: 'ai-studio', label: 'AI Studio', icon: <Sparkles className="w-3.5 h-3.5" />, color: 'cyan' },
-    { id: 'code', label: 'Dev Runner', icon: <Code2 className="w-3.5 h-3.5" />, color: 'cyan' },
+    { id: 'code', label: 'Coding Studio', icon: <Code2 className="w-3.5 h-3.5" />, color: 'cyan' },
     { id: 'script', label: 'Script Writer', icon: <ScrollText className="w-3.5 h-3.5" />, color: 'indigo' },
     { id: 'math', label: 'Math Lab', icon: <Sigma className="w-3.5 h-3.5" />, color: 'purple' },
     { id: 'image', label: '8K Vision', icon: <ImageIcon className="w-3.5 h-3.5" />, color: 'rose' },
