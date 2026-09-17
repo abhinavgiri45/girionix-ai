@@ -617,17 +617,19 @@ ${lengthRule}
       });
     }
 
-    // Priority 1: Direct AI Studio (Gemini 2.0 Flash) Voice Generation (<250ms latency)
+    // Priority 1: Direct AI Studio (Gemini Flash) Voice Generation (<250ms latency)
     const directGeminiKey = (activeKey?.startsWith('AIzaSy') ? activeKey : '') ||
       (typeof localStorage !== 'undefined' ? localStorage.getItem('girionix_gemini_api_key') : '') ||
       (typeof localStorage !== 'undefined' ? localStorage.getItem('girionix_custom_api_key') : '') ||
-      (config.providerId === 'google' ? activeKey : '');
+      (config.providerId === 'google' ? activeKey : '') ||
+      (masterKey?.startsWith('AIzaSy') ? masterKey : '');
 
     if (directGeminiKey) {
       try {
         const { geminiStudioEngine } = await import('./geminiStudioEngine.js');
+        const activeGemKey = directGeminiKey || geminiStudioEngine.getApiKey();
         const res = await geminiStudioEngine.streamPrompt({
-          directKey: directGeminiKey,
+          directKey: activeGemKey,
           mode: 'chat',
           systemInstruction: systemPrompt,
           history: context.map(t => ({
@@ -635,7 +637,7 @@ ${lengthRule}
             content: t.content
           })),
           prompt,
-          model: 'gemini-2.0-flash',
+          model: 'gemini-2.5-flash',
           temperature: 0.7,
           maxOutputTokens: isLongFormRequested ? 800 : 350,
           enableThinking: false,

@@ -315,6 +315,19 @@ class SpeechService {
       this.isListening = false;
       this.isStarting = false;
 
+      // If user finished a spoken sentence and recognition ended, finalize immediately
+      if (accumulatedText.trim() && !this.isSpeaking && !this.isProcessing) {
+        clearTimeout(this.silenceTimer);
+        const finalized = accumulatedText.trim();
+        accumulatedText = '';
+        hasFinal = false;
+        this.isProcessing = true;
+        if (onSpeechFinalized) {
+          onSpeechFinalized(finalized);
+        }
+        return;
+      }
+
       // Auto-restart for hands-free conversations if desired and idle
       if (this.desiredListening && !this.isSpeaking && !this.isProcessing) {
         clearTimeout(this.restartDebounceTimer);

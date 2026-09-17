@@ -363,16 +363,29 @@ class LocalNeuralEngine {
       return this.generateDynamicPolymathResponse(prompt, tag);
     }
 
-    const primaryHit = results[0];
-    const secondaryHits = results.slice(1, 4);
+    const cleanSubject = prompt.replace(/[?!.]+$/, '').trim();
+    const capSubject = cleanSubject.charAt(0).toUpperCase() + cleanSubject.slice(1);
 
-    const narrative = [
-      primaryHit.snippet,
-      secondaryHits.length > 0 ? secondaryHits.map(h => h.snippet).join(' ') : ''
-    ].filter(Boolean).join('\n\n');
+    const primarySnippet = results[0]?.snippet || '';
+    const otherSnippets = results.slice(1, 4).map(r => r.snippet).filter(Boolean);
 
-    return `${narrative}\n\n---\n\n**Sources & Real-Time References**:\n` +
-      results.slice(0, 3).map((r, i) => `[${i + 1}] [${r.title}](${r.url}) — *${r.source}*`).join('\n');
+    let content = `### ${capSubject}\n\n`;
+    content += `${primarySnippet}\n\n`;
+
+    if (otherSnippets.length > 0) {
+      content += `#### Key Insights & Verified Details\n\n`;
+      otherSnippets.forEach(s => {
+        content += `• ${s}\n`;
+      });
+      content += '\n';
+    }
+
+    content += `---\n\n**🌐 Real-Time Sources & Citations**:\n`;
+    results.slice(0, 5).forEach((r, idx) => {
+      content += `[${idx + 1}] [**${r.title || 'Source'}**](${r.url}) — *${r.source || 'Web Knowledge'}*\n`;
+    });
+
+    return content;
   }
 
   /**
@@ -383,6 +396,15 @@ class LocalNeuralEngine {
     const lp = p.toLowerCase();
     const isLite = isTitanLite || modelId === 'girionix-titan-lite' || this.activeProfile === 'lite';
     const tag = isLite ? '🌱 Titan Lite (On-Device Lightweight)' : '⚡ Titan 70B Heavy Core (On-Device Workstation)';
+
+    // =========================================================================
+    // 0. REAL-TIME GROUNDED WEB SEARCH (Triggered when live web search results exist)
+    // =========================================================================
+    if (searchData && searchData.results && searchData.results.length > 0) {
+      if (!/^(hi|hello|hey|namaste|greetings|who created you|who made you|about girionix)\b/i.test(lp)) {
+        return this.synthesizeGroundedSearchResponse(prompt, searchData, tag);
+      }
+    }
 
     // =========================================================================
     // 1. CONVERSATION, GREETINGS & PERSONAL INTERACTION (HIGHEST PRIORITY!)
@@ -1250,48 +1272,64 @@ $$e^{i\\pi} + 1 = 0$$`;
       return this.pickDiverse(whyStyles, `why_${p.slice(0, 30)}`);
     }
 
-    // 6. General Topics: 4 DISTINCT STRUCTURAL ARCHETYPES
+    // 6. General Topics: 5 DIVERSE STRUCTURAL ARCHETYPES (Non-repetitive & Context-Rich)
     let hash = 0;
     for (let i = 0; i < p.length; i++) hash = ((hash << 5) - hash) + p.charCodeAt(i);
-    const archetypeIndex = Math.abs(hash) % 4;
+    const archetypeIndex = Math.abs(hash) % 5;
 
     if (archetypeIndex === 0) {
-      // ARCHETYPE 1: Fluid Narrative Essay (Feynman Intuitive Explanation)
+      // ARCHETYPE 1: Direct Answer & Key Pillars
       return `### ${capitalizedSubject}\n\n` +
-`At its essence, **${cleanSubject}** represents a captivating intersection of theory and practical reality. To understand how it operates intuitively, think of it as a coordinated system where foundational rules interact to produce complex, emergent behavior.\n\n` +
-`In real-world environments, ${cleanSubject} does not exist in isolation. It functions as a bridge between core principles and practical applications, enabling systems to solve problems with greater efficiency and precision. When examined closely, the underlying mechanisms reveal a remarkable balance between constraint and flexibility.\n\n` +
-`Whether applied in modern technology, scientific exploration, or analytical problem-solving, mastering **${cleanSubject}** provides a strategic lens through which we can design better systems, optimize workflows, and uncover deeper insights into the domain.`;
+`**${cleanSubject}** is best understood through its core purpose and direct practical value.\n\n` +
+`#### Key Pillars:\n` +
+`1. **Foundational Concept**: It provides the underlying rules and framework necessary to organize complex operations into structured, predictable actions.\n` +
+`2. **Operational Function**: By standardizing interactions and minimizing friction, it allows systems or individuals to accomplish objectives with elevated reliability.\n` +
+`3. **Practical Application**: From technical architectures to day-to-day problem-solving, applying this approach ensures consistency and clear visibility into outcomes.\n\n` +
+`💡 **Core Takeaway**: Mastering **${cleanSubject}** is fundamentally about focusing on high-leverage fundamentals and systematically removing friction.`;
     }
 
     if (archetypeIndex === 1) {
-      // ARCHETYPE 2: Executive Brief & Thematic Insights
-      return `### Overview: ${capitalizedSubject}\n\n` +
-`**${capitalizedSubject}** is a pivotal concept with significant implications across both theoretical frameworks and practical execution.\n\n` +
-`#### Core Mechanism & Dynamics\n` +
-`The defining characteristic of ${cleanSubject} is its ability to transform baseline inputs and principles into structured, reproducible outcomes. It operates through well-defined interactions that prioritize stability, performance, and predictable behavior.\n\n` +
-`#### Practical Significance\n` +
-`In applied scenarios, understanding ${cleanSubject} allows practitioners to streamline decision-making, eliminate inefficiencies, and build robust foundations for long-term scalability. Its relevance spans disciplines from technical architecture to scientific research.`;
+      // ARCHETYPE 2: Intuitive First-Principles Explanation (Feynman Technique)
+      return `### Understanding ${capitalizedSubject}: An Intuitive Guide\n\n` +
+`To understand **${cleanSubject}** without unnecessary jargon, picture it like a well-tuned navigation system. Instead of wandering randomly through trial and error, it gives you a verified path based on tested coordinates.\n\n` +
+`• **The Problem It Solves**: In any domain, complexity tends to multiply quickly. ${cleanSubject} establishes boundaries that keep things manageable.\n` +
+`• **How It Actually Operates**: It breaks down large, ambiguous goals into discrete, verifiable components.\n` +
+`• **Why It Matters**: By reducing uncertainty, it frees up mental bandwidth and technical resources for creative and strategic decisions.\n\n` +
+`*In simple terms: It takes what could be chaotic and turns it into a repeatable, understandable process.*`;
     }
 
     if (archetypeIndex === 2) {
-      // ARCHETYPE 3: Socratic Q&A Exploration
-      return `### Deep-Dive: ${capitalizedSubject}\n\n` +
-`To explore **${cleanSubject}** thoroughly, we can examine the three most fundamental questions surrounding it:\n\n` +
-`**1. What is the fundamental principle behind ${cleanSubject}?**\n` +
-`At its core, it establishes an objective framework for organizing, evaluating, and executing processes within its domain, ensuring consistency and clarity.\n\n` +
-`**2. What are the key trade-offs and considerations?**\n` +
-`Balancing precision with adaptability is essential. While strict adherence to rules ensures reliability, flexibility is required to accommodate edge cases and changing environments.\n\n` +
-`**3. Where is this most effectively applied?**\n` +
-`It serves as an indispensable tool for researchers, engineers, and thinkers who need to decompose complex challenges into manageable, high-leverage solutions.`;
+      // ARCHETYPE 3: Executive Brief & Strategic Overview
+      return `### Executive Brief: ${capitalizedSubject}\n\n` +
+`**Topic**: ${capitalizedSubject}\n` +
+`**Category**: Strategic & Practical Intelligence\n\n` +
+`#### Overview & Significance\n` +
+`${cleanSubject} represents a pivotal discipline with immediate relevance to modern workflows. Its primary advantage lies in transforming abstract requirements into reliable, deterministic execution.\n\n` +
+`#### Critical Considerations\n` +
+`• **Scalability**: When structured correctly from the outset, it scales smoothly as complexity grows.\n` +
+`• **Resilience**: It incorporates natural fault tolerance by ensuring each component can be independently inspected and validated.\n` +
+`• **Efficiency**: By minimizing redundant effort, it maximizes resource utilization and team velocity.`;
     }
 
-    // ARCHETYPE 4: System Dynamics & Architectural Framework
-    return `### Architectural Breakdown: ${capitalizedSubject}\n\n` +
-`Understanding **${cleanSubject}** requires examining the system through three interconnected dimensions:\n\n` +
-`• **The Foundations**: The core axioms, rules, and components that define the boundary conditions.\n` +
-`• **The Dynamic Process**: How active forces and variables interact to produce measurable, deterministic change.\n` +
-`• **The Strategic Value**: How leveraging these principles drives efficiency, innovation, and long-term problem solving.\n\n` +
-`By approaching ${cleanSubject} from first principles, we gain both theoretical mastery and actionable insight.`;
+    if (archetypeIndex === 3) {
+      // ARCHETYPE 4: Socratic Exploration
+      return `### Deep-Dive: ${capitalizedSubject}\n\n` +
+`To analyze **${cleanSubject}** with depth and clarity, let's explore three critical questions:\n\n` +
+`**1. What is the fundamental objective?**\n` +
+`The primary objective is to create clear order, reliable repeatability, and quantifiable outcomes in environments that would otherwise be unpredictable.\n\n` +
+`**2. What are the common failure modes to avoid?**\n` +
+`The most frequent pitfall is premature complexity—trying to optimize before mastering the baseline prerequisites. Keeping initial iterations simple and modular prevents architectural drift.\n\n` +
+`**3. What is the highest-leverage next step?**\n` +
+`Start with a small, testable prototype or scenario. Verify results against clear benchmarks before expanding the scope.`;
+    }
+
+    // ARCHETYPE 5: Systematic Framework & Architecture
+    return `### Framework Breakdown: ${capitalizedSubject}\n\n` +
+`A comprehensive breakdown of **${cleanSubject}** encompasses three interconnected dimensions:\n\n` +
+`• **The Baseline (Inputs & Constraints)**: The essential parameters, assumptions, and resources required to begin.\n` +
+`• **The Engine (Mechanism of Action)**: The sequence of transformations and interactions that convert initial conditions into the intended state.\n` +
+`• **The Value (Outcomes & Impact)**: The measurable benefits, efficiencies, and capabilities unlocked by its successful execution.\n\n` +
+`Applying this mental model provides both conceptual clarity and an actionable roadmap for real-world implementation.`;
   }
 
   /**

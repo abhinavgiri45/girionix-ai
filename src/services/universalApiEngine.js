@@ -338,10 +338,10 @@ export const universalApiEngine = {
 
     // 1. Gemini Direct
     if (config.providerId === 'google') {
-      if (requestedModelId === 'girionix-pro' || requestedModelId === 'girionix-universal-auto') return 'gemini-2.0-flash';
-      if (requestedModelId === 'girionix-lite') return 'gemini-2.0-flash';
-      if (requestedModelId === 'girionix-codemaster-ultra') return 'gemini-2.0-flash';
-      if (requestedModelId === 'girionix-mathx-olympiad') return 'gemini-2.0-flash';
+      if (requestedModelId === 'girionix-pro' || requestedModelId === 'girionix-universal-auto') return 'gemini-2.5-flash';
+      if (requestedModelId === 'girionix-lite') return 'gemini-2.5-flash';
+      if (requestedModelId === 'girionix-codemaster-ultra') return 'gemini-2.5-flash';
+      if (requestedModelId === 'girionix-mathx-olympiad') return 'gemini-2.5-flash';
       return requestedModelId.includes('/') ? requestedModelId.split('/').pop() : requestedModelId;
     }
 

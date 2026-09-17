@@ -17,6 +17,7 @@ import TitanWorkstationModal from './components/common/TitanWorkstationModal';
 import TitanWorkstationView from './components/titan/TitanWorkstationView';
 import ChatView from './components/chat/ChatView';
 import MobileBottomNav from './components/layout/MobileBottomNav';
+import SettingsModal from './components/settings/SettingsModal';
 
 import { AI_MODELS, TITAN_AI_MODELS } from './services/modelCatalog';
 import { storage } from './services/storage';
@@ -50,6 +51,7 @@ export default function App() {
   const [activeStudioTab, setActiveStudioTab] = useState('ai-studio'); // Flagship AI Studio by default
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isToolsOpen, setIsToolsOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [introTab, setIntroTab] = useState('overview');
   // The AI Web App ALWAYS opens with the Official Introduction Page as the primary landing page first!
   const [isAboutOpen, setIsAboutOpen] = useState(() => {
@@ -270,7 +272,7 @@ export default function App() {
         onClearAllSessions={handleClearAllSessions}
         isCollapsed={isSidebarCollapsed}
         setIsCollapsed={setIsSidebarCollapsed}
-        onOpenSettings={() => setIsToolsOpen(true)}
+        onOpenSettings={() => setIsSettingsOpen(true)}
         onOpenAbout={() => {
           setIntroTab('overview');
           setIsAboutOpen(true);
@@ -287,6 +289,7 @@ export default function App() {
           layoutMode={layoutMode}
           setLayoutMode={setLayoutMode}
           onOpenTools={() => setIsToolsOpen(true)}
+          onOpenSettings={() => setIsSettingsOpen(true)}
           onOpenAbout={() => {
             setIntroTab('overview');
             setIsAboutOpen(true);
@@ -366,6 +369,7 @@ export default function App() {
                 }}
                 onOpenWhySwitch={handleOpenWhySwitch}
                 onOpenDownload={() => setIsDownloadOpen(true)}
+                onOpenSettings={() => setIsSettingsOpen(true)}
                 isAppInstalled={isAppInstalled}
                 isTitanMode={isTitanMode}
                 onOpenTitanWorkstation={() => setIsTitanWorkstationOpen(true)}
@@ -532,7 +536,17 @@ export default function App() {
         onClose={() => setIsCommandPaletteOpen(false)}
         setCurrentStudio={(s) => { setActiveStudioTab(s); setLayoutMode('split'); }}
         setActiveModel={handleSetActiveModel}
-        onOpenSettings={() => setIsToolsOpen(true)}
+        onOpenSettings={() => setIsSettingsOpen(true)}
+      />
+
+      {/* Universal API & Engine Settings Modal */}
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        onApiKeyUpdated={() => {
+          // Re-trigger re-render across views
+          setActiveModel(prev => ({ ...prev }));
+        }}
       />
     </div>
   );

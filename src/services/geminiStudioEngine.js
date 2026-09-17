@@ -111,13 +111,14 @@ export const geminiStudioEngine = {
       const trimmed = (key || '').trim();
       if (trimmed) {
         localStorage.setItem(GEMINI_API_KEY_STORAGE, trimmed);
-        // Also update universal provider if user specified a Gemini key
+        localStorage.setItem('girionix_custom_api_key', trimmed);
+        storage.setApiKey(trimmed);
         if (trimmed.startsWith('AIzaSy')) {
           localStorage.setItem('girionix_universal_provider', 'google');
-          localStorage.setItem('girionix_custom_api_key', trimmed);
         }
       } else {
         localStorage.removeItem(GEMINI_API_KEY_STORAGE);
+        storage.removeApiKey();
       }
     } catch (_) {}
   },
@@ -234,7 +235,16 @@ export const geminiStudioEngine = {
     // 1. Direct Official Gemini API SSE Streaming
     if (activeKey) {
       try {
-        const resolvedModel = model.startsWith('gemini-') ? model : 'gemini-2.5-pro';
+        let primaryModel = (model || 'gemini-2.5-flash').replace(/:free$/i, '').replace(/^google\//i, '');
+        if (primaryModel === 'gemini-2.5-flash-thinking') primaryModel = 'gemini-2.0-flash-thinking-exp';
+        if (!primaryModel.startsWith('gemini-')) primaryModel = 'gemini-2.5-flash';
+
+        // Order candidates starting with primaryModel, followed by robust fallbacks with generous free quotas
+        const modelCandidates = [primaryModel];
+        ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.5-pro'].forEach(m => {
+          if (!modelCandidates.includes(m)) modelCandidates.push(m);
+        });
+
         // Build Gemini API contents array
         const contents = [];
 
@@ -278,105 +288,141 @@ export const geminiStudioEngine = {
           parts: [{ text: systemInstruction }]
         } : undefined;
 
-        // Generation Config
-        const generationConfig = {
-          temperature: typeof temperature === 'number' ? temperature : 1.0,
-          topP: typeof topP === 'number' ? topP : 0.95,
-          topK: typeof topK === 'number' ? topK : 40,
-          maxOutputTokens: maxOutputTokens || 8192
-        };
+        let lastError = null;
 
-        if (enableJsonMode) {
-          generationConfig.responseMimeType = 'application/json';
-        }
+        for (const candidateModel of modelCandidates) {
+          if (signal?.aborted) break;
 
-        if (enableThinking) {
-          generationConfig.thinkingConfig = {
-            thinkingBudget: thinkingBudget || 2048
-          };
-        }
+          try {
+            const supportsThinking = candidateModel.includes('2.5') || candidateModel.includes('thinking');
 
-        const requestPayload = {
-          contents,
-          generationConfig
-        };
+            // Generation Config
+            const generationConfig = {
+              temperature: typeof temperature === 'number' ? temperature : 1.0,
+              topP: typeof topP === 'number' ? topP : 0.95,
+              topK: typeof topK === 'number' ? topK : 40,
+              maxOutputTokens: maxOutputTokens || 8192
+            };
 
-        if (systemPart) {
-          requestPayload.system_instruction = systemPart;
-        }
+            if (enableJsonMode) {
+              generationConfig.responseMimeType = 'application/json';
+            }
 
-        if (enableSearchGrounding) {
-          requestPayload.tools = [{ google_search: {} }];
-        }
+            if (enableThinking && supportsThinking) {
+              generationConfig.thinkingConfig = {
+                thinkingBudget: typeof thinkingBudget === 'number' ? thinkingBudget : -1
+              };
+            } else if (!enableThinking && candidateModel.includes('2.5-flash')) {
+              generationConfig.thinkingConfig = {
+                thinkingBudget: 0
+              };
+            }
 
-        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${resolvedModel}:streamGenerateContent?key=${encodeURIComponent(activeKey)}&alt=sse`;
+            const requestPayload = {
+              contents,
+              generationConfig
+            };
 
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(requestPayload),
-          signal
-        });
+            if (systemPart) {
+              requestPayload.system_instruction = systemPart;
+            }
 
-        if (!response.ok) {
-          const errData = await response.json().catch(() => ({}));
-          throw new Error(errData.error?.message || `Gemini API returned HTTP ${response.status}`);
-        }
+            if (enableSearchGrounding && !candidateModel.includes('thinking')) {
+              requestPayload.tools = [{ googleSearch: {} }];
+            }
 
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder('utf-8');
-        let buffer = '';
+            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${candidateModel}:streamGenerateContent?key=${encodeURIComponent(activeKey)}&alt=sse`;
 
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
+            const response = await fetch(endpoint, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(requestPayload),
+              signal
+            });
 
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n');
-          buffer = lines.pop() || '';
+            if (!response.ok) {
+              const errData = await response.json().catch(() => ({}));
+              const errMsg = errData.error?.message || `Gemini API returned HTTP ${response.status}`;
+              lastError = new Error(errMsg);
 
-          for (const line of lines) {
-            const trimmed = line.trim();
-            if (!trimmed || !trimmed.startsWith('data: ')) continue;
-            const dataStr = trimmed.slice(6);
-            if (dataStr === '[DONE]') continue;
-
-            try {
-              const parsed = JSON.parse(dataStr);
-              const candidate = parsed.candidates?.[0];
-              const parts = candidate?.content?.parts || [];
-
-              for (const part of parts) {
-                // Thought / reasoning token stream
-                if (part.thought) {
-                  fullThinking += part.text || '';
-                  if (onThinking) onThinking(part.text || '', fullThinking);
-                } else if (part.text) {
-                  fullContent += part.text;
-                  totalTokens += Math.max(1, Math.round(part.text.length / 4));
-                  if (onToken) onToken(part.text, fullContent);
-                }
+              // Fatal authentication errors should terminate cascade immediately
+              if (response.status === 400 && errMsg.includes('API_KEY_INVALID')) {
+                throw new Error(`Invalid Gemini API Key: ${errMsg}`);
+              }
+              if (response.status === 403) {
+                throw new Error(`Gemini API Access Forbidden: ${errMsg}`);
               }
 
-              // Emit metrics every 150ms
-              const now = performance.now();
-              if (now - lastMetricTime > 150) {
-                lastMetricTime = now;
-                emitMetrics();
+              console.warn(`Gemini model ${candidateModel} failed (${response.status}: ${errMsg}), trying next candidate...`);
+              continue;
+            }
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder('utf-8');
+            let buffer = '';
+
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+
+              buffer += decoder.decode(value, { stream: true });
+              const lines = buffer.split('\n');
+              buffer = lines.pop() || '';
+
+              for (const line of lines) {
+                const trimmed = line.trim();
+                if (!trimmed || !trimmed.startsWith('data: ')) continue;
+                const dataStr = trimmed.slice(6);
+                if (dataStr === '[DONE]') continue;
+
+                try {
+                  const parsed = JSON.parse(dataStr);
+                  const candidate = parsed.candidates?.[0];
+                  const parts = candidate?.content?.parts || [];
+
+                  for (const part of parts) {
+                    // Thought / reasoning token stream
+                    if (part.thought) {
+                      fullThinking += part.text || '';
+                      if (onThinking) onThinking(part.text || '', fullThinking);
+                    } else if (part.text) {
+                      fullContent += part.text;
+                      totalTokens += Math.max(1, Math.round(part.text.length / 4));
+                      if (onToken) onToken(part.text, fullContent);
+                    }
+                  }
+
+                  // Emit metrics every 150ms
+                  const now = performance.now();
+                  if (now - lastMetricTime > 150) {
+                    lastMetricTime = now;
+                    emitMetrics();
+                  }
+                } catch (_) {}
               }
-            } catch (_) {}
+            }
+
+            if (fullContent || fullThinking) {
+              emitMetrics('stop');
+              return {
+                content: fullContent,
+                thinking: fullThinking,
+                modelUsed: candidateModel,
+                latencyMs: Math.round(performance.now() - startTime),
+                finishReason: 'stop'
+              };
+            }
+          } catch (modelErr) {
+            if (signal?.aborted) throw modelErr;
+            if (modelErr.message.includes('API Key') || modelErr.message.includes('Forbidden')) {
+              throw modelErr;
+            }
+            lastError = modelErr;
           }
         }
 
-        if (fullContent || fullThinking) {
-          emitMetrics('stop');
-          return {
-            content: fullContent,
-            thinking: fullThinking,
-            modelUsed: resolvedModel,
-            latencyMs: Math.round(performance.now() - startTime),
-            finishReason: 'stop'
-          };
+        if (lastError) {
+          throw lastError;
         }
       } catch (err) {
         if (signal?.aborted) throw err;

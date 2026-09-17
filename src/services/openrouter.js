@@ -202,9 +202,9 @@ export const openrouter = {
             content: m.content
           }));
 
-          let resolvedModel = 'gemini-2.5-pro';
-          if (model.includes('flash-thinking')) resolvedModel = 'gemini-2.0-flash-thinking-exp:free';
-          else if (model.includes('flash-lite')) resolvedModel = 'gemini-2.0-flash-lite-preview-02-05:free';
+          let resolvedModel = 'gemini-2.5-flash';
+          if (model.includes('flash-thinking')) resolvedModel = 'gemini-2.0-flash-thinking-exp';
+          else if (model.includes('2.5-pro')) resolvedModel = 'gemini-2.5-pro';
           else if (model.includes('2.5-flash')) resolvedModel = 'gemini-2.5-flash';
           else if (model.includes('2.0-flash')) resolvedModel = 'gemini-2.0-flash';
           else if (model.includes('1.5-pro')) resolvedModel = 'gemini-1.5-pro';
@@ -240,7 +240,11 @@ export const openrouter = {
         }
       } catch (err) {
         if (signal?.aborted) throw err;
-        console.warn('Direct Gemini stream error, falling back:', err.message);
+        console.error('Direct Gemini stream error:', err.message);
+        if (directGeminiKey) {
+          const formattedErr = `⚠️ **Google Gemini API Notice**\n\nCould not complete request with your Gemini API key: *${err.message}*\n\n💡 **Troubleshooting**:\n- Check your Gemini API key in **Settings (⚙️)**\n- Verify your quota on [Google AI Studio](https://aistudio.google.com/app/apikey)\n- Free-tier accounts have generous 15 RPM limits on \`gemini-2.5-flash\` and \`gemini-2.0-flash\`\n\n*Falling back to sovereign on-device neural core for this response:*`;
+          if (onChunk) onChunk(formattedErr + '\n\n', formattedErr + '\n\n');
+        }
       }
     }
 
@@ -416,7 +420,12 @@ export const openrouter = {
       }
     }
 
-    // Fallback: If all cloud endpoints fail, display clean notice
+    // Fallback: If user had an active key configured but cloud endpoints failed, notify user
+    if (userApiKey || masterKey) {
+      const notice = `⚠️ **Cloud API Connection Notice**\n\nCould not complete request with provider **${config.providerName || config.providerId}**. Candidate models returned errors or exhausted quota.\n\n👉 **Please verify your API key in Settings (⚙️).**\n\n*Serving via sovereign on-device neural core:*`;
+      if (onChunk) onChunk(notice + '\n\n', notice + '\n\n');
+    }
+
     return this.streamFreeNeuralAI({ messages: enrichedMessages, onChunk, onReasoningChunk, signal });
   },
 

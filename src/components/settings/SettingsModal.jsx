@@ -116,8 +116,11 @@ export default function SettingsModal({ isOpen, onClose, onApiKeyUpdated }) {
     });
 
     storage.setApiKey(trimmed);
-    if (trimmed.startsWith('AIzaSy')) {
+    if (selectedProvider === 'google' || trimmed.startsWith('AIzaSy')) {
       geminiStudioEngine.setApiKey(trimmed);
+      try {
+        localStorage.setItem('girionix_gemini_api_key', trimmed);
+      } catch (_) {}
     }
 
     if (onApiKeyUpdated) onApiKeyUpdated(trimmed);

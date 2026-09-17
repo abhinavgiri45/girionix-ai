@@ -91,6 +91,96 @@ export default function VoiceOrbModal({ isOpen, onClose, onExportToChat }) {
   const processSpokenPrompt = async (userPrompt, currentLang) => {
     if (!userPrompt || !isMountedRef.current) return;
 
+    // Clean and strip punctuation
+    const cleanCmd = userPrompt
+      .toLowerCase()
+      .replace(/[.,/#!$%^&*;:{}=\-_`~()?"'।]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    // 1. Stop / Pause
+    if (
+      cleanCmd === 'stop' || 
+      cleanCmd === 'pause' || 
+      cleanCmd === 'be quiet' || 
+      cleanCmd === 'chup ho jao' || 
+      cleanCmd === 'chup raho' || 
+      cleanCmd === 'ruko'
+    ) {
+      stopSession();
+      setAiResponse('Session paused. Tap the mic or orb when you are ready to talk.');
+      speech.speak('Paused.');
+      return;
+    }
+
+    // 2. Clear Session / Clear Chat
+    if (
+      cleanCmd === 'clear chat' || 
+      cleanCmd === 'clear session' || 
+      cleanCmd === 'clear conversation' || 
+      cleanCmd === 'reset' || 
+      cleanCmd === 'chat saaf karo'
+    ) {
+      setChatTurns([]);
+      setTranscript('');
+      setAiResponse('Conversation cleared.');
+      speech.speak('Conversation cleared.', () => {
+        if (isMountedRef.current && isSessionActiveRef.current) {
+          startListeningTurn(currentLang);
+        }
+      }, voiceSpeed, currentLang, voiceProfile);
+      return;
+    }
+
+    // 3. Switch Language to Hindi
+    if (
+      cleanCmd === 'switch to hindi' || 
+      cleanCmd === 'hindi me bolo' || 
+      cleanCmd === 'hindi mein baat karo'
+    ) {
+      setVoiceLang('hi-IN');
+      storage.setVoiceLanguage('hi-IN');
+      setTranscript('');
+      setAiResponse('ज़रूर, अब हम हिंदी में बात करेंगे। आप क्या जानना चाहते हैं?');
+      speech.speak('ज़रूर, अब हम हिंदी में बात करेंगे। आप क्या जानना चाहते हैं?', () => {
+        if (isMountedRef.current && isSessionActiveRef.current) {
+          startListeningTurn('hi-IN');
+        }
+      }, voiceSpeed, 'hi-IN', voiceProfile);
+      return;
+    }
+
+    // 4. Switch Language to English
+    if (
+      cleanCmd === 'switch to english' || 
+      cleanCmd === 'speak in english'
+    ) {
+      setVoiceLang('en-US');
+      storage.setVoiceLanguage('en-US');
+      setTranscript('');
+      setAiResponse('Switched to English. What would you like to explore?');
+      speech.speak('Switched to English. What would you like to explore?', () => {
+        if (isMountedRef.current && isSessionActiveRef.current) {
+          startListeningTurn('en-US');
+        }
+      }, voiceSpeed, 'en-US', voiceProfile);
+      return;
+    }
+
+    // 5. Close / Exit Voice Mode
+    if (
+      cleanCmd === 'close' || 
+      cleanCmd === 'exit' || 
+      cleanCmd === 'exit voice' || 
+      cleanCmd === 'close voice orb' || 
+      cleanCmd === 'goodbye' || 
+      cleanCmd === 'bye bye'
+    ) {
+      stopSession();
+      if (onClose) onClose();
+      return;
+    }
+
     // Keep mic stream alive during AI thinking/speaking turn
     speech.stopListening(false);
     setConnectionStatus('thinking');

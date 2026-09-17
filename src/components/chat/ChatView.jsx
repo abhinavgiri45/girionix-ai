@@ -32,7 +32,8 @@ import {
   RefreshCw,
   FileCode,
   Share2,
-  Lightbulb
+  Lightbulb,
+  Key
 } from 'lucide-react';
 import MessageItem from './MessageItem';
 import VoiceOrbModal from './VoiceOrbModal';
@@ -76,6 +77,7 @@ export default function ChatView({
   onOpenVoiceModal,
   onOpenAbout,
   onOpenDownload,
+  onOpenSettings,
   isAppInstalled = false,
   isTitanMode = false,
   onOpenTitanWorkstation,
@@ -327,36 +329,139 @@ export default function ChatView({
           setIsListening(false);
           if (!finalTranscript) return;
 
-          const lower = finalTranscript.toLowerCase().trim();
+          // Clean and strip punctuation (e.g. browser trailing period "Clear chat.")
+          const cleanCmd = finalTranscript
+            .toLowerCase()
+            .replace(/[.,/#!$%^&*;:{}=\-_`~()?"'।]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
 
-          // Built-in Voice Commands
-          if (lower === 'clear chat' || lower === 'clear all' || lower === 'delete chat' || lower === 'chat saaf karo' || lower === 'clear conversation') {
+          // 1. Clear Chat Command
+          if (
+            cleanCmd === 'clear chat' || 
+            cleanCmd === 'clear all' || 
+            cleanCmd === 'delete chat' || 
+            cleanCmd === 'clear the chat' || 
+            cleanCmd === 'clear conversation' || 
+            cleanCmd === 'chat saaf karo' ||
+            cleanCmd === 'sab saaf karo'
+          ) {
             handleClearChat();
             speech.speak('Chat cleared.');
             setInput('');
             return;
           }
 
-          if (lower === 'new chat' || lower === 'new session' || lower === 'start fresh' || lower === 'naya chat') {
+          // 2. New Chat Command
+          if (
+            cleanCmd === 'new chat' || 
+            cleanCmd === 'new session' || 
+            cleanCmd === 'start fresh' || 
+            cleanCmd === 'start a new chat' || 
+            cleanCmd === 'create new chat' || 
+            cleanCmd === 'naya chat'
+          ) {
             onCreateNewSession();
             speech.speak('Started a new chat session.');
             setInput('');
             return;
           }
 
-          if (lower === 'stop' || lower === 'stop speaking' || lower === 'cancel' || lower === 'chup ho jao') {
+          // 3. Stop Command
+          if (
+            cleanCmd === 'stop' || 
+            cleanCmd === 'stop speaking' || 
+            cleanCmd === 'cancel' || 
+            cleanCmd === 'be quiet' || 
+            cleanCmd === 'shut up' || 
+            cleanCmd === 'pause' || 
+            cleanCmd === 'ruko' || 
+            cleanCmd === 'chup ho jao' || 
+            cleanCmd === 'chup raho'
+          ) {
             speech.stopSpeaking();
             handleStop();
             setInput('');
             return;
           }
 
-          if (lower.startsWith('web search ') || lower.startsWith('search web for ') || lower.startsWith('search the web for ')) {
-            const query = lower.replace(/^(web search|search web for|search the web for)\s+/i, '');
-            setWebSearchEnabled(true);
-            setInput(query);
-            handleSend(query);
+          // 4. Toggle Web Search
+          if (
+            cleanCmd === 'turn on web search' || 
+            cleanCmd === 'enable web search' || 
+            cleanCmd === 'turn web search on' || 
+            cleanCmd === 'web search on'
+          ) {
+            handleToggleWebSearch(true);
+            speech.speak('Web search enabled.');
+            setInput('');
             return;
+          }
+          if (
+            cleanCmd === 'turn off web search' || 
+            cleanCmd === 'disable web search' || 
+            cleanCmd === 'turn web search off' || 
+            cleanCmd === 'web search off'
+          ) {
+            handleToggleWebSearch(false);
+            speech.speak('Web search disabled.');
+            setInput('');
+            return;
+          }
+
+          // 5. Toggle Deep Reasoning / Thinking
+          if (
+            cleanCmd === 'turn on thinking' || 
+            cleanCmd === 'enable thinking' || 
+            cleanCmd === 'turn on deep reasoning' || 
+            cleanCmd === 'enable deep reasoning'
+          ) {
+            handleToggleThinking(true);
+            speech.speak('Deep reasoning enabled.');
+            setInput('');
+            return;
+          }
+          if (
+            cleanCmd === 'turn off thinking' || 
+            cleanCmd === 'disable thinking' || 
+            cleanCmd === 'turn off deep reasoning' || 
+            cleanCmd === 'disable deep reasoning'
+          ) {
+            handleToggleThinking(false);
+            speech.speak('Deep reasoning disabled.');
+            setInput('');
+            return;
+          }
+
+          // 6. Modal / Interface triggers
+          if (cleanCmd === 'open voice orb' || cleanCmd === 'voice orb' || cleanCmd === 'voice mode' || cleanCmd === 'launch voice') {
+            setIsVoiceOrbOpen(true);
+            speech.speak('Opening Voice Orb.');
+            setInput('');
+            return;
+          }
+          if ((cleanCmd === 'open settings' || cleanCmd === 'settings' || cleanCmd === 'api settings') && onOpenSettings) {
+            onOpenSettings();
+            speech.speak('Opening API settings.');
+            setInput('');
+            return;
+          }
+
+          // 7. Search for ... Command
+          if (
+            cleanCmd.startsWith('web search ') || 
+            cleanCmd.startsWith('search web for ') || 
+            cleanCmd.startsWith('search the web for ') || 
+            cleanCmd.startsWith('search for ') || 
+            cleanCmd.startsWith('google ')
+          ) {
+            const query = cleanCmd.replace(/^(web search|search web for|search the web for|search for|google)\s+/i, '').trim();
+            if (query) {
+              handleToggleWebSearch(true);
+              setInput(query);
+              handleSend(query);
+              return;
+            }
           }
 
           // Voice input captured: auto-send
@@ -1206,6 +1311,25 @@ export default function ChatView({
             </div>
 
             <div className="flex items-center gap-2">
+              {onOpenSettings && (
+                <button
+                  type="button"
+                  onClick={onOpenSettings}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-[11px] font-mono font-semibold transition-all cursor-pointer select-none active:scale-95 ${
+                    storage.hasApiKey()
+                      ? 'bg-cyan-500/15 border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/25 shadow-sm'
+                      : 'bg-amber-500/15 border-amber-500/30 text-amber-300 hover:bg-amber-500/25 animate-pulse'
+                  }`}
+                  title={storage.hasApiKey() ? "Cloud Gateway Active (Gemini/OpenAI/Groq) • Click to configure" : "Connect your Google Gemini, OpenAI or Groq API Key for live responses"}
+                >
+                  {storage.hasApiKey() ? (
+                    <Zap className="w-3 h-3 text-cyan-400" />
+                  ) : (
+                    <Key className="w-3 h-3 text-amber-400" />
+                  )}
+                  <span>{storage.hasApiKey() ? 'API: Connected' : 'Connect API Key'}</span>
+                </button>
+              )}
               <span className="hidden sm:inline text-cyan-400/90 font-mono text-xs font-semibold">
                 ⚡ Girionix Pro Sovereign Engine
               </span>

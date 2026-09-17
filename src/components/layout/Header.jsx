@@ -14,13 +14,17 @@ import {
   Award, 
   Activity, 
   RefreshCw,
-  Globe
+  Globe,
+  Key,
+  Zap
 } from 'lucide-react';
+import { storage } from '../../services/storage';
 
 export default function Header({
   layoutMode,
   setLayoutMode,
   onOpenTools,
+  onOpenSettings,
   onOpenAbout,
   onOpenDownload,
   onOpenProStatus,
@@ -242,6 +246,28 @@ export default function Header({
           )
         )}
 
+        {/* Quick API Key / Cloud Engine Status */}
+        {onOpenSettings && (
+          <button
+            onClick={onOpenSettings}
+            className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
+              storage.hasApiKey()
+                ? 'bg-cyan-500/15 border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/25 shadow-sm'
+                : 'bg-amber-500/15 border-amber-500/30 text-amber-300 hover:bg-amber-500/25 animate-pulse'
+            }`}
+            title={storage.hasApiKey() ? 'Cloud API Active • Click to configure Gemini / OpenAI / Groq' : 'Click to connect your Gemini / OpenAI / Groq API Key'}
+          >
+            {storage.hasApiKey() ? (
+              <Zap className="w-3.5 h-3.5 text-cyan-400" />
+            ) : (
+              <Key className="w-3.5 h-3.5 text-amber-400" />
+            )}
+            <span className="hidden sm:inline">
+              {storage.hasApiKey() ? 'API Active' : 'Set API Key'}
+            </span>
+          </button>
+        )}
+
         {/* Unified Tools & Extra Features Dropdown */}
         <div className="relative" ref={dropdownRef}>
           <button
@@ -279,17 +305,42 @@ export default function Header({
                 </button>
               )}
 
-              {/* 1. Tools Hub */}
+              {/* 1. API & Cloud Gateway */}
+              {onOpenSettings && (
+                <button
+                  onClick={() => { setIsToolsDropdownOpen(false); onOpenSettings(); }}
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left text-xs text-gray-200 hover:text-white hover:bg-cyan-500/20 transition-colors"
+                >
+                  <div className="p-1.5 rounded-lg bg-cyan-500/20 text-cyan-400">
+                    <Key className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-white flex items-center gap-1.5">
+                      <span>API & Cloud Gateway</span>
+                      <span className={`text-[9px] px-1.5 py-0.2 rounded font-mono font-bold ${
+                        storage.hasApiKey()
+                          ? 'bg-cyan-500/20 text-cyan-300'
+                          : 'bg-amber-500/20 text-amber-300'
+                      }`}>
+                        {storage.hasApiKey() ? 'Connected' : 'Configure'}
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-gray-400">Gemini, OpenAI, Groq, DeepSeek & Keys</div>
+                  </div>
+                </button>
+              )}
+
+              {/* 2. Tools Hub */}
               <button
                 onClick={() => { setIsToolsDropdownOpen(false); onOpenTools(); }}
                 className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left text-xs text-gray-200 hover:text-white hover:bg-white/10 transition-colors"
               >
-                <div className="p-1.5 rounded-lg bg-cyan-500/20 text-cyan-400">
+                <div className="p-1.5 rounded-lg bg-purple-500/20 text-purple-400">
                   <Wrench className="w-4 h-4" />
                 </div>
                 <div>
-                  <div className="font-semibold text-white">Universal API & Tools Hub</div>
-                  <div className="text-[10px] text-gray-400">Universal API, Auto-Upgrade & Parameters</div>
+                  <div className="font-semibold text-white">Productivity & Tools Hub</div>
+                  <div className="text-[10px] text-gray-400">Personas, Themes, Timer & Soundscapes</div>
                 </div>
               </button>
 
