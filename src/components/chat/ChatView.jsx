@@ -59,6 +59,7 @@ import { storage, PERSONAS } from '../../services/storage';
 import { AI_MODELS, TITAN_AI_MODELS } from '../../services/modelCatalog';
 import { localNeuralEngine } from '../../services/localNeuralEngine';
 import { universalApiEngine } from '../../services/universalApiEngine';
+import { conversationMemory } from '../../services/conversationMemory';
 
 export default function ChatView({
   activeModel,
@@ -796,11 +797,14 @@ export default function ChatView({
         (personaObj ? `\n\nACTIVE ROLE INSTRUCTION: ${personaObj.promptSuffix}` : '') +
         (webSearchEnabled ? '\n\nWEB GROUNDING: Cite real-world sources and current technical documentation.' : '');
 
+      const validDialogue = conversationMemory.formatMessagesForApi(
+        updatedMessages.filter(m => m.id !== assistantId),
+        24
+      );
+
       const apiMessages = [
         { role: 'system', content: systemPromptWithPersona },
-        ...updatedMessages
-          .filter(m => m.id !== assistantId && m.id !== 'welcome')
-          .map(m => ({ role: m.role, content: m.content }))
+        ...validDialogue
       ];
 
       await openrouter.streamChat({

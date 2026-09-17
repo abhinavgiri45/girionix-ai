@@ -15,6 +15,7 @@ import { storage } from './storage.js';
 import { openrouter } from './openrouter.js';
 import { universalApiEngine } from './universalApiEngine.js';
 import { localNeuralEngine } from './localNeuralEngine.js';
+import { conversationMemory } from './conversationMemory.js';
 
 const GEMINI_API_KEY_STORAGE = 'girionix_gemini_api_key';
 
@@ -259,42 +260,16 @@ export const geminiStudioEngine = {
           if (!modelCandidates.includes(m)) modelCandidates.push(m);
         });
 
-        // Build Gemini API contents array
-        const contents = [];
+        // Build Gemini API contents array with robust multi-turn normalization
+        const contents = conversationMemory.formatGeminiContents(history, prompt);
 
-        // Add history turns if in chat mode
-        if (mode === 'chat' && history.length > 0) {
-          for (const turn of history) {
-            const turnParts = [];
-            if (turn.attachments && turn.attachments.length > 0) {
-              turnParts.push(...this.formatFileParts(turn.attachments));
-            }
-            if (turn.content) {
-              turnParts.push({ text: turn.content });
-            }
-            if (turnParts.length > 0) {
-              contents.push({
-                role: turn.role === 'user' ? 'user' : 'model',
-                parts: turnParts
-              });
-            }
+        // Attach files to the final turn if provided
+        if (files && files.length > 0 && contents.length > 0) {
+          const fileParts = this.formatFileParts(files);
+          if (fileParts.length > 0) {
+            const lastTurn = contents[contents.length - 1];
+            lastTurn.parts.unshift(...fileParts);
           }
-        }
-
-        // Add current user prompt
-        const currentParts = [];
-        if (files && files.length > 0) {
-          currentParts.push(...this.formatFileParts(files));
-        }
-        if (prompt) {
-          currentParts.push({ text: prompt });
-        }
-
-        if (currentParts.length > 0) {
-          contents.push({
-            role: 'user',
-            parts: currentParts
-          });
         }
 
         // System Instruction configuration

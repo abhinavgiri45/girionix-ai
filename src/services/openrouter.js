@@ -13,6 +13,7 @@
 import { storage, GIRIONIX_SYSTEM_PROMPT } from './storage.js';
 import { localNeuralEngine } from './localNeuralEngine.js';
 import { universalApiEngine } from './universalApiEngine.js';
+import { conversationMemory } from './conversationMemory.js';
 
 export const openrouter = {
   /**
@@ -165,23 +166,23 @@ export const openrouter = {
       featureDirectives += '\n\n[DIRECT CONCISE MODE]: Deep reasoning is disabled. Provide a fast, direct, and concise response without excessive internal deliberation.';
     }
 
-    // Ensure system prompt always carries the full master polymath prompt & active directives
-    const enrichedMessages = messages.map(m => {
-      if (m.role === 'system') {
-        return {
-          ...m,
-          content: `${GIRIONIX_SYSTEM_PROMPT}\n\n${m.content}${featureDirectives}`
-        };
-      }
-      return m;
-    });
+    // 1. Build dynamic conversation memory directive from past messages
+    const memoryDirective = conversationMemory.buildMemoryDirective(messages);
 
-    if (!enrichedMessages.some(m => m.role === 'system')) {
-      enrichedMessages.unshift({
-        role: 'system',
-        content: `${GIRIONIX_SYSTEM_PROMPT}${featureDirectives}`
-      });
-    }
+    // 2. Clean and format dialogue messages (filtering out transient errors and windowing)
+    const cleanDialogue = conversationMemory.formatMessagesForApi(
+      messages.filter(m => m.role !== 'system'),
+      24
+    );
+
+    // 3. Ensure system prompt always carries the full master polymath prompt & active directives
+    const baseSystem = messages.find(m => m.role === 'system')?.content || '';
+    const finalSystemPrompt = `${GIRIONIX_SYSTEM_PROMPT}\n\n${baseSystem}${featureDirectives}${memoryDirective}`;
+
+    const enrichedMessages = [
+      { role: 'system', content: finalSystemPrompt },
+      ...cleanDialogue
+    ];
 
     // Direct Gemini API Route (If user provided an AIzaSy key or saved one in AI Studio/Universal settings)
     const directGeminiKey = (userApiKey?.startsWith('AIzaSy') ? userApiKey : '') ||
@@ -194,13 +195,10 @@ export const openrouter = {
         const { geminiStudioEngine } = await import('./geminiStudioEngine.js');
         const activeKey = directGeminiKey || geminiStudioEngine.getApiKey();
         if (activeKey) {
-          const systemMsg = enrichedMessages.find(m => m.role === 'system')?.content || '';
-          const nonSystemMsgs = enrichedMessages.filter(m => m.role !== 'system');
-          const lastMsg = nonSystemMsgs.pop();
-          const historyTurns = nonSystemMsgs.map(m => ({
-            role: m.role === 'assistant' ? 'model' : 'user',
-            content: m.content
-          }));
+          const systemMsg = finalSystemPrompt;
+          const nonSystemMsgs = cleanDialogue;
+          const lastMsg = nonSystemMsgs.length > 0 ? nonSystemMsgs[nonSystemMsgs.length - 1] : { content: 'Hello' };
+          const historyTurns = nonSystemMsgs.slice(0, -1);
 
           let resolvedModel = 'gemini-2.5-flash';
           const lowerM = (model || '').toLowerCase();

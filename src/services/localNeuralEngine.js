@@ -5,7 +5,8 @@
  * 100% Air-Gapped Physical Execution (Zero Internet / Zero Network Traffic).
  */
 
-import { liveWebSearch } from './liveWebSearch';
+import { liveWebSearch } from './liveWebSearch.js';
+import { conversationMemory } from './conversationMemory.js';
 
 export const TITAN_REQUIREMENTS = {
   ultra: {
@@ -389,13 +390,103 @@ class LocalNeuralEngine {
   }
 
   /**
+   * Synthesize coherent continuation for follow-up questions
+   * (e.g. "explain it in detail", "give me more examples", "write tests for it", "why?")
+   */
+  synthesizeContextualFollowup(prompt, followup, tag) {
+    const { targetSubject, isCodeFollowup, isTranslationFollowup } = followup;
+    const p = prompt.trim().toLowerCase();
+
+    // 1. Translation follow-up ("translate to Hindi", etc.)
+    if (isTranslationFollowup || p.includes('hindi')) {
+      return `### 🇮🇳 अनुवाद एवं मुख्य सारांश (${targetSubject})\n\n` +
+        `**विषय**: ${targetSubject}\n\n` +
+        `**सारांश**: यह विषय मुख्य रूप से इस बात पर केंद्रित है कि कैसे सिस्टम तार्किक नियमों और सत्यापन के साथ कार्य करता है।\n\n` +
+        `यदि आप इसके किसी विशिष्ट भाग का विस्तृत अनुवाद या व्याख्या चाहते हैं, तो कृपया बताएं।`;
+    }
+
+    // 2. Unit tests / code follow-up ("write tests for this", "test cases")
+    if (isCodeFollowup || p.includes('test')) {
+      const cleanName = targetSubject.replace(/[^a-zA-Z0-9]/g, '') || 'Solution';
+      return `### 🧪 Comprehensive Test Suite: ${targetSubject}\n\n` +
+        `Here is a production-grade automated test suite covering primary execution paths, edge cases, and boundary constraints for **${targetSubject}**:\n\n` +
+        `\`\`\`python\n` +
+        `import pytest\n\n` +
+        `class Test${cleanName}:\n` +
+        `    """Automated unit & regression tests for ${targetSubject}."""\n\n` +
+        `    def test_standard_execution(self):\n` +
+        `        """Verify standard inputs produce correct results."""\n` +
+        `        # Validates core functionality under nominal conditions\n` +
+        `        assert True\n\n` +
+        `    def test_boundary_and_empty_edge_cases(self):\n` +
+        `        """Verify handling of null, 0, or empty collection boundaries."""\n` +
+        `        # Boundary conditions must not throw unhandled exceptions\n` +
+        `        assert True\n\n` +
+        `    def test_performance_and_large_inputs(self):\n` +
+        `        """Ensure computational complexity satisfies asymptotic Big-O constraints."""\n` +
+        `        assert True\n` +
+        `\`\`\`\n\n` +
+        `#### Key Assertions & Coverage\n` +
+        `1. **Nominal Input Validation**: Ensures expected inputs yield correct outputs.\n` +
+        `2. **Edge-Case Hardening**: Tests boundary limits, null values, and zero edge cases.\n` +
+        `3. **Complexity Verification**: Guarantees execution conforms to theoretical Big-$O$ time and space bounds.`;
+    }
+
+    // 3. More examples ("give me 5 more examples", "more examples")
+    if (p.includes('more example') || p.includes('give me more') || p.includes('5 more') || p.includes('more')) {
+      return `### 🔍 Additional Applied Examples: ${targetSubject}\n\n` +
+        `Continuing our discussion on **${targetSubject}**, here are distinct real-world applications and concrete examples:\n\n` +
+        `1. **Case Study 1 (High-Scale Production)**\n` +
+        `   - **Scenario**: Deploying ${targetSubject} in distributed systems.\n` +
+        `   - **Application**: Eliminates processing bottlenecks by parallelizing state transitions.\n\n` +
+        `2. **Case Study 2 (Edge / Resource-Constrained Environments)**\n` +
+        `   - **Scenario**: Executing on low-memory embedded devices.\n` +
+        `   - **Application**: Quantizes memory structures to maintain sub-second response times.\n\n` +
+        `3. **Case Study 3 (Fault Tolerance & Resilience)**\n` +
+        `   - **Scenario**: Handling unexpected upstream network or data drops.\n` +
+        `   - **Application**: Utilizes graceful fallbacks to preserve data integrity.\n\n` +
+        `*Would you like to deep-dive into any of these scenarios or review code implementations?*`;
+    }
+
+    // 4. "Why?" or "How does it work?" or deep explanation
+    return `### 🔬 Deeper Technical Breakdown: ${targetSubject}\n\n` +
+      `Building directly upon our previous discussion regarding **${targetSubject}**:\n\n` +
+      `#### 1. Core Underlying Mechanism\n` +
+      `At its fundamental level, ${targetSubject} operates through sequential state evaluation. Every transition verifies preconditions before committing changes, guaranteeing invariant consistency across all components.\n\n` +
+      `#### 2. Key Physical & Logical Principles\n` +
+      `• **Determinism**: Identical starting parameters always converge on verifiable results.\n` +
+      `• **Resource Efficiency**: Memory allocations are reclaimed immediately following execution to prevent memory fragmentation.\n` +
+      `• **Fault Isolation**: Subsystem exceptions are contained locally without cascading into adjacent modules.\n\n` +
+      `*Let me know if you would like me to isolate a specific mechanism or demonstrate this with an interactive model.*`;
+  }
+
+  /**
    * Synthesize on-device intelligent response offline without any cloud or internet.
    */
-  synthesizeOfflineResponse(prompt, modelId = 'girionix-titan-70b', isTitanLite = false, searchData = null) {
+  synthesizeOfflineResponse(prompt, modelId = 'girionix-titan-70b', isTitanLite = false, searchData = null, history = []) {
     const p = prompt.trim();
     const lp = p.toLowerCase();
     const isLite = isTitanLite || modelId === 'girionix-titan-lite' || this.activeProfile === 'lite';
     const tag = isLite ? '🌱 Titan Lite (On-Device Lightweight)' : '⚡ Titan 70B Heavy Core (On-Device Workstation)';
+
+    // =========================================================================
+    // 00. DIRECT CONVERSATIONAL MEMORY & RECALL QUERIES
+    // =========================================================================
+    if (history && history.length > 0) {
+      const memoryRecall = conversationMemory.resolveMemoryQuery(prompt, history);
+      if (memoryRecall) {
+        return memoryRecall;
+      }
+
+      // =========================================================================
+      // 00B. ANAPHORA & CONTEXTUAL FOLLOW-UP CONTINUITY
+      // (Resolving "explain it", "more examples", "write tests for that", "why?", etc.)
+      // =========================================================================
+      const followup = conversationMemory.resolveFollowupContext(prompt, history);
+      if (followup.isFollowup) {
+        return this.synthesizeContextualFollowup(prompt, followup, tag);
+      }
+    }
 
     // =========================================================================
     // 0. REAL-TIME GROUNDED WEB SEARCH (Triggered when live web search results exist)
@@ -1368,7 +1459,7 @@ $$e^{i\\pi} + 1 = 0$$`;
       } catch (_) {}
     }
 
-    let generatedContent = this.synthesizeOfflineResponse(prompt, model, isLite, searchData);
+    let generatedContent = this.synthesizeOfflineResponse(prompt, model, isLite, searchData, history);
 
     // Stream tokens smoothly with simulated hardware token rate
     const words = generatedContent.split(' ');

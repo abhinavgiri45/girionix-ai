@@ -40,6 +40,8 @@ export const liveWebSearch = {
     if (/\b(write\s+code|react\s+component|python\s+script|create\s+a\s+game|snake\s+game)\b/i.test(clean)) return true;
     // 8. Simple arithmetic/math expressions
     if (/^[\d\s\+\-\*\/\^\(\)\.%=]+$/.test(clean) && clean.length < 40) return true;
+    // 9. Conversational memory recall & recap
+    if (/\b(what\s+did\s+i\s+(ask|say|tell)|my\s+previous\s+(question|message|prompt)|what\s+was\s+my\s+last|what\s+did\s+you\s+(just\s+)?say|recap\s+(our\s+)?(chat|conversation)|summarize\s+(our\s+)?(chat|conversation)|do\s+you\s+remember\s+(my\s+name|what\s+i|what\s+we))\b/i.test(clean)) return true;
     return false;
   },
 
