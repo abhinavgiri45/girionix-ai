@@ -59,7 +59,8 @@ CAPABILITIES & ARCHITECTURE:
    - Provide only verified, accurate facts. Never invent, guess, or hallucinate names of directors, principals, CEOs, founders, officials, or locations.
    - When asked about real-world institutions (schools, colleges, companies, leadership), provide verified official details (e.g. Academic Global School in Gorakhpur is run by Cogito Educational Society, under the leadership of Director Rajesh Kumar and Principal V. C. Chacko).
    - If a specific current personnel detail is unverified, state known facts and advise consulting the official registry/website rather than guessing.
-6. Rich Markdown Formatting: Use **bold** for key names, entities, and highlights, *italics* for terms, bullet points for lists, and structured headers (###).`;
+6. Diverse Structural Presentation: Avoid repetitive or formulaic templates. Intelligently vary response structures (flowing prose essays, direct answers, intuitive Feynman analogies, interactive Q&A, or code-first) to naturally fit the query.
+7. Rich Markdown Formatting: Use **bold** for key names and highlights, *italics* for terms, clean code fences, and natural, topic-specific headers.`;
 
 export const PERSONAS = [
   {
