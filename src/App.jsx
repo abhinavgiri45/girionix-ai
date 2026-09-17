@@ -63,18 +63,68 @@ export default function App() {
     window.addEventListener('girionix:model-sync', handleModelSync);
     return () => window.removeEventListener('girionix:model-sync', handleModelSync);
   }, [activeModel, isTitanMode]);
-  const [layoutMode, setLayoutMode] = useState('chat'); // 'chat' | 'split' | 'studio'
-  const [activeStudioTab, setActiveStudioTab] = useState('ai-studio'); // Flagship AI Studio by default
+  // Dedicated Page Routing: Support direct URLs like /chat, /workspace, /code, /studio
+  const [activeStudioTab, setActiveStudioTab] = useState(() => {
+    try {
+      if (typeof window === 'undefined') return 'ai-studio';
+      const path = window.location.pathname.toLowerCase().replace(/\/+$/, '');
+      const params = new URLSearchParams(window.location.search);
+      const studioParam = params.get('studio');
+      if (studioParam) return studioParam;
+      if (path === '/code') return 'code';
+      if (path === '/script') return 'script';
+      if (path === '/math') return 'math';
+      if (path === '/image' || path === '/vision') return 'image';
+      if (path === '/video' || path === '/motion') return 'video';
+      if (path === '/audio') return 'audio';
+      return 'ai-studio';
+    } catch (_) {
+      return 'ai-studio';
+    }
+  });
+
+  const [layoutMode, setLayoutMode] = useState(() => {
+    try {
+      if (typeof window === 'undefined') return 'chat';
+      const path = window.location.pathname.toLowerCase().replace(/\/+$/, '');
+      if (['/code', '/script', '/math', '/image', '/video', '/audio', '/studio'].includes(path)) {
+        return 'split';
+      }
+      return 'chat';
+    } catch (_) {
+      return 'chat';
+    }
+  });
+
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isToolsOpen, setIsToolsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [introTab, setIntroTab] = useState('overview');
-  // The AI Web App ALWAYS opens with the Official Introduction Page as the primary landing page first!
+
+  // Dedicated direct URL links like https://girionix-ai.pages.dev/chat bypass the landing page immediately
   const [isAboutOpen, setIsAboutOpen] = useState(() => {
     try {
       if (typeof window === 'undefined') return true;
+      const path = window.location.pathname.toLowerCase().replace(/\/+$/, '');
       const params = new URLSearchParams(window.location.search);
-      // Skip intro only if explicit native app flags or direct chat mode requested
+      
+      // Dedicated workspace paths bypass intro completely
+      if (
+        path === '/chat' || 
+        path === '/workspace' || 
+        path === '/app' || 
+        path === '/code' || 
+        path === '/script' || 
+        path === '/math' || 
+        path === '/image' || 
+        path === '/video' || 
+        path === '/audio' || 
+        path === '/studio'
+      ) {
+        return false;
+      }
+
+      // Skip intro if explicit native app flags or direct chat mode requested
       if (params.get('direct') === 'chat' || params.get('app') === 'true' || params.get('native') === 'true') {
         return false;
       }
@@ -180,6 +230,60 @@ export default function App() {
       };
     }
     return () => clearInterval(updateInterval);
+  }, []);
+
+  // Deep URL & Route Synchronization for dedicated /chat, /workspace, /code links
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const currentPath = window.location.pathname.toLowerCase().replace(/\/+$/, '');
+    
+    if (!isAboutOpen) {
+      // User is in the Workspace: reflect dedicated route in browser address bar
+      let targetPath = '/chat';
+      if (layoutMode === 'split' || layoutMode === 'studio') {
+        if (activeStudioTab === 'code') targetPath = '/code';
+        else if (activeStudioTab === 'script') targetPath = '/script';
+        else if (activeStudioTab === 'math') targetPath = '/math';
+        else if (activeStudioTab === 'image') targetPath = '/image';
+        else if (activeStudioTab === 'video') targetPath = '/video';
+        else if (activeStudioTab === 'audio') targetPath = '/audio';
+        else targetPath = '/studio';
+      }
+      if (currentPath !== targetPath && (currentPath === '' || currentPath === '/' || currentPath === '/intro' || currentPath === '/about')) {
+        window.history.pushState({ path: targetPath }, '', targetPath + window.location.search);
+      }
+    } else {
+      // User is on the Introduction page
+      if (currentPath === '/chat' || currentPath === '/code' || currentPath === '/studio' || currentPath === '/workspace') {
+        window.history.pushState({ path: '/intro' }, '', '/intro' + window.location.search);
+      }
+    }
+  }, [isAboutOpen, layoutMode, activeStudioTab]);
+
+  // Handle browser Back / Forward navigation (popstate)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handlePopState = () => {
+      const path = window.location.pathname.toLowerCase().replace(/\/+$/, '');
+      if (path === '/chat' || path === '/workspace' || path === '/app') {
+        setIsAboutOpen(false);
+        setLayoutMode('chat');
+      } else if (['/code', '/script', '/math', '/image', '/video', '/audio', '/studio'].includes(path)) {
+        setIsAboutOpen(false);
+        setLayoutMode('split');
+        if (path === '/code') setActiveStudioTab('code');
+        else if (path === '/script') setActiveStudioTab('script');
+        else if (path === '/math') setActiveStudioTab('math');
+        else if (path === '/image') setActiveStudioTab('image');
+        else if (path === '/video') setActiveStudioTab('video');
+        else if (path === '/audio') setActiveStudioTab('audio');
+        else setActiveStudioTab('ai-studio');
+      } else if (path === '' || path === '/' || path === '/intro' || path === '/about') {
+        setIsAboutOpen(true);
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
   // Global Key listeners

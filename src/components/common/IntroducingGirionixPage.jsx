@@ -54,7 +54,8 @@ import {
   Volume2,
   ArrowRight,
   Eye,
-  ScrollText
+  ScrollText,
+  Copy
 } from 'lucide-react';
 import KatexMath from './KatexMath';
 import { 
@@ -109,6 +110,16 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
   const [interactiveStudio, setInteractiveStudio] = useState('ai-studio'); // 'ai-studio' | 'code' | 'math' | 'image' | 'video' | 'audio'
   const [openFaq, setOpenFaq] = useState(0);
   const [copiedCodeSnippet, setCopiedCodeSnippet] = useState(false);
+  const [copiedChatLink, setCopiedChatLink] = useState(false);
+
+  const handleCopyDirectChatLink = (e) => {
+    e?.stopPropagation();
+    try {
+      navigator.clipboard.writeText('https://girionix-ai.pages.dev/chat');
+      setCopiedChatLink(true);
+      setTimeout(() => setCopiedChatLink(false), 2000);
+    } catch (_) {}
+  };
   const [activeBenchmarkPill, setActiveBenchmarkPill] = useState('humaneval');
   const [simPlayingAudio, setSimPlayingAudio] = useState(false);
   const [simAudioFreq, setSimAudioFreq] = useState([20, 45, 75, 90, 60, 40, 85, 95, 70, 50, 30, 65, 80, 55, 35, 90]);
@@ -525,6 +536,29 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
               >
                 <Download className="w-4 h-4 text-cyan-400" />
                 <span>Download Standalone Apps</span>
+              </button>
+            </div>
+
+            {/* Dedicated Workspace Page Link (https://girionix-ai.pages.dev/chat) */}
+            <div className="flex items-center justify-center gap-2 pt-2 flex-wrap text-xs font-mono">
+              <span className="text-gray-400 font-sans text-xs">Direct Workspace Page:</span>
+              <a
+                href="/chat"
+                onClick={(e) => { e.preventDefault(); handleLaunch(); }}
+                className="px-3.5 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 flex items-center gap-1.5 transition-all hover:scale-105 shadow-sm group cursor-pointer"
+                title="Open Dedicated Chat Workspace directly"
+              >
+                <Globe className="w-3.5 h-3.5 text-cyan-400 group-hover:rotate-12 transition-transform" />
+                <span className="font-bold underline decoration-cyan-400/40 underline-offset-2">https://girionix-ai.pages.dev/chat</span>
+                <ArrowRight className="w-3 h-3 text-cyan-400 group-hover:translate-x-0.5 transition-transform" />
+              </a>
+              <button
+                onClick={handleCopyDirectChatLink}
+                className="px-3 py-1.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-gray-300 hover:text-white border border-white/10 flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+                title="Copy Direct Link to Clipboard"
+              >
+                {copiedChatLink ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-cyan-400" />}
+                <span>{copiedChatLink ? 'Copied!' : 'Copy Link'}</span>
               </button>
             </div>
 

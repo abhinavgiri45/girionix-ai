@@ -16,7 +16,10 @@ import {
   RefreshCw,
   Globe,
   Key,
-  Zap
+  Zap,
+  Copy,
+  Check,
+  Share2
 } from 'lucide-react';
 import { storage } from '../../services/storage';
 
@@ -41,6 +44,7 @@ export default function Header({
   onOpenWhySwitch
 }) {
   const [isToolsDropdownOpen, setIsToolsDropdownOpen] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
   const dropdownRef = useRef(null);
 
   // Close dropdown on click outside
@@ -282,6 +286,32 @@ export default function Header({
                   </div>
                 </button>
               )}
+
+              {/* Direct Workspace Link (/chat) */}
+              <button
+                onClick={() => {
+                  try {
+                    navigator.clipboard.writeText('https://girionix-ai.pages.dev/chat');
+                    setCopiedLink(true);
+                    setTimeout(() => setCopiedLink(false), 2000);
+                  } catch (_) {}
+                }}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left text-xs text-gray-200 hover:text-white hover:bg-cyan-500/20 transition-colors"
+                title="Copy direct page link for chat workspace"
+              >
+                <div className="p-1.5 rounded-lg bg-cyan-500/20 text-cyan-400">
+                  {copiedLink ? <Check className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-white flex items-center gap-1.5">
+                    <span>Direct Workspace Link</span>
+                    <span className="text-[9px] px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 font-mono font-bold">
+                      {copiedLink ? 'Copied!' : '/chat'}
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-gray-400 truncate">https://girionix-ai.pages.dev/chat</div>
+                </div>
+              </button>
 
               {/* 1. API & Cloud Gateway */}
               {onOpenSettings && (

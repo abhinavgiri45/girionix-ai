@@ -2,9 +2,21 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://girionix-ai.pages.dev/</loc>
-    <lastmod>2026-08-28T00:00:00+00:00</lastmod>
+    <lastmod>2026-09-17T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0000</priority>
+  </url>
+  <url>
+    <loc>https://girionix-ai.pages.dev/chat</loc>
+    <lastmod>2026-09-17T00:00:00+00:00</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9800</priority>
+  </url>
+  <url>
+    <loc>https://girionix-ai.pages.dev/workspace</loc>
+    <lastmod>2026-09-17T00:00:00+00:00</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9500</priority>
   </url>
   <url>
     <loc>https://girionix-ai.pages.dev/overview</loc>

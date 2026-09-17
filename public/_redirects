@@ -8,5 +8,15 @@
 /downloads/Girionix_AI_Titan_Lite_macOS.dmg /downloads/Girionix_AI_macOS.dmg 302
 /downloads/Girionix_AI_Titan_iOS.mobileconfig /downloads/Girionix_AI_iOS.mobileconfig 302
 /downloads/Girionix_AI_Titan_Lite_iOS.mobileconfig /downloads/Girionix_AI_iOS.mobileconfig 302
-/downloads/Girionix_AI_macOS.zip /downloads/Girionix_AI_macOS.dmg 302
+/chat  /index.html  200
+/workspace  /index.html  200
+/app  /index.html  200
+/code  /index.html  200
+/studio  /index.html  200
+/script  /index.html  200
+/math  /index.html  200
+/image  /index.html  200
+/video  /index.html  200
+/audio  /index.html  200
+/intro  /index.html  200
 /*  /index.html  200
