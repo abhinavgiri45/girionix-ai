@@ -532,8 +532,8 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
             <div className="max-w-4xl mx-auto p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-[#070B18] via-[#0B1024] to-[#070B18] border border-cyan-500/40 shadow-2xl shadow-glow-cyan/20 backdrop-blur-xl flex flex-col sm:flex-row items-center justify-between gap-5 text-left">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-400 via-purple-500 to-emerald-400 p-0.5 shrink-0 shadow-lg">
-                  <div className="w-full h-full bg-[#050814] rounded-[14px] flex items-center justify-center">
-                    <Globe className="w-6 h-6 text-cyan-400 animate-pulse" />
+                  <div className="w-full h-full bg-[#050814] rounded-[14px] flex items-center justify-center p-1.5">
+                    <img src="/giri-corporation-logo.png" alt="Giri Corporation" className="w-7 h-7 object-contain" />
                   </div>
                 </div>
                 <div>
@@ -1504,8 +1504,8 @@ export default function NeuralPulseSphere() {
 
                 <div className="space-y-4 relative z-10">
                   <div className="flex items-center justify-between">
-                    <div className="w-12 h-12 rounded-2xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center">
-                      <Globe className="w-6 h-6 text-cyan-400 animate-spin-slow" />
+                    <div className="w-12 h-12 rounded-2xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center p-2">
+                      <img src="/giri-corporation-logo.png" alt="Giri Corporation" className="w-8 h-8 object-contain" />
                     </div>
                     <span className="px-3 py-1 rounded-full bg-cyan-400/10 text-cyan-300 font-mono text-[10px] font-extrabold border border-cyan-400/30">
                       PARENT CONGLOMERATE

@@ -18,6 +18,28 @@ function getTimeoutSignal(ms = 3500) {
 
 export const liveWebSearch = {
   /**
+   * Identifies conversational chit-chat, personal queries, greetings, and basic math
+   * that should NEVER trigger encyclopedic web searches (e.g. searching 'hello' finding Hello Kitty).
+   */
+  isConversationalOrNonSearchQuery(prompt) {
+    if (!prompt) return true;
+    const clean = prompt.trim().toLowerCase();
+    // 1. Common greetings
+    if (/^(hi|hello|hey|namaste|greetings|good\s+(morning|afternoon|evening|night)|yo|sup|hola)\b/i.test(clean)) return true;
+    // 2. Personal & wellbeing questions
+    if (/^(how\s+are\s+(you|u|ya)|how\s+r\s+u|how's\s+it\s+going|how\s+do\s+you\s+do|what's\s+up|wassup|how\s+have\s+you\s+been)\b/i.test(clean)) return true;
+    // 3. Identity questions
+    if (/^(who\s+are\s+you|what\s+is\s+your\s+name|who\s+created\s+you|who\s+made\s+you|what\s+can\s+you\s+do|introduce\s+yourself)\b/i.test(clean)) return true;
+    // 4. Politeness, affirmations & farewells
+    if (/^(thank\s+you|thanks|thank\s+u|bye|goodbye|see\s+you|see\s+ya|ok|okay|cool|great|awesome|yes|no)\b/i.test(clean)) return true;
+    // 5. Jokes & humor
+    if (/^(tell\s+me\s+a\s+joke|make\s+me\s+laugh|say\s+something\s+funny|crack\s+a\s+joke)\b/i.test(clean)) return true;
+    // 6. Simple arithmetic/math expressions
+    if (/^[\d\s\+\-\*\/\^\(\)\.=]+$/.test(clean) && clean.length < 30) return true;
+    return false;
+  },
+
+  /**
    * Cleans a user prompt into crisp search keywords
    */
   extractSearchKeywords(prompt) {
@@ -133,8 +155,12 @@ export const liveWebSearch = {
    */
   async performSearch(query) {
     const rawQuery = (query || '').trim();
+    if (!rawQuery || this.isConversationalOrNonSearchQuery(rawQuery)) {
+      return null;
+    }
+
     const keywords = this.extractSearchKeywords(rawQuery) || rawQuery;
-    if (!keywords) return null;
+    if (!keywords || keywords.length < 2) return null;
 
     try {
       const [ddgResults, wikiResults, techResults] = await Promise.allSettled([

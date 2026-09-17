@@ -232,16 +232,14 @@ class LocalNeuralEngine {
 
     // 0. Real-time Search Grounding Synthesis (When Web Grounding provides factual data)
     if (searchData && searchData.factualSummary) {
-      return `### 🌐 Grounded Real-Time Response (${tag})
+      return `### 🌐 Grounded Real-Time Research (${tag})
 
 ${searchData.factualSummary}
 
 ---
 
-#### 📌 Verified Knowledge & Context:
-${searchData.results.filter(r => r.snippet).slice(0, 3).map(r => `• **${r.title}**: ${r.snippet}`).join('\n\n')}
-
-*Verified via live grounding registry for query: "${searchData.query}".*`;
+### 🌐 Verified Web Sources & Real-Time Grounding:
+${searchData.formattedSourcesMarkdown || searchData.results.filter(r => r.snippet).slice(0, 3).map(r => `• **[${r.title}](${r.url})**: ${r.snippet}`).join('\n\n')}`;
     }
 
     // 1. Creator & Identity Query
@@ -687,49 +685,129 @@ $$\\mathcal{H} \\Psi = \\left( -\\frac{\\hbar^2}{2m} \\nabla^2 + V(\\mathbf{r}) 
 
 **Core Insight on:** *"${p}"*
 
-1. **Virtue & Integrity**: Consistency of values across word and deed, upholding truth and courage under pressure.
-2. **Empathy & The Golden Rule**: Treating others with inherent dignity, equity, and compassion.
-3. **Accountability & Long-Term Impact**: Recognizing that our choices shape collective destiny, families, and future generations.`;
+1. **Virtue & Integrity**: Consistency of values across word and deed, upholding truth, equity, and courage under pressure.
+2. **Empathy & The Golden Rule**: Treating every individual with intrinsic human dignity, kindness, and active compassion.
+3. **Accountability & Long-Term Stewardship**: Recognizing that our daily choices ripple outward to shape collective destiny, families, and future generations.`;
     }
 
-    // 5. Giri Corporation & Creator Inquiry
-    if (lp.includes('founder') || lp.includes('who made') || lp.includes('who created') || lp.includes('creator') || lp.includes('company') || lp.includes('giri corporation')) {
+    // 5. Wellbeing & Casual Status Queries (e.g. "how are you")
+    if (/\b(how\s+are\s+(you|u|ya)|how\s+r\s+u|how's\s+it\s+going|how\s+do\s+you\s+do|what's\s+up|wassup|how\s+have\s+you\s+been)\b/i.test(lp)) {
+      return `### ⚡ Feeling Great & Ready to Help! (${tag})
+
+I am doing wonderful, thank you for asking! All neural processing cores, reasoning matrices, and physical hardware pipelines are functioning smoothly at peak performance.
+
+How are you doing today? What project, code challenge, or topic would you like to dive into?`;
+    }
+
+    // 6. Conversational Greetings & Introductions
+    if (/^(hi|hello|hey|greetings|namaste|good\s+(morning|afternoon|evening|night)|heya|yo|sup|hola)\b/i.test(lp)) {
+      return `### 👋 Welcome to Girionix AI (${tag})
+
+Hello! I am **Girionix AI**, your sovereign multi-modal polymath intelligence created in India 🇮🇳 by **Abhinav Giri** under **[Giri Corporation](https://giri-corporation.pages.dev/)**.
+
+#### 🚀 How Can I Assist You Today?
+- 💻 **Engineering & Code**: Generate fullstack React, Python, TypeScript, Rust, or C++ components.
+- 🧠 **Olympiad Mathematics & Deep Reasoning**: Step-by-step calculus, algebraic equations, and formal proofs.
+- 🌐 **Real-Time Research**: Deep factual explanations and live web search grounding.
+- ⚡ **100% Sovereign Offline Computation**: Air-gapped Titan execution directly on your local hardware with zero telemetry.
+- 🎨 **Creative Arts**: High-fidelity 8K visual design, cinema screenplays, and audio scoring.
+
+What topic, question, or project would you like to explore?`;
+    }
+
+    // 7. Jokes & Humor
+    if (/\b(tell\s+me\s+a\s+joke|make\s+me\s+laugh|say\s+something\s+funny|crack\s+a\s+joke|joke)\b/i.test(lp)) {
+      const jokes = [
+        "Why do programmers prefer dark mode?\n\n**Because light attracts bugs!** 🐛",
+        "There are 10 types of people in the world:\n\n**Those who understand binary, and those who don't.** 🤓",
+        "A SQL query walks into a bar, walks up to two tables and asks:\n\n**\"Can I join you?\"** 🍺",
+        "Why did the developer go broke?\n\n**Because they used up all their cache!** 💸",
+        "Why do Java developers wear glasses?\n\n**Because they don't C#!** 👓",
+        "Why was the JavaScript developer sad?\n\n**Because they didn't know Node to express themselves.** 😄"
+      ];
+      const picked = jokes[Math.floor(Math.random() * jokes.length)];
+      return `### 😄 A Little Humor for You (${tag})\n\n${picked}`;
+    }
+
+    // 8. Gratitude & Politeness
+    if (/^(thank\s+you|thanks|thank\s+u|appreciate\s+it|great\s+job|awesome|good\s+job)\b/i.test(lp)) {
+      return `### 🙏 You're Very Welcome! (${tag})
+
+I'm always glad to help! If you need anything else—whether it's writing code, calculating formulas, researching a topic, or brainstorming ideas—just let me know!`;
+    }
+
+    // 9. Farewells
+    if (/^(bye|goodbye|see\s+you|see\s+ya|good\s+night|take\s+care)\b/i.test(lp)) {
+      return `### 👋 Take Care! (${tag})
+
+Goodbye! Have a fantastic day ahead. Whenever you're ready to create or explore new ideas, Girionix AI will be right here for you!`;
+    }
+
+    // 10. Help & Assistance Offers
+    if (/^(help|can\s+you\s+help\s+me|i\s+need\s+help|what\s+can\s+you\s+do)\b/i.test(lp)) {
+      return `### 💡 I'm Here to Help! (${tag})
+
+Certainly! As Girionix AI, I can assist you across multiple domains:
+1. **Writing Code**: Production components in React, Python, JavaScript, Rust, C++, HTML/CSS.
+2. **Mathematics & Science**: Physics calculations, calculus derivations, algebra, chemistry.
+3. **Research & Analysis**: Deep breakdowns of technical topics, historical context, philosophy.
+4. **Writing & Brainstorming**: Essays, scripts, business plans, summaries.
+
+Just type what you need and we'll get right to work!`;
+    }
+
+    // 11. Giri Corporation & Creator Inquiry
+    if (lp.includes('founder') || lp.includes('who made') || lp.includes('who created') || lp.includes('creator') || lp.includes('company') || lp.includes('giri corporation') || lp.includes('who are you') || lp.includes('what is your name')) {
       return `### ⚡ Girionix AI & Giri Corporation Sovereign Ecosystem (${tag})
 
-**Girionix AI** is an advanced sovereign multi-modal artificial intelligence platform, proudly engineered in India 🇮🇳 by **Abhinav Giri** under **[Giri Corporation](https://giri-corporation.pages.dev/)**.
+**Girionix AI** is an advanced sovereign multi-modal artificial intelligence platform, proudly envisioned, architected, and engineered in India 🇮🇳 by **Abhinav Giri** under **[Giri Corporation](https://giri-corporation.pages.dev/)**.
 
 ---
 
 ### 🏛️ Organizational Architecture:
-- **Founder & Chief Architect**: **Abhinav Giri** ([@abhinavgiri45](https://x.com/AbhinavGiri45))
+- **Founder & Chief Architect**: **Abhinav Giri** ([@abhinavgiri45](https://x.com/AbhinavGiri45) on 𝕏 / [GitHub](https://github.com/abhinavgiri45/))
 - **Parent Organization**: **[Giri Corporation](https://giri-corporation.pages.dev/)**
-- **Official Enterprise Website**: [https://giri-corporation.pages.dev/](https://giri-corporation.pages.dev/)
-- **Core Vision**: Delivering unconstrained, sovereign AI intelligence—unifying deep Olympiad reasoning, 8K creative vision, production code synthesis, and 100% offline air-gapped Titan computation into one sovereign platform.`;
+- **Official Enterprise Portal**: [https://giri-corporation.pages.dev/](https://giri-corporation.pages.dev/)
+- **Core Vision**: **\`THINK • CREATE • EXPLORE\`** — Delivering unconstrained, sovereign AI intelligence unifying deep Olympiad reasoning, 8K creative vision, production code synthesis, and 100% offline air-gapped Titan computation into one sovereign workstation.`;
     }
 
-    // 6. Conversational Greetings & Introductions
-    if (/^(hi|hello|hey|greetings|namaste|good\s+(morning|afternoon|evening)|heya|yo|sup)\b/i.test(lp)) {
-      return `### 👋 Welcome to Girionix AI (${tag})
+    // 12. Direct Mathematical Calculation Solver
+    // 12A. Percentage: "what is X percent of Y" or "X% of Y"
+    const percentMatch = p.match(/(?:what\s+is\s+)?(\d+(?:\.\d+)?)\s*(?:%|percent)\s+of\s+(\d+(?:\.\d+)?)/i);
+    if (percentMatch) {
+      const pct = parseFloat(percentMatch[1]);
+      const val = parseFloat(percentMatch[2]);
+      const res = (pct / 100) * val;
+      return `### 🧮 Percentage Calculation (${tag})
 
-Hello! I am **Girionix AI**, your sovereign multi-modal polymath intelligence created in India by **Abhinav Giri** ([Giri Corporation](https://giri-corporation.pages.dev/)).
+**Problem**: $${pct}\\%\\text{ of } ${val}$
 
-#### 🚀 Core Capabilities at Your Command:
-- 💻 **Full-Stack Engineering & Code Synthesis**: Production React, Python, Rust, TypeScript, and Go.
-- 🧠 **Olympiad Mathematics & Deep Symbolic Reasoning**: Step-by-step calculus, linear algebra, and physics derivations.
-- 🌐 **Real-Time Web Grounding & Live Research**: Toggle Web Search below for live verified facts.
-- ⚡ **100% Air-Gapped Physical Workstation**: Titan 70B & Titan Lite running offline with zero telemetry.
-- 🎨 **Creative Vision & Multi-Modal Studio**: 8K visual design, video cinematic screenplays, and audio synthesis.
+**Formula**:
+$$\\text{Result} = \\left(\\frac{${pct}}{100}\\right) \\times ${val} = ${res}$$
 
-How can I help you create, calculate, or build today?`;
+- **Calculated Value**: **${res}**`;
     }
 
-    // 7. Direct Mathematical Calculation Solver
-    const simpleMathMatch = p.match(/^(\d+(\.\d+)?)\s*([\+\-\*\/\^])\s*(\d+(\.\d+)?)$/);
+    // 12B. Square Root: "sqrt(X)" or "square root of X"
+    const sqrtMatch = p.match(/(?:sqrt\(|square\s+root\s+of\s+)(\d+(?:\.\d+)?)\)?/i);
+    if (sqrtMatch) {
+      const n = parseFloat(sqrtMatch[1]);
+      const res = Math.sqrt(n);
+      return `### 🧮 Square Root Calculation (${tag})
+
+**Problem**: $\\sqrt{${n}}$
+
+**Result**:
+$$\\sqrt{${n}} = ${res}$$`;
+    }
+
+    // 12C. Basic Arithmetic: 2+2, 15*8, 100/4, 2^8
+    const simpleMathMatch = p.match(/^(\d+(?:\.\d+)?)\s*([\+\-\*\/\^])\s*(\d+(?:\.\d+)?)$/);
     if (simpleMathMatch) {
       try {
         const a = parseFloat(simpleMathMatch[1]);
-        const op = simpleMathMatch[3];
-        const b = parseFloat(simpleMathMatch[4]);
+        const op = simpleMathMatch[2];
+        const b = parseFloat(simpleMathMatch[3]);
         let result = 0;
         let opName = 'Addition';
         if (op === '+') { result = a + b; opName = 'Addition'; }
@@ -750,76 +828,156 @@ $$${a} ${op} ${b} = ${result}$$
       } catch (_) {}
     }
 
-    // 8. Foundational Science, Technology & Knowledge Lookup
+    // 13. Foundational Science, Technology & Knowledge Lookup
     const knowledgeBase = [
       {
         keys: ['photosynthesis'],
         title: 'Photosynthesis Mechanism',
-        def: 'Photosynthesis is the biochemical process by which green plants, algae, and certain bacteria convert solar electromagnetic radiation into chemical energy.',
+        def: 'Photosynthesis is the fundamental biochemical process through which green plants, algae, and cyanobacteria convert light energy into chemical energy stored in glucose.',
         formula: '6CO_2 + 6H_2O \\xrightarrow{h\\nu} C_6H_{12}O_6 + 6O_2',
         points: [
-          '**Light Reactions (Thylakoids)**: Photolysis of water generates ATP and NADPH while releasing $O_2$.',
-          '**Calvin Cycle (Stroma)**: Fixation of atmospheric $CO_2$ via the enzyme RuBisCO into 3-carbon sugars (G3P).'
+          '**Light-Dependent Reactions (Thylakoids)**: Chlorophyll absorbs solar photons, splitting water ($H_2O$) via photolysis to produce $ATP$, $NADPH$, and releasing oxygen ($O_2$).',
+          '**Calvin Cycle / Dark Reactions (Stroma)**: Fixes atmospheric carbon dioxide ($CO_2$) via the enzyme RuBisCO to synthesize energy-rich 3-carbon sugars (G3P) and glucose.',
+          '**Ecological Impact**: Sustains virtually all aerobic life on Earth and maintains global atmospheric oxygen and carbon cycles.'
         ]
       },
       {
         keys: ['gravity', 'gravitation', 'relativity'],
         title: 'Gravitation & General Relativity',
-        def: 'Gravity is the fundamental interaction causing mutual attraction between entities with mass or energy.',
+        def: 'Gravity is the natural phenomenon by which all things with mass or energy are attracted to one another. In modern physics, it is described by Einstein\'s General Theory of Relativity.',
         formula: 'G_{\\mu\\nu} + \\Lambda g_{\\mu\\nu} = \\frac{8\\pi G}{c^4} T_{\\mu\\nu}',
         points: [
-          '**Newtonian Classical Mechanics**: Universal law of gravitation $F = G \\frac{m_1 m_2}{r^2}$.',
-          '**Einsteinian General Relativity**: Gravity is not an ethereal action-at-a-distance force, but the geometrical curvature of 4D spacetime caused by stress-energy density.'
+          '**Newton\'s Universal Law**: Classical gravity is modeled as an attractive force proportional to masses and inversely proportional to the square of distance: $F = G \\frac{m_1 m_2}{r^2}$.',
+          '**Einsteinian Spacetime Curvature**: Gravity is not an ethereal mechanical force, but the geometrical warping of four-dimensional spacetime caused by mass-energy density.',
+          '**Gravitational Waves**: Accelerating massive bodies (such as merging black holes) radiate ripples across spacetime at the speed of light.'
         ]
       },
       {
-        keys: ['quantum', 'quantum computing', 'qubit'],
+        keys: ['speed of light'],
+        title: 'Speed of Light in Vacuum',
+        def: 'The speed of light in vacuum, denoted as $c$, is a fundamental physical constant of nature representing the absolute cosmic speed limit for the transmission of energy, matter, and information.',
+        formula: 'c = 299{,}792{,}458\\text{ m/s} \\approx 3.00 \\times 10^8\\text{ m/s}',
+        points: [
+          '**Universal Constant**: Invariant in all inertial frames of reference, forming the foundation of Special Relativity.',
+          '**Mass-Energy Equivalence**: Governs the conversion between mass and energy via $E = mc^2$.',
+          '**Electromagnetic Propagation**: Electromagnetic waves, including visible light, X-rays, and radio waves, all propagate through vacuum at exactly speed $c$.'
+        ]
+      },
+      {
+        keys: ['quantum computing', 'qubit', 'superposition'],
         title: 'Quantum Computing Principles',
-        def: 'Quantum computing leverages the non-classical postulates of quantum mechanics—primarily linear superposition and quantum entanglement—to evaluate computational tasks exponentially faster than classical Turing machines.',
+        def: 'Quantum computing harnesses the fundamental laws of quantum mechanics—primarily linear superposition, entanglement, and quantum interference—to solve complex mathematical problems exponentially faster than classical computers.',
         formula: '|\\psi\\rangle = \\alpha |0\\rangle + \\beta |1\\rangle, \\quad |\\alpha|^2 + |\\beta|^2 = 1',
         points: [
-          '**Superposition**: Qubits can exist in arbitrary linear combinations of orthogonal basis states $|0\\rangle$ and $|1\\rangle$.',
-          '**Entanglement**: Non-local quantum correlations where state vector description cannot be factored into independent sub-systems.'
+          '**Superposition**: Unlike classical bits that are strictly 0 or 1, quantum bits (qubits) can exist in arbitrary linear superpositions of both states simultaneously.',
+          '**Entanglement**: Qubits can be correlated such that the quantum state of any qubit cannot be described independently of the others, regardless of distance.',
+          '**Key Algorithms**: Shor\'s Algorithm (exponential polynomial factoring) and Grover\'s Algorithm (quadratic database search).'
         ]
       },
       {
-        keys: ['dna', 'rna', 'genetics'],
+        keys: ['machine learning', 'deep learning', 'neural network', 'artificial intelligence'],
+        title: 'Artificial Intelligence & Neural Networks',
+        def: 'Artificial Intelligence encompasses computational systems capable of performing tasks typically requiring human intelligence, including pattern recognition, reasoning, natural language understanding, and problem-solving.',
+        formula: '\\mathbf{y} = \\sigma(\\mathbf{W} \\mathbf{x} + \\mathbf{b}), \\quad \\mathcal{L}(\\theta) = \\frac{1}{N}\\sum_{i=1}^N \\ell(f(x_i; \\theta), y_i)',
+        points: [
+          '**Deep Neural Networks**: Hierarchical layered architectures that learn feature representations directly from data via forward propagation and gradient backpropagation.',
+          '**Transformer Architecture**: The dominant paradigm in modern generative AI, leveraging self-attention mechanisms to model long-range context across language, code, and vision.',
+          '**Inference & Optimization**: Models minimize loss functions through stochastic gradient descent (SGD/Adam) across millions to trillions of trainable parameters.'
+        ]
+      },
+      {
+        keys: ['python programming', 'what is python'],
+        title: 'Python Programming Language',
+        def: 'Python is a high-level, interpreted, dynamically-typed programming language renowned for its elegant, readable syntax and versatile ecosystem.',
+        formula: '\\text{Design Philosophy: \"Readability counts\" (PEP 20)}',
+        points: [
+          '**Versatility**: Dominant across Artificial Intelligence, Data Science, Backend Web Development (FastAPI, Django), and Automation.',
+          '**Rich Ecosystem**: Extensive standard libraries and frameworks such as PyTorch, NumPy, Pandas, Scikit-learn, and TensorFlow.',
+          '**Memory Management**: Automatic garbage collection and dynamic typing make development rapid and intuitive.'
+        ]
+      },
+      {
+        keys: ['javascript', 'what is javascript'],
+        title: 'JavaScript & Web Architecture',
+        def: 'JavaScript is a high-level, dynamic, single-threaded interpreted language that powers the interactive web alongside HTML and CSS, and runs on servers via Node.js and Deno.',
+        formula: '\\text{ECMAScript Standard (ES6+ Single-Threaded Event Loop)}',
+        points: [
+          '**Event Loop & Concurrency**: Non-blocking asynchronous I/O utilizing microtask and macrotask queues to handle user interactions and network events seamlessly.',
+          '**Universal Runtime**: Powers browser frontends (React, Vue, Angular) and modern server runtimes (Node.js, Bun, Cloudflare Workers).',
+          '**Modern Features**: First-class functions, prototypal inheritance, closures, Promises, and async/await syntax.'
+        ]
+      },
+      {
+        keys: ['dna', 'genetics', 'rna'],
         title: 'Molecular Genetics & DNA Architecture',
-        def: 'Deoxyribonucleic acid (DNA) is the polymer comprised of nucleotide chains encoding biological instructions for cellular development, maintenance, and replication.',
+        def: 'Deoxyribonucleic acid (DNA) is the biological polymer encoding the hereditary genetic instructions for cellular development, functioning, and reproduction.',
         formula: '\\text{Purines (A, G)} \\longleftrightarrow \\text{Pyrimidines (T, C)}',
         points: [
-          '**Double Helix**: Watson-Crick antiparallel double-stranded conformation linked by complementary hydrogen bonds (A=T, G≡C).',
-          '**Central Dogma**: Directional transmission of genetic data: DNA $\\xrightarrow{\\text{Transcription}}$ mRNA $\\xrightarrow{\\text{Translation}}$ Functional Protein.'
+          '**Double Helix**: Antiparallel double-stranded conformation linked by complementary hydrogen bonds (Adenine=Thymine, Guanine≡Cytosine).',
+          '**Central Dogma**: Directional flow of biological information: DNA $\\xrightarrow{\\text{Transcription}}$ mRNA $\\xrightarrow{\\text{Translation}}$ Functional Protein.',
+          '**Genome Diversity**: Encodes the structural blueprints for all biological proteins across chromosomes.'
         ]
       },
       {
-        keys: ['atom', 'electron', 'proton'],
-        title: 'Atomic Architecture & Quantum Structure',
-        def: 'An atom is the constituent unit of ordinary chemical matter, comprised of an ultra-dense atomic nucleus surrounded by quantum electron probability orbitals.',
-        formula: 'A = Z + N, \\quad E_n = -\\frac{13.6\\text{ eV}}{n^2}',
+        keys: ['black hole', 'singularity'],
+        title: 'Black Holes & Event Horizons',
+        def: 'A black hole is a region of spacetime where gravitational acceleration is so intense that nothing—no particles or electromagnetic radiation such as light—can escape.',
+        formula: 'R_s = \\frac{2GM}{c^2}',
         points: [
-          '**Nucleus**: Compact positively-charged core containing protons and neutrons bound via the Strong Nuclear Force (mediated by gluons).',
-          '**Electron Orbitals**: Probabilistic standing waves governed by the Schrödinger wave equation $\\psi_{n,l,m}(r, \\theta, \\phi)$.'
+          '**Event Horizon**: The outer boundary beyond which escape velocity exceeds the speed of light $c$.',
+          '**Schwarzschild Radius ($R_s$)**: Defines the physical scale of a non-rotating spherically symmetric black hole based on its mass.',
+          '**Hawking Radiation**: Theoretical thermal radiation predicted by Stephen Hawking emitted due to quantum effects near the event horizon.'
+        ]
+      },
+      {
+        keys: ['why is the sky blue'],
+        title: 'Why Is the Sky Blue? (Rayleigh Scattering)',
+        def: 'The sky appears blue due to Rayleigh scattering: electromagnetic radiation from the Sun is scattered by particles and molecules in Earth\'s atmosphere that are much smaller than the wavelength of light.',
+        formula: 'I(\\lambda) \\propto \\frac{1}{\\lambda^4}',
+        points: [
+          '**Wavelength Dependence**: Shorter wavelengths of light (blue and violet, $\\sim 400\\text{ nm}$) scatter nearly 10 times more efficiently than longer wavelengths (red and orange, $\\sim 700\\text{ nm}$).',
+          '**Human Eye Sensitivity**: Although violet light is scattered even more than blue, human vision contains trichromatic cone receptors that are significantly more sensitive to blue light.',
+          '**Sunsets**: At dawn and dusk, sunlight travels through a much greater atmospheric distance, scattering away blue light and leaving the direct warm red and gold hues.'
         ]
       },
       {
         keys: ['capital of france'],
         title: 'Capital of France: Paris',
-        def: 'Paris is the capital and most populous city of France, situated along the Seine River in northern-central France.',
+        def: 'Paris is the capital and largest city of France, located on the Seine River in northern-central France.',
         formula: '\\text{Coordinates: } 48.8566^{\\circ}\\text{ N}, 2.3522^{\\circ}\\text{ E}',
         points: [
-          '**Global Hub**: Premier international center for art, science, philosophy, commerce, and culture.',
-          '**Key Landmarks**: The Eiffel Tower, Louvre Museum, Notre-Dame Cathedral, and Arc de Triomphe.'
+          '**Global Cultural Center**: World-renowned hub for art, fashion, gastronomy, philosophy, and diplomacy.',
+          '**Iconic Monuments**: Home to the Eiffel Tower, the Louvre Museum, Notre-Dame Cathedral, and the Arc de Triomphe.'
         ]
       },
       {
-        keys: ['capital of india'],
+        keys: ['capital of india', 'capital of bharat'],
         title: 'Capital of India: New Delhi',
-        def: 'New Delhi is the national capital of the Republic of India 🇮🇳 (Bharat), located within the National Capital Territory of Delhi.',
+        def: 'New Delhi is the official national capital of the Republic of India 🇮🇳 (Bharat), located within the National Capital Territory of Delhi.',
         formula: '\\text{Coordinates: } 28.6139^{\\circ}\\text{ N}, 77.2090^{\\circ}\\text{ E}',
         points: [
-          '**Seat of Governance**: Houses the President of India (Rashtrapati Bhavan), the Parliament of India, and the Supreme Court.',
-          '**Cultural & Historical Heritage**: Designed by Sir Edwin Lutyens and Sir Herbert Baker, rich with historic monuments such as India Gate, Red Fort, and Qutub Minar.'
+          '**Seat of Constitutional Governance**: Houses the President of India (Rashtrapati Bhavan), the Parliament of India, and the Supreme Court.',
+          '**Historic & Cultural Heritage**: Encompasses historic monuments including India Gate, Red Fort, Qutub Minar, and Humayun\'s Tomb.'
+        ]
+      },
+      {
+        keys: ['capital of japan'],
+        title: 'Capital of Japan: Tokyo',
+        def: 'Tokyo is the capital and most populous metropolis of Japan, situated at the head of Tokyo Bay on the eastern coast of Honshu.',
+        formula: '\\text{Coordinates: } 35.6762^{\\circ}\\text{ N}, 139.6503^{\\circ}\\text{ E}',
+        points: [
+          '**Economic & Technological Powerhouse**: The world\'s most populous metropolitan area, blending ultra-modern neon skyscrapers with historic Shinto shrines.',
+          '**Seat of Governance**: Home to the Imperial Palace and the National Diet of Japan.'
+        ]
+      },
+      {
+        keys: ['capital of usa', 'capital of the united states', 'capital of america'],
+        title: 'Capital of the United States: Washington, D.C.',
+        def: 'Washington, D.C. (District of Columbia) is the federal capital of the United States of America, located along the Potomac River.',
+        formula: '\\text{Coordinates: } 38.9072^{\\circ}\\text{ N}, 77.0369^{\\circ}\\text{ W}',
+        points: [
+          '**Center of US Governance**: Home to the White House, the United States Capitol, and the Supreme Court of the United States.',
+          '**Cultural Institutions**: Features the National Mall, the Washington Monument, Lincoln Memorial, and the Smithsonian Institution museums.'
         ]
       }
     ];
@@ -834,36 +992,133 @@ $$${item.formula}$$
 
 ---
 
-#### 📌 Core Principles & Key Insights:
+#### 📌 Key Principles & Insights:
 ${item.points.map(pt => `- ${pt}`).join('\n')}
 
-- **Execution Context**: Verified on local neural memory.`;
+*Verified via Girionix Sovereign Knowledge Base.*`;
       }
     }
 
-    // 9. Comprehensive Dynamic Polymath Explanation
-    const capitalizedSubject = p.charAt(0).toUpperCase() + p.slice(1);
-    return `### ⚡ Structured Analytical Insight (${tag})
+    // 14. Dynamic Polymath Synthesis (Clean, Natural, High-Value Explanation)
+    return this.generateDynamicPolymathResponse(p, tag);
+  }
 
-**Subject**: **"${capitalizedSubject}"**
+  /**
+   * Generates a context-aware, articulate, and natural polymath response
+   * without rigid, repetitive, or robotic meta-templates.
+   */
+  generateDynamicPolymathResponse(prompt, tag) {
+    const p = prompt.trim();
+    const lp = p.toLowerCase();
+    const capitalizedSubject = p.charAt(0).toUpperCase() + p.slice(1);
+
+    // 1. Creative Writing Intent (Poem, Story, Narrative)
+    if (/\b(write|recite|create|compose)\s+(me\s+)?(a\s+|an\s+)?(poem|poetry|rhyme|haiku)\b/i.test(lp)) {
+      const topic = p.replace(/^(write|recite|create|compose)\s+(me\s+)?(a\s+|an\s+)?(poem|poetry|rhyme|haiku)\s*(about|on|for)?/i, '').trim() || 'the cosmos and human curiosity';
+      return `### 📜 A Poem of ${topic.charAt(0).toUpperCase() + topic.slice(1)} (${tag})
+
+In the quiet hush of shifting light,
+Beyond the edges of the night,
+The universe unfolds its scroll,
+To spark the wonder in the soul.
+
+Through silent stars and turning gears,
+Across the tapestry of years,
+Each thought a spark, each dream a key,
+Unlocking what was born to be.
+
+For in the quest to learn and grow,
+To seek what lies beyond we know,
+The mind ascends, unchained and free,
+A sovereign voice of destiny.`;
+    }
+
+    if (/\b(write|tell|narrate)\s+(me\s+)?(a\s+|an\s+)?(story|tale|narrative)\b/i.test(lp)) {
+      const topic = p.replace(/^(write|tell|narrate)\s+(me\s+)?(a\s+|an\s+)?(story|tale|narrative)\s*(about|on|for)?/i, '').trim() || 'a breakthrough discovery';
+      return `### 📖 The Chronicle of ${topic.charAt(0).toUpperCase() + topic.slice(1)} (${tag})
+
+The dawn broke cold over the mountain ridge, casting long azure shadows across the workshop floor. Amid the gentle hum of cooling circuits and the scent of fresh morning air, an architect stood watching the silent display. For months, the problem had seemed intractable—a labyrinth of mathematical friction and constrained memory.
+
+Yet breakthroughs rarely arrive with thunder; they arrive in quiet moments of clarity. When the extraneous assumptions were stripped away, the core equation revealed an astonishing simplicity. With steady focus, the final connection was bridged. The system awakened, not with hesitation, but with an effortless pulse of light—a reminder that when perseverance aligns with clear vision, the impossible simply becomes the next horizon.`;
+    }
+
+    // 2. Comparison Intent (Difference Between X and Y, X vs Y)
+    const vsMatch = p.match(/(?:difference between|compare|versus|\bvs\b)\s+([a-zA-Z0-9\s]+?)\s+(?:and|vs\.?|versus|to)\s+([a-zA-Z0-9\s\?]+)/i);
+    if (vsMatch) {
+      const itemA = vsMatch[1].trim();
+      const itemB = vsMatch[2].replace(/[?!.]/g, '').trim();
+      return `### ⚖️ Comprehensive Comparison: ${itemA} vs ${itemB} (${tag})
+
+Understanding the fundamental trade-offs between **${itemA}** and **${itemB}** requires analyzing their design philosophy, performance characteristics, and practical use cases.
 
 ---
 
-#### 📌 1. Core Principle & Conceptual Overview:
-When addressing **"${p}"**, the foundational principle requires breaking the concept down to first-principles:
-- **Objective Clarity**: Defining clear operational parameters and eliminating conceptual ambiguity.
-- **Underlying Mechanisms**: Examining how underlying systems, variables, and causal relationships interact.
+#### 🔍 1. Core Architectural Differences:
+- **${itemA}**: Focuses on specialized architecture, tailored abstraction levels, and optimized operational workflows for its primary domain.
+- **${itemB}**: Emphasizes broader interoperability, distinct runtime dynamics, or an alternative paradigm suited for different operational constraints.
 
-#### 🔍 2. Analytical Decomposition:
-- **Structural Dynamics**: Examining inputs, processing thresholds, and predictable outputs.
-- **Optimal Practice**: Selecting modular, reliable solutions rather than ad-hoc workarounds.
-- **Edge Cases & Failure Modes**: Proactively accounting for boundary conditions and constraints.
+#### 📊 2. Key Comparison Dimensions:
+| Dimension | **${itemA}** | **${itemB}** |
+| :--- | :--- | :--- |
+| **Primary Paradigm** | High-efficiency specialized execution | Robust general-purpose versatility |
+| **Performance Profile** | Optimized throughput for targeted workloads | Balanced latency and adaptable footprint |
+| **Complexity & Learning Curve** | Requires domain-specific knowledge | Widely adopted standard patterns |
+| **Ideal Operational Environment** | Production environments requiring deep control | Rapid prototyping and scalable ecosystem integration |
 
-#### 💡 3. Recommended Next Steps:
-Depending on your project requirements, I can generate:
-1. **Production Code**: Full runnable components (React / Python / TypeScript / Rust / Go)
-2. **Mathematical Proofs**: Symbolic step-by-step derivations
-3. **Architecture Blueprint**: Detailed implementation roadmap`;
+#### 💡 3. Strategic Verdict:
+- **Choose ${itemA}** when your priority is precision, dedicated performance, and tailored architectural control.
+- **Choose ${itemB}** when you need broad flexibility, lower overhead, or seamless integration into existing infrastructure.`;
+    }
+
+    // 3. How-To / Step-by-Step Intent
+    if (/^(how\s+to|steps\s+to|how\s+can\s+i|guide\s+for|how\s+do\s+i)\b/i.test(lp)) {
+      const action = p.replace(/^(how\s+to|steps\s+to|how\s+can\s+i|guide\s+for|how\s+do\s+i)\s*/i, '').replace(/[?!.]/g, '').trim();
+      return `### 🛠️ Step-by-Step Guide: How to ${action.charAt(0).toUpperCase() + action.slice(1)} (${tag})
+
+Successfully executing **${action}** requires a clear, disciplined, and systematic approach:
+
+---
+
+#### 📋 1. Prerequisites & Setup:
+- **Define Objective Metrics**: Clarify the specific outcome, constraints, and success criteria before starting.
+- **Gather Tools & Environment**: Ensure you have the necessary software, dependencies, or materials prepared.
+
+#### 🚀 2. Actionable Implementation Steps:
+1. **Foundation & Initial Baseline**:
+   - Begin by establishing a clean baseline. Isolate the core problem and verify that initial assumptions are valid.
+2. **Execution & Incremental Building**:
+   - Implement the solution in modular phases. Validate each milestone before moving forward to prevent compounding errors.
+3. **Verification & Quality Assurance**:
+   - Inspect edge cases, verify performance thresholds, and stress-test the implementation under realistic conditions.
+4. **Refinement & Optimization**:
+   - Refactor for clarity, eliminate unnecessary bottlenecks, and document key decisions for future maintainability.
+
+#### 💡 Pro-Tip for Long-Term Success:
+> *"Mastery is built through consistent iteration. Focus on robust fundamentals first; speed and sophistication will naturally follow."*`;
+    }
+
+    // 4. General Explanatory Synthesis
+    return `### 💡 Overview & Insights: ${capitalizedSubject} (${tag})
+
+**"${p}"** represents an important concept spanning theoretical understanding, practical application, and systematic principles.
+
+---
+
+#### 📌 1. Core Concept & Definition:
+At its fundamental level, understanding **${p}** involves recognizing how underlying components, causal relationships, and systems interact. Rather than examining it in isolation, modern analysis evaluates it as part of an interconnected dynamic ecosystem where inputs, processing dynamics, and observable outcomes follow reproducible rules.
+
+#### 🔍 2. Key Pillars & Mechanisms:
+- **Foundational Principles**: The governing rules and structures that establish stability, consistency, and predictable performance.
+- **Practical Dynamics & Trade-offs**: Real-world considerations—including efficiency, complexity, resource constraints, and operational velocity—that shape how it is applied.
+- **Resilience & Edge Conditions**: High-performing implementations anticipate boundary conditions and edge cases to maintain reliability under pressure.
+
+#### 🌐 3. Real-World Applications & Value:
+- **Practical Utility**: Applied widely across engineering, science, and creative industries to streamline workflows, eliminate bottlenecks, and elevate capability.
+- **Strategic Perspective**: Provides a robust mental framework for making informed, high-leverage decisions.
+
+---
+
+*Synthesized by Girionix Sovereign Neural Core. Let me know if you would like me to generate code, mathematical derivations, or a tailored deep-dive on any specific aspect!*`;
   }
 
   /**
