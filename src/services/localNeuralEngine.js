@@ -7,6 +7,7 @@
 
 import { liveWebSearch } from './liveWebSearch.js';
 import { conversationMemory } from './conversationMemory.js';
+import { localCodeSynthesizer } from './localCodeSynthesizer.js';
 
 export const TITAN_REQUIREMENTS = {
   ultra: {
@@ -69,6 +70,17 @@ class LocalNeuralEngine {
 
   getProfile() {
     return this.activeProfile;
+  }
+
+  isCodeQuery(prompt) {
+    return localCodeSynthesizer.isCodeQuery(prompt);
+  }
+
+  isMathQuery(prompt) {
+    if (!prompt) return false;
+    const p = prompt.toLowerCase().trim();
+    return /\b(math|calculate|integral|derivative|equation|solve|sqrt|square root|factorial|algebra|trigonometry|pythagor|fibonacci|sine|cosine|tangent|calculus|proof|hypotenuse|area of circle)\b/i.test(p) ||
+      /^[\d\s\+\-\*\/\^\(\)\.%=]+$/.test(p);
   }
 
   /**
@@ -239,6 +251,90 @@ class LocalNeuralEngine {
   tryEvaluateMath(prompt, tag) {
     const p = prompt.trim();
     const lp = p.toLowerCase();
+
+    // 0. Natural Language Arithmetic: "what is 25 * 40", "15 plus 40", "100 divided by 4"
+    const naturalExp = lp
+      .replace(/^(what\s+is|calculate|evaluate|compute|find|solve)\s+/i, '')
+      .replace(/\bplus\b/g, '+')
+      .replace(/\bminus\b/g, '-')
+      .replace(/\b(times|multiplied\s+by)\b/g, '*')
+      .replace(/\bdivided\s+by\b/g, '/')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if (/^[\d\s\+\-\*\/\(\)\.]+$/.test(naturalExp) && naturalExp.length <= 40 && /[\+\-\*\/]/.test(naturalExp)) {
+      try {
+        const cleanExp = naturalExp.replace(/[^0-9\+\-\*\/\(\)\.]/g, '');
+        // eslint-disable-next-line no-new-func
+        const res = Function("'use strict'; return (" + cleanExp + ")")();
+        if (Number.isFinite(res)) {
+          return `**Result: ${res}**\n\n$${cleanExp} = ${res}$`;
+        }
+      } catch (_) {}
+    }
+
+    // Pythagoras Theorem: "hypotenuse of 3 and 4"
+    const hypMatch = lp.match(/hypotenuse\s+(?:of\s+)?(\d+(?:\.\d+)?)\s+(?:and\s+)?(\d+(?:\.\d+)?)/i);
+    if (hypMatch) {
+      const a = parseFloat(hypMatch[1]);
+      const b = parseFloat(hypMatch[2]);
+      const c = Math.sqrt(a * a + b * b);
+      return `### 📐 Pythagorean Theorem (${tag})\n\n` +
+        `For a right triangle with legs $a = ${a}$ and $b = ${b}$:\n\n` +
+        `$c = \\sqrt{a^2 + b^2} = \\sqrt{${a}^2 + ${b}^2} = \\sqrt{${a * a} + ${b * b}} = \\sqrt{${a * a + b * b}} = ${c}$\n\n` +
+        `$\\boxed{c = ${c}}$`;
+    }
+
+    // Circle Area: "area of circle with radius 5"
+    const circleMatch = lp.match(/area\s+of\s+(?:a\s+)?circle\s+(?:with\s+)?(?:radius\s+)?(\d+(?:\.\d+)?)/i);
+    if (circleMatch) {
+      const r = parseFloat(circleMatch[1]);
+      const area = (Math.PI * r * r).toFixed(4).replace(/\.?0+$/, '');
+      return `### 📐 Circle Geometry (${tag})\n\n` +
+        `For a circle with radius $r = ${r}$:\n\n` +
+        `**1. Area**:\n` +
+        `$A = \\pi r^2 = \\pi \\times (${r})^2 \\approx ${area}$\n\n` +
+        `**2. Circumference**:\n` +
+        `$C = 2\\pi r = 2\\pi (${r}) \\approx ${(2 * Math.PI * r).toFixed(4).replace(/\.?0+$/, '')}$\n\n` +
+        `$\\boxed{A \\approx ${area}}$`;
+    }
+
+    // Linear Equation: "solve 2x + 6 = 14"
+    const linMatch = lp.match(/solve\s+([+-]?\s*\d*)\s*x\s*([+-]\s*\d+)\s*=\s*([+-]?\s*\d+)/i);
+    if (linMatch) {
+      const parseCoeff = (s, def) => {
+        if (!s || s.trim() === '' || s.trim() === '+') return def;
+        if (s.trim() === '-') return -def;
+        return parseFloat(s.replace(/\s+/g, ''));
+      };
+      const a = parseCoeff(linMatch[1], 1);
+      const b = parseCoeff(linMatch[2], 0);
+      const c = parseFloat(linMatch[3]);
+      if (a !== 0) {
+        const xVal = (c - b) / a;
+        return `### 📐 Linear Equation Analytical Solution (${tag})\n\n` +
+          `Given: $${a === 1 ? '' : a === -1 ? '-' : a}x ${b >= 0 ? '+ ' + b : '- ' + Math.abs(b)} = ${c}$\n\n` +
+          `**Step 1: Isolate Variable Term**:\n` +
+          `$${a === 1 ? '' : a === -1 ? '-' : a}x = ${c} - (${b}) = ${c - b}$\n\n` +
+          `**Step 2: Solve for x**:\n` +
+          `$x = \\frac{${c - b}}{${a}} = ${xVal}$\n\n` +
+          `$\\boxed{x = ${xVal}}$`;
+      }
+    }
+
+    // Unit Conversion: km to miles
+    const kmMile = lp.match(/convert\s+(\d+(?:\.\d+)?)\s*km\s+to\s+miles?/i);
+    if (kmMile) {
+      const km = parseFloat(kmMile[1]);
+      const miles = (km * 0.621371).toFixed(3);
+      return `**${km} kilometers** is equal to **${miles} miles**.\n\n$${km} \\times 0.621371 = ${miles}\\text{ miles}$`;
+    }
+    const mileKm = lp.match(/convert\s+(\d+(?:\.\d+)?)\s*miles?\s+to\s*km/i);
+    if (mileKm) {
+      const m = parseFloat(mileKm[1]);
+      const km = (m * 1.60934).toFixed(3);
+      return `**${m} miles** is equal to **${km} kilometers**.\n\n$${m} \\times 1.60934 = ${km}\\text{ km}$`;
+    }
 
     // 1. Percentage: "20% of 500" or "what is 15% of 80"
     const pctMatch = lp.match(/(\d+(?:\.\d+)?)\s*%\s*(?:of|\*)\s*(\d+(?:\.\d+)?)/);
@@ -785,571 +881,10 @@ class LocalNeuralEngine {
     }
 
     // =========================================================================
-    // 5. PRODUCTION CODE GENERATION (React, Python, Snake Game, Dashboard)
+    // 5. PRODUCTION CODE GENERATION & SOFTWARE ARCHITECTURE
     // =========================================================================
-    if (/\b(write\s+code|react\s+component|python\s+script|create\s+a\s+game|snake\s+game|build\s+an\s+app|code\s+for)\b/i.test(lp) ||
-        (lp.includes('code') && (lp.includes('react') || lp.includes('python') || lp.includes('javascript') || lp.includes('html') || lp.includes('component')))) {
-      
-      // 5A. Python Dedicated Code Generation
-      if (lp.includes('python')) {
-        if (lp.includes('snake')) {
-          return `### 🐍 On-Device Python Snake Game (${tag})
-
-Here is the complete, standalone Python Snake Game code using Python's standard \`turtle\` module—requiring **zero external packages**:
-
-\`\`\`python
-import turtle
-import time
-import random
-
-# Game Configuration
-DELAY = 0.1
-SCORE = 0
-HIGH_SCORE = 0
-
-# 1. Screen Setup
-screen = turtle.Screen()
-screen.title("Girionix AI — Python Snake Game")
-screen.bgcolor("#0B0F19")
-screen.setup(width=600, height=600)
-screen.tracer(0)
-
-# 2. Snake Head
-head = turtle.Turtle()
-head.speed(0)
-head.shape("square")
-head.color("#00FFAA")
-head.penup()
-head.goto(0, 0)
-head.direction = "stop"
-
-# 3. Food
-food = turtle.Turtle()
-food.speed(0)
-food.shape("circle")
-food.color("#FF3366")
-food.penup()
-food.goto(0, 100)
-
-segments = []
-
-# 4. Score Display
-pen = turtle.Turtle()
-pen.speed(0)
-pen.shape("square")
-pen.color("#FFFFFF")
-pen.penup()
-pen.hideturtle()
-pen.goto(0, 260)
-pen.write("Score: 0  |  High Score: 0", align="center", font=("Courier", 16, "bold"))
-
-# Movement Controls
-def go_up():
-    if head.direction != "down": head.direction = "up"
-def go_down():
-    if head.direction != "up": head.direction = "down"
-def go_left():
-    if head.direction != "right": head.direction = "left"
-def go_right():
-    if head.direction != "left": head.direction = "right"
-
-def move():
-    if head.direction == "up": head.sety(head.ycor() + 20)
-    elif head.direction == "down": head.sety(head.ycor() - 20)
-    elif head.direction == "left": head.setx(head.xcor() - 20)
-    elif head.direction == "right": head.setx(head.xcor() + 20)
-
-def reset_game():
-    global SCORE, DELAY
-    time.sleep(1)
-    head.goto(0, 0)
-    head.direction = "stop"
-    for segment in segments: segment.goto(1000, 1000)
-    segments.clear()
-    SCORE = 0
-    DELAY = 0.1
-    pen.clear()
-    pen.write(f"Score: {SCORE}  |  High Score: {HIGH_SCORE}", align="center", font=("Courier", 16, "bold"))
-
-# Key Bindings
-screen.listen()
-screen.onkeypress(go_up, "Up")
-screen.onkeypress(go_down, "Down")
-screen.onkeypress(go_left, "Left")
-screen.onkeypress(go_right, "Right")
-screen.onkeypress(go_up, "w")
-screen.onkeypress(go_down, "s")
-screen.onkeypress(go_left, "a")
-screen.onkeypress(go_right, "d")
-
-# Main Loop
-while True:
-    screen.update()
-
-    if head.xcor() > 290 or head.xcor() < -290 or head.ycor() > 290 or head.ycor() < -290:
-        reset_game()
-
-    if head.distance(food) < 20:
-        food.goto(random.randint(-13, 13) * 20, random.randint(-13, 13) * 20)
-        new_segment = turtle.Turtle()
-        new_segment.speed(0)
-        new_segment.shape("square")
-        new_segment.color("#00BB77")
-        new_segment.penup()
-        segments.append(new_segment)
-        SCORE += 10
-        if SCORE > HIGH_SCORE: HIGH_SCORE = SCORE
-        DELAY = max(0.04, DELAY - 0.002)
-        pen.clear()
-        pen.write(f"Score: {SCORE}  |  High Score: {HIGH_SCORE}", align="center", font=("Courier", 16, "bold"))
-
-    for i in range(len(segments) - 1, 0, -1):
-        segments[i].goto(segments[i - 1].xcor(), segments[i - 1].ycor())
-    if len(segments) > 0:
-        segments[0].goto(head.xcor(), head.ycor())
-
-    move()
-
-    for segment in segments:
-        if segment.distance(head) < 20:
-            reset_game()
-
-    time.sleep(DELAY)
-\`\`\`
-
----
-
-### 🚀 How to Run:
-1. Save this code to \`snake.py\`.
-2. Run \`python snake.py\` in your terminal.
-3. Control with **Arrow Keys** or **W/A/S/D**.`;
-        }
-
-        return `### ⚡ On-Device Python Implementation (${tag})
-
-Here is the modular, clean Python solution for: **"${p}"**
-
-\`\`\`python
-#!/usr/bin/env python3
-"""
-Girionix AI — Production Python Solution
-Execution Mode: ${tag}
-"""
-
-import sys
-import time
-from typing import List, Dict, Any, Optional
-
-def solve_task(data: Optional[List[Any]] = None) -> Dict[str, Any]:
-    """
-    High-efficiency algorithmic implementation with O(n) linear execution.
-    """
-    start_time = time.perf_counter()
-    
-    # Process inputs cleanly
-    items = data if data is not None else [1, 2, 3, 4, 5]
-    processed = [x * 2 for x in items if isinstance(x, (int, float))]
-    
-    elapsed_ms = (time.perf_counter() - start_time) * 1000
-    return {
-        "status": "success",
-        "input_count": len(items),
-        "output": processed,
-        "latency_ms": round(elapsed_ms, 3)
-    }
-
-if __name__ == "__main__":
-    result = solve_task([10, 20, 30, 40, 50])
-    print(f"🚀 Execution Completed: {result}")
-\`\`\`
-
-**Characteristics**:
-- **Target**: Pure Python 3.8+ Standard Library
-- **Dependencies**: Zero external packages required
-- **Time Complexity**: $O(n)$ linear runtime`;
-      }
-
-      // 5B. React Snake Game
-      if (lp.includes('snake')) {
-        return `### 🕹️ On-Device Standalone Snake Game (${tag})
-
-Here is a complete, fully functional Snake game engineered in React 18 with Tailwind CSS:
-
-\`\`\`jsx
-import React, { useState, useEffect, useCallback } from 'react';
-import { Play, RotateCcw, Trophy } from 'lucide-react';
-
-const GRID_SIZE = 16;
-const INITIAL_SNAKE = [[8, 8], [8, 9], [8, 10]];
-const INITIAL_DIRECTION = [-1, 0];
-
-export default function StandaloneSnakeGame() {
-  const [snake, setSnake] = useState(INITIAL_SNAKE);
-  const [direction, setDirection] = useState(INITIAL_DIRECTION);
-  const [food, setFood] = useState([4, 4]);
-  const [score, setScore] = useState(0);
-  const [highScore, setHighScore] = useState(0);
-  const [gameOver, setGameOver] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
-
-  const generateFood = useCallback(() => {
-    return [Math.floor(Math.random() * GRID_SIZE), Math.floor(Math.random() * GRID_SIZE)];
-  }, []);
-
-  const resetGame = () => {
-    setSnake(INITIAL_SNAKE);
-    setDirection(INITIAL_DIRECTION);
-    setFood(generateFood());
-    setScore(0);
-    setGameOver(false);
-    setIsPlaying(true);
-  };
-
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (!isPlaying || gameOver) return;
-      if (e.key === 'ArrowUp' && direction[0] !== 1) setDirection([-1, 0]);
-      if (e.key === 'ArrowDown' && direction[0] !== -1) setDirection([1, 0]);
-      if (e.key === 'ArrowLeft' && direction[1] !== 1) setDirection([0, -1]);
-      if (e.key === 'ArrowRight' && direction[1] !== -1) setDirection([0, 1]);
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [direction, isPlaying, gameOver]);
-
-  useEffect(() => {
-    if (!isPlaying || gameOver) return;
-    const timer = setInterval(() => {
-      setSnake(prev => {
-        const head = [prev[0][0] + direction[0], prev[0][1] + direction[1]];
-        if (head[0] < 0 || head[0] >= GRID_SIZE || head[1] < 0 || head[1] >= GRID_SIZE) {
-          setGameOver(true);
-          return prev;
-        }
-        if (prev.some(seg => seg[0] === head[0] && seg[1] === head[1])) {
-          setGameOver(true);
-          return prev;
-        }
-        const newSnake = [head, ...prev];
-        if (head[0] === food[0] && head[1] === food[1]) {
-          setScore(s => {
-            const next = s + 10;
-            if (next > highScore) setHighScore(next);
-            return next;
-          });
-          setFood(generateFood());
-        } else {
-          newSnake.pop();
-        }
-        return newSnake;
-      });
-    }, 120);
-    return () => clearInterval(timer);
-  }, [isPlaying, gameOver, direction, food, highScore, generateFood]);
-
-  return (
-    <div className="flex flex-col items-center justify-center p-6 bg-[#0B0F19] text-white rounded-3xl border border-emerald-500/30 max-w-md mx-auto shadow-2xl space-y-4 font-sans">
-      <div className="flex justify-between w-full items-center">
-        <h2 className="text-lg font-bold text-emerald-400 flex items-center gap-2">🐍 Titan Snake</h2>
-        <div className="flex items-center gap-3 text-xs font-mono">
-          <span className="text-gray-400">Score: <strong className="text-white">{score}</strong></span>
-          <span className="text-amber-400 flex items-center gap-1"><Trophy className="w-3.5 h-3.5" /> {highScore}</span>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-16 gap-0.5 bg-black/60 p-2 rounded-2xl border border-white/5 w-64 h-64">
-        {Array.from({ length: GRID_SIZE * GRID_SIZE }).map((_, idx) => {
-          const r = Math.floor(idx / GRID_SIZE);
-          const c = idx % GRID_SIZE;
-          const isHead = snake[0][0] === r && snake[0][1] === c;
-          const isBody = snake.some(s => s[0] === r && s[1] === c);
-          const isFood = food[0] === r && food[1] === c;
-
-          const cellBg = isHead ? 'bg-emerald-400 shadow-[0_0_8px_#00FFAA]' : isBody ? 'bg-emerald-600/80' : isFood ? 'bg-rose-500 animate-ping rounded-full' : 'bg-white/[0.02]';
-          return (
-            <div
-              key={idx}
-              className={'w-full h-full rounded-sm ' + cellBg}
-            />
-          );
-        })}
-      </div>
-
-      <div className="flex gap-2 w-full">
-        {!isPlaying || gameOver ? (
-          <button
-            onClick={resetGame}
-            className="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg cursor-pointer"
-          >
-            {gameOver ? <RotateCcw className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-            {gameOver ? 'Play Again' : 'Start Game'}
-          </button>
-        ) : (
-          <p className="text-xs text-center text-gray-400 w-full font-mono">Use Arrow Keys to Navigate</p>
-        )}
-      </div>
-    </div>
-  );
-}
-\`\`\``;
-      }
-
-      // 5C. Algorithmic Implementations (Binary Search, QuickSort, LRU Cache, Debounce)
-      if (lp.includes('binary search') || lp.includes('bsearch')) {
-        return `### ⚡ Binary Search Algorithm (${tag})
-
-Binary search is an optimal $O(\\log n)$ search algorithm operating on a sorted contiguous array.
-
-\`\`\`python
-from typing import List, Optional
-
-def binary_search(arr: List[int], target: int) -> Optional[int]:
-    """
-    Performs binary search on a sorted list of integers.
-    Returns the 0-based index if target is found, otherwise None.
-    
-    Time Complexity: O(log n)
-    Space Complexity: O(1) auxiliary space
-    """
-    left, right = 0, len(arr) - 1
-
-    while left <= right:
-        # Prevent potential integer overflow
-        mid = left + (right - left) // 2
-
-        if arr[mid] == target:
-            return mid
-        elif arr[mid] < target:
-            left = mid + 1
-        else:
-            right = mid - 1
-
-    return None
-
-# --- Verification & Unit Tests ---
-def test_binary_search():
-    data = [2, 5, 8, 12, 16, 23, 38, 56, 72, 91]
-    assert binary_search(data, 23) == 5, "Target in middle failed"
-    assert binary_search(data, 2) == 0, "Target at start failed"
-    assert binary_search(data, 91) == 9, "Target at end failed"
-    assert binary_search(data, 50) is None, "Missing target failed"
-    assert binary_search([], 10) is None, "Empty array failed"
-    print("✅ All binary search assertions verified!")
-
-if __name__ == "__main__":
-    test_binary_search()
-\`\`\`
-
-**Complexity Analysis**:
-- **Best Case**: $O(1)$ when target is at the initial median.
-- **Worst / Average Case**: $O(\\log n)$ because the search interval is halved on every comparison: $N \\to N/2 \\to N/4 \\to \\dots \\to 1$.
-- **Space**: $O(1)$ iterative in-place pointer manipulation.`;
-      }
-
-      if (lp.includes('quicksort') || lp.includes('quick sort')) {
-        return `### ⚡ QuickSort In-Place Algorithm (${tag})
-
-QuickSort is an efficient divide-and-conquer sorting algorithm using Hoare partitioning.
-
-\`\`\`python
-from typing import List
-import random
-
-def quicksort(arr: List[int]) -> List[int]:
-    """
-    In-place randomized QuickSort.
-    Average Time: O(n log n) | Worst Case: O(n^2) with adversarial pivots
-    Auxiliary Space: O(log n) stack frames
-    """
-    def _quicksort(items: List[int], low: int, high: int):
-        if low < high:
-            pivot_idx = _partition(items, low, high)
-            _quicksort(items, low, pivot_idx - 1)
-            _quicksort(items, pivot_idx + 1, high)
-
-    def _partition(items: List[int], low: int, high: int) -> int:
-        # Randomized pivot avoids O(n^2) regression on pre-sorted arrays
-        rand_pivot = random.randint(low, high)
-        items[rand_pivot], items[high] = items[high], items[rand_pivot]
-        pivot = items[high]
-        
-        i = low - 1
-        for j in range(low, high):
-            if items[j] <= pivot:
-                i += 1
-                items[i], items[j] = items[j], items[i]
-                
-        items[i + 1], items[high] = items[high], items[i + 1]
-        return i + 1
-
-    _quicksort(arr, 0, len(arr) - 1)
-    return arr
-
-# Test verification
-if __name__ == "__main__":
-    test_arr = [64, 34, 25, 12, 22, 11, 90, -4, 0]
-    sorted_arr = quicksort(test_arr)
-    assert sorted_arr == sorted(test_arr), "QuickSort verification failed"
-    print("✅ QuickSort Result:", sorted_arr)
-\`\`\``;
-      }
-
-      if (lp.includes('lru cache') || lp.includes('lru')) {
-        return `### ⚡ LRU (Least Recently Used) Cache (${tag})
-
-An optimal LRU Cache implementation achieving **$O(1)$ get and $O(1)$ put** using a Doubly Linked List paired with a Hash Map.
-
-\`\`\`python
-class Node:
-    def __init__(self, key: int = 0, val: int = 0):
-        self.key = key
-        self.val = val
-        self.prev = None
-        self.next = None
-
-class LRUCache:
-    def __init__(self, capacity: int):
-        self.cap = capacity
-        self.cache = {}  # key -> Node
-        # Sentinel dummy nodes eliminate edge-case head/tail checks
-        self.head = Node()
-        self.tail = Node()
-        self.head.next = self.tail
-        self.tail.prev = self.head
-
-    def _remove(self, node: Node):
-        node.prev.next = node.next
-        node.next.prev = node.prev
-
-    def _insert_front(self, node: Node):
-        node.next = self.head.next
-        node.prev = self.head
-        self.head.next.prev = node
-        self.head.next = node
-
-    def get(self, key: int) -> int:
-        if key in self.cache:
-            node = self.cache[key]
-            self._remove(node)
-            self._insert_front(node)
-            return node.val
-        return -1
-
-    def put(self, key: int, value: int) -> None:
-        if key in self.cache:
-            self._remove(self.cache[key])
-        
-        node = Node(key, value)
-        self.cache[key] = node
-        self._insert_front(node)
-
-        if len(self.cache) > self.cap:
-            lru = self.tail.prev
-            self._remove(lru)
-            del self.cache[lru.key]
-
-# --- Verification ---
-if __name__ == "__main__":
-    lru = LRUCache(2)
-    lru.put(1, 1)
-    lru.put(2, 2)
-    assert lru.get(1) == 1
-    lru.put(3, 3)  # evicts key 2
-    assert lru.get(2) == -1
-    print("✅ LRU Cache O(1) operations verified successfully!")
-\`\`\``;
-      }
-
-      if (lp.includes('debounce')) {
-        return `### ⚡ Production JavaScript Debounce & Throttle (${tag})
-
-\`\`\`javascript
-/**
- * Debounces a function call by waiting \`waitMs\` after the last invocation.
- * @param {Function} func The target callback
- * @param {number} waitMs Delay in milliseconds
- * @param {boolean} immediate Whether to trigger on leading edge
- */
-export function debounce(func, waitMs = 300, immediate = false) {
-  let timeoutId = null;
-
-  function debounced(...args) {
-    const callNow = immediate && !timeoutId;
-    clearTimeout(timeoutId);
-
-    timeoutId = setTimeout(() => {
-      timeoutId = null;
-      if (!immediate) func.apply(this, args);
-    }, waitMs);
-
-    if (callNow) func.apply(this, args);
-  }
-
-  debounced.cancel = () => {
-    clearTimeout(timeoutId);
-    timeoutId = null;
-  };
-
-  return debounced;
-}
-\`\`\``;
-      }
-
-      // 5D. Generic High Quality React Dashboard
-      return `### ⚡ On-Device Production Component (${tag})
-
-Here is your production-ready, fully self-contained React 18 component:
-
-\`\`\`jsx
-import React, { useState } from 'react';
-import { Cpu, Zap, ShieldCheck, Activity } from 'lucide-react';
-
-export default function TitanEngineDashboard() {
-  const [metric, setMetric] = useState({ tflops: 2.84, tokSec: 138, ramMb: 340 });
-
-  return (
-    <div className="p-6 rounded-3xl bg-[#090C15] border border-emerald-500/30 text-white space-y-5 max-w-lg mx-auto shadow-2xl font-sans">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-[0_0_12px_rgba(0,255,170,0.2)]">
-            <Cpu className="w-6 h-6 animate-pulse" />
-          </div>
-          <div>
-            <h3 className="font-bold text-base text-white tracking-wide">Girionix Titan Engine</h3>
-            <p className="text-xs text-emerald-400/80 font-mono">100% Offline Physical Execution</p>
-          </div>
-        </div>
-        <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-mono border border-emerald-500/30">
-          AIR-GAPPED
-        </span>
-      </div>
-
-      <div className="grid grid-cols-3 gap-2 text-center font-mono">
-        <div className="p-3 rounded-2xl bg-black/40 border border-white/5">
-          <span className="text-[10px] text-gray-400 block mb-1">INFERENCE</span>
-          <p className="text-emerald-400 font-bold text-sm">{metric.tokSec} tok/s</p>
-        </div>
-        <div className="p-3 rounded-2xl bg-black/40 border border-white/5">
-          <span className="text-[10px] text-gray-400 block mb-1">COMPUTE</span>
-          <p className="text-cyan-400 font-bold text-sm">{metric.tflops} TF</p>
-        </div>
-        <div className="p-3 rounded-2xl bg-black/40 border border-white/5">
-          <span className="text-[10px] text-gray-400 block mb-1">RAM BUFFER</span>
-          <p className="text-purple-400 font-bold text-sm">{metric.ramMb} MB</p>
-        </div>
-      </div>
-
-      <div className="p-3.5 rounded-2xl bg-emerald-950/20 border border-emerald-500/20 flex items-center justify-between text-xs font-mono">
-        <div className="flex items-center gap-2 text-gray-300">
-          <ShieldCheck className="w-4 h-4 text-emerald-400" />
-          <span>Local Device Privacy</span>
-        </div>
-        <span className="text-emerald-400 font-bold">ACTIVE (0 Net Bytes)</span>
-      </div>
-    </div>
-  );
-}
-\`\`\``;
+    if (this.isCodeQuery(p)) {
+      return localCodeSynthesizer.synthesizeCode(p, tag);
     }
 
     // =========================================================================
@@ -1796,21 +1331,29 @@ $$e^{i\\pi} + 1 = 0$$`;
 
     const isLite = isTitanLite || model === 'girionix-titan-lite' || this.activeProfile === 'lite';
 
-    if (onReasoning) {
-      if (webSearchEnabled) {
-        onReasoning("🌐 Searching verified real-time sources & web knowledge graph...\n- Querying live news registries and knowledge bases\n- Cross-referencing citations with local neural reasoning matrix...");
-      } else if (isLite) {
-        onReasoning("🌱 Initializing Titan Lite Quantized Engine...\n- Allocating ultra-low memory buffer (~350MB RAM)\n- Running on physical CPU cores with zero network packets\n- Generating instant on-device logical token stream...");
-      } else {
-        onReasoning("⚡ Initializing Titan 70B Heavy Workstation Engine...\n- Pinning physical CPU threads and local GPU shader pipelines\n- Allocating dedicated in-memory tensor matrices\n- Executing 100% air-gapped multi-step reasoning chain (0 bytes sent)...");
-      }
-    }
+    const isConversational = liveWebSearch.isConversationalOrNonSearchQuery(prompt);
+    const isCode = this.isCodeQuery(prompt);
+    const isMath = this.isMathQuery(prompt);
 
     let searchData = null;
-    if (webSearchEnabled) {
+    if (webSearchEnabled && !isConversational && !isCode && !isMath) {
+      if (onReasoning && useThinking) {
+        onReasoning("🌐 Querying verified real-time sources & web knowledge graph...\n- Searching live news registries and knowledge bases\n- Cross-referencing citations with local neural reasoning matrix...");
+      }
       try {
         searchData = await liveWebSearch.performSearch(prompt);
       } catch (_) {}
+    } else if (onReasoning && useThinking) {
+      if (isCode) {
+        onReasoning(`🧩 Analyzing architecture & specifications for "${prompt.trim().slice(0, 45)}..."\n- Outlining component state, props, and UI event handlers\n- Applying modern Tailwind CSS / responsive layout patterns\n- Verifying edge cases, algorithmic efficiency, and syntax validation...`);
+      } else if (isMath) {
+        onReasoning(`📐 Evaluating mathematical equations and algebraic constraints...\n- Checking numerical bounds and formal identities\n- Deriving step-by-step solution with KaTeX notation...`);
+      } else if (!isConversational) {
+        onReasoning(isLite 
+          ? "🌱 Initializing Titan Lite Quantized Engine...\n- Allocating ultra-low memory buffer (~350MB RAM)\n- Running on physical CPU cores with zero network packets\n- Generating instant on-device token stream..."
+          : "⚡ Initializing Titan 70B Heavy Workstation Engine...\n- Pinning physical CPU threads and local GPU shader pipelines\n- Allocating dedicated in-memory tensor matrices\n- Executing 100% air-gapped multi-step reasoning chain (0 bytes sent)..."
+        );
+      }
     }
 
     let generatedContent = this.synthesizeOfflineResponse(prompt, model, isLite, searchData, history);
@@ -1829,6 +1372,25 @@ $$e^{i\\pi} + 1 = 0$$`;
     }
 
     return currentText;
+  }
+
+  /**
+   * Universal streaming method compatible with CodeStudio, MathLab, ScriptStudio
+   */
+  async generateStream({ messages = [], model = 'girionix-titan-70b', onChunk, onReasoningChunk, signal }) {
+    const userPrompt = messages.filter(m => m.role !== 'system').pop()?.content || '';
+    return this.streamLocalResponse({
+      prompt: userPrompt,
+      history: messages,
+      model,
+      onToken: (fullText, token) => {
+        if (onChunk) onChunk(token, fullText);
+      },
+      onReasoning: (reasoning) => {
+        if (onReasoningChunk) onReasoningChunk(reasoning, reasoning);
+      },
+      signal
+    });
   }
 }
 

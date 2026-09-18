@@ -32,7 +32,8 @@ import {
   RefreshCw,
   FileCode,
   Share2,
-  Lightbulb
+  Lightbulb,
+  Key
 } from 'lucide-react';
 import MessageItem from './MessageItem';
 import VoiceOrbModal from './VoiceOrbModal';
@@ -51,6 +52,7 @@ import UrlInspectorModal from './UrlInspectorModal';
 import FlashcardModal from './FlashcardModal';
 import ChatExportModal from './ChatExportModal';
 import PromptLibraryModal from './PromptLibraryModal';
+import FreeKeyModal from '../common/FreeKeyModal';
 
 import { openrouter } from '../../services/openrouter';
 import { imageGenerator } from '../../services/imageGenerator';
@@ -60,6 +62,7 @@ import { AI_MODELS, TITAN_AI_MODELS } from '../../services/modelCatalog';
 import { localNeuralEngine } from '../../services/localNeuralEngine';
 import { universalApiEngine } from '../../services/universalApiEngine';
 import { conversationMemory } from '../../services/conversationMemory';
+import { geminiStudioEngine } from '../../services/geminiStudioEngine';
 
 export default function ChatView({
   activeModel,
@@ -122,6 +125,47 @@ export default function ChatView({
   const [isSyncingModels, setIsSyncingModels] = useState(false);
   const [syncFeedback, setSyncFeedback] = useState(null);
   const [modelToast, setModelToast] = useState(null);
+  const [isFreeKeyModalOpen, setIsFreeKeyModalOpen] = useState(false);
+  const [hasGeminiKey, setHasGeminiKey] = useState(() => {
+    return Boolean(geminiStudioEngine.getApiKey() || storage.getApiKey());
+  });
+  const [dismissedKeyBanner, setDismissedKeyBanner] = useState(() => {
+    try {
+      return sessionStorage.getItem('girionix_dismiss_key_banner') === 'true';
+    } catch (_) {
+      return false;
+    }
+  });
+
+  // Keep API key status synchronized in real time
+  useEffect(() => {
+    const checkKey = () => {
+      setHasGeminiKey(Boolean(geminiStudioEngine.getApiKey() || storage.getApiKey()));
+    };
+    window.addEventListener('storage', checkKey);
+    window.addEventListener('girionix:key-updated', checkKey);
+    return () => {
+      window.removeEventListener('storage', checkKey);
+      window.removeEventListener('girionix:key-updated', checkKey);
+    };
+  }, []);
+
+  const handleKeySaved = (key, modelId) => {
+    const hasKey = Boolean(key);
+    setHasGeminiKey(hasKey);
+    if (hasKey && modelId) {
+      const target = AI_MODELS.find(m => m.id === modelId) || AI_MODELS[0];
+      if (target) {
+        setActiveModel(target);
+        storage.setActiveModelId(target.id);
+        setModelToast(`🟢 Activated: ${target.name}`);
+        setTimeout(() => setModelToast(null), 3000);
+      }
+    } else if (!hasKey) {
+      setModelToast(`⚡ Switched to Sovereign Local Core`);
+      setTimeout(() => setModelToast(null), 3000);
+    }
+  };
 
   // Synchronize activeModel when storage or another component changes it
   useEffect(() => {
@@ -1061,6 +1105,40 @@ export default function ChatView({
             />
           )}
 
+          {/* Free Gemini API Callout Banner */}
+          {!hasGeminiKey && !dismissedKeyBanner && (
+            <div className="mb-2 p-2.5 px-3.5 rounded-2xl bg-gradient-to-r from-cyan-950/40 via-[#0a0f24] to-blue-950/40 border border-cyan-500/30 flex items-center justify-between gap-3 text-xs animate-fadeIn">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="p-1.5 rounded-xl bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shrink-0">
+                  <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                </div>
+                <p className="text-gray-300 truncate text-[11px] sm:text-xs">
+                  <span className="text-white font-semibold">Unlock Full Cloud AI:</span> Connect your 100% Free Google Gemini API key (0 credit card) for Gemini 2.5 Pro & Flash.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setIsFreeKeyModalOpen(true)}
+                  className="px-2.5 py-1 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black text-[11px] font-bold transition-all shadow-sm active:scale-95 cursor-pointer"
+                >
+                  Connect Free Key
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDismissedKeyBanner(true);
+                    try { sessionStorage.setItem('girionix_dismiss_key_banner', 'true'); } catch (_) {}
+                  }}
+                  className="p-1 rounded-lg text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-colors cursor-pointer"
+                  title="Dismiss notice"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Main Input Textarea & Action Buttons */}
           <div className="relative rounded-2xl bg-black/60 border border-white/10 focus-within:border-cyan-500/40 transition-colors p-2 flex flex-col">
             {/* Live Token & Character Counter HUD */}
@@ -1339,9 +1417,33 @@ export default function ChatView({
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="hidden sm:inline text-cyan-400/90 font-mono text-xs font-semibold">
-                ⚡ Girionix Pro Sovereign Engine
-              </span>
+              {hasGeminiKey ? (
+                <button
+                  type="button"
+                  onClick={() => setIsFreeKeyModalOpen(true)}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[11px] font-mono transition-all cursor-pointer shadow-sm hover:shadow-emerald-500/10"
+                  title="Google Gemini 2.5 Active via Google AI Studio. Click to manage key."
+                >
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="font-bold">Gemini 2.5 Active</span>
+                  <span className="text-gray-400 text-[10px] hidden sm:inline">(Free AI Studio)</span>
+                </button>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span className="hidden sm:inline text-gray-400 text-[11px] font-mono">
+                    ⚡ Sovereign Local Core
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setIsFreeKeyModalOpen(true)}
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-gradient-to-r from-cyan-500/20 to-blue-500/20 hover:from-cyan-500/30 hover:to-blue-500/30 text-cyan-300 border border-cyan-500/40 text-[11px] font-mono transition-all cursor-pointer shadow-sm hover:shadow-cyan-500/20 active:scale-95"
+                    title="Connect Google Gemini 2.5 Pro / Flash for free without credit card"
+                  >
+                    <Key className="w-3 h-3 text-cyan-400" />
+                    <span className="font-bold">Connect Free Gemini AI</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1406,6 +1508,12 @@ export default function ChatView({
         onRunPrompt={(text) => {
           handleSend(text);
         }}
+      />
+
+      <FreeKeyModal
+        isOpen={isFreeKeyModalOpen}
+        onClose={() => setIsFreeKeyModalOpen(false)}
+        onKeySaved={handleKeySaved}
       />
     </div>
   );
