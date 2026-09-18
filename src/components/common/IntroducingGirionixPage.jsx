@@ -111,6 +111,18 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
   const [openFaq, setOpenFaq] = useState(0);
   const [copiedCodeSnippet, setCopiedCodeSnippet] = useState(false);
   const [copiedChatLink, setCopiedChatLink] = useState(false);
+  const [alwaysDirectChat, setAlwaysDirectChat] = useState(() => {
+    try {
+      return localStorage.getItem('girionix_always_direct_chat') === 'true';
+    } catch (_) { return false; }
+  });
+
+  const handleToggleAlwaysDirectChat = (checked) => {
+    setAlwaysDirectChat(checked);
+    try {
+      localStorage.setItem('girionix_always_direct_chat', checked ? 'true' : 'false');
+    } catch (_) {}
+  };
 
   const handleCopyDirectChatLink = (e) => {
     e?.stopPropagation();
@@ -560,6 +572,26 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
                 {copiedChatLink ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-cyan-400" />}
                 <span>{copiedChatLink ? 'Copied!' : 'Copy Link'}</span>
               </button>
+            </div>
+
+            {/* Direct Startup Toggle (Always Open Chat Workspace Directly) */}
+            <div className="flex items-center justify-center pt-1">
+              <label className="flex items-center gap-2 cursor-pointer bg-white/[0.03] hover:bg-white/[0.07] px-3.5 py-1.5 rounded-xl border border-white/10 transition-all select-none group">
+                <input
+                  type="checkbox"
+                  checked={alwaysDirectChat}
+                  onChange={(e) => handleToggleAlwaysDirectChat(e.target.checked)}
+                  className="w-4 h-4 rounded accent-cyan-400 cursor-pointer"
+                />
+                <span className="text-gray-300 group-hover:text-white text-xs font-sans">
+                  Always start directly in <strong>Chat Workspace (/chat)</strong> on visit (skip this intro)
+                </span>
+                {alwaysDirectChat && (
+                  <span className="px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 text-[10px] font-mono border border-cyan-500/40">
+                    Default
+                  </span>
+                )}
+              </label>
             </div>
 
             {/* Giri Corporation Featured Organization Spotlight Card */}

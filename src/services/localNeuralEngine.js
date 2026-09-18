@@ -289,6 +289,159 @@ class LocalNeuralEngine {
       } catch (_) {}
     }
 
+    // 5. Factorial: "5!" or "factorial of 6"
+    const factMatch = lp.match(/(\d+)\s*!|factorial\s*(?:of)?\s*(\d+)/);
+    if (factMatch) {
+      const n = parseInt(factMatch[1] || factMatch[2], 10);
+      if (n >= 0 && n <= 30) {
+        let f = 1;
+        for (let i = 2; i <= n; i++) f *= i;
+        return `### 📐 Factorial Evaluation (${tag})\n\n` +
+               `The factorial of **${n}** ($${n}!$) is **${f.toLocaleString()}**.\n\n` +
+               `$$\\boxed{${n}! = ${f.toLocaleString()}}$$\n\n` +
+               `**Formal Definition**:\n` +
+               `$$n! = \\prod_{k=1}^n k = n \\times (n-1) \\times (n-2) \\times \\cdots \\times 2 \\times 1$$`;
+      }
+    }
+
+    // 6. Calculus Derivatives: "derivative of x^3", "d/dx of sin(x)", "derivative of e^x"
+    const derivMatch = lp.match(/(?:derivative|d\/dx)\s*(?:of)?\s*([a-z0-9\^\*\+\-\/\s\(\)]+)/);
+    if (derivMatch) {
+      const expr = derivMatch[1].trim();
+      // d/dx(x^n)
+      const powPoly = expr.match(/^x\^(\d+)$/);
+      if (powPoly) {
+        const n = parseInt(powPoly[1], 10);
+        const newExp = n - 1;
+        const resTerm = newExp === 1 ? `${n}x` : newExp === 0 ? `${n}` : `${n}x^{${newExp}}`;
+        return `### 📐 Calculus: Derivative Derivation (${tag})\n\n` +
+               `To compute the derivative of $f(x) = x^{${n}}$ with respect to $x$:\n\n` +
+               `**1. Power Rule Application**:\n` +
+               `$$\\frac{d}{dx}[x^n] = n x^{n-1}$$\n\n` +
+               `**2. Step-by-Step Calculation**:\n` +
+               `$$\\frac{d}{dx}\\left(x^{${n}}\\right) = ${n} x^{${n}-1} = ${resTerm}$$\n\n` +
+               `**Definitive Result**:\n` +
+               `$$\\boxed{\\frac{d}{dx}\\left(x^{${n}}\\right) = ${resTerm}}$$`;
+      }
+      if (expr === 'sin(x)' || expr === 'sinx') {
+        return `### 📐 Calculus: Derivative of Sine (${tag})\n\n` +
+               `$$\\frac{d}{dx}\\sin(x) = \\cos(x)$$\n\n` +
+               `**First-Principles Proof via Limits**:\n` +
+               `$$\\lim_{h\\to 0} \\frac{\\sin(x+h) - \\sin(x)}{h} = \\lim_{h\\to 0} \\frac{2\\cos\\left(x + \\frac{h}{2}\\right)\\sin\\left(\\frac{h}{2}\\right)}{h} = \\cos(x)$$\n\n` +
+               `$$\\boxed{\\frac{d}{dx}\\sin(x) = \\cos(x)}$$`;
+      }
+      if (expr === 'cos(x)' || expr === 'cosx') {
+        return `### 📐 Calculus: Derivative of Cosine (${tag})\n\n` +
+               `$$\\frac{d}{dx}\\cos(x) = -\\sin(x)$$\n\n` +
+               `$$\\boxed{\\frac{d}{dx}\\cos(x) = -\\sin(x)}$$`;
+      }
+      if (expr === 'e^x' || expr === 'exp(x)') {
+        return `### 📐 Calculus: Exponential Derivative (${tag})\n\n` +
+               `The exponential function $e^x$ is the unique non-trivial eigenfunction of the differential operator:\n\n` +
+               `$$\\frac{d}{dx} e^x = e^x$$\n\n` +
+               `$$\\boxed{\\frac{d}{dx} e^x = e^x}$$`;
+      }
+      if (expr === 'ln(x)' || expr === 'log(x)') {
+        return `### 📐 Calculus: Natural Logarithm Derivative (${tag})\n\n` +
+               `$$\\frac{d}{dx}\\ln(x) = \\frac{1}{x} \\quad (x > 0)$$\n\n` +
+               `$$\\boxed{\\frac{d}{dx}\\ln(x) = \\frac{1}{x}}$$`;
+      }
+    }
+
+    // 7. Calculus Integrals: "integral of x^2", "integrate sin(x)"
+    const intMatch = lp.match(/(?:integral|integrate)\s*(?:of)?\s*([a-z0-9\^\*\+\-\/\s\(\)]+)/);
+    if (intMatch) {
+      const expr = intMatch[1].trim();
+      const powPoly = expr.match(/^x\^(\d+)$/);
+      if (powPoly) {
+        const n = parseInt(powPoly[1], 10);
+        const newExp = n + 1;
+        return `### 📐 Calculus: Indefinite Integral (${tag})\n\n` +
+               `To evaluate $\\int x^{${n}} \\, dx$:\n\n` +
+               `**1. Reverse Power Rule**:\n` +
+               `$$\\int x^n \\, dx = \\frac{x^{n+1}}{n+1} + C \\quad (n \\ne -1)$$\n\n` +
+               `**2. Evaluation**:\n` +
+               `$$\\int x^{${n}} \\, dx = \\frac{x^{${newExp}}}{${newExp}} + C$$\n\n` +
+               `$$\\boxed{\\int x^{${n}} \\, dx = \\frac{x^{${newExp}}}{${newExp}} + C}$$`;
+      }
+      if (expr === 'x') {
+        return `### 📐 Calculus: Indefinite Integral of $x$ (${tag})\n\n` +
+               `$$\\int x \\, dx = \\frac{x^2}{2} + C$$\n\n` +
+               `$$\\boxed{\\int x \\, dx = \\frac{x^2}{2} + C}$$`;
+      }
+      if (expr === 'sin(x)' || expr === 'sinx') {
+        return `### 📐 Calculus: Indefinite Integral of $\\sin(x)$ (${tag})\n\n` +
+               `$$\\int \\sin(x) \\, dx = -\\cos(x) + C$$\n\n` +
+               `$$\\boxed{\\int \\sin(x) \\, dx = -\\cos(x) + C}$$`;
+      }
+      if (expr === 'cos(x)' || expr === 'cosx') {
+        return `### 📐 Calculus: Indefinite Integral of $\\cos(x)$ (${tag})\n\n` +
+               `$$\\int \\cos(x) \\, dx = \\sin(x) + C$$\n\n` +
+               `$$\\boxed{\\int \\cos(x) \\, dx = \\sin(x) + C}$$`;
+      }
+      if (expr === 'e^x') {
+        return `### 📐 Calculus: Integral of Exponential (${tag})\n\n` +
+               `$$\\int e^x \\, dx = e^x + C$$\n\n` +
+               `$$\\boxed{\\int e^x \\, dx = e^x + C}$$`;
+      }
+    }
+
+    // 8. Quadratic Formula Solver: "solve x^2 - 5x + 6 = 0"
+    const quadMatch = lp.match(/(?:solve\s*)?([+-]?\s*\d*)\s*x\^2\s*([+-]\s*\d*)\s*x\s*([+-]\s*\d+)\s*=\s*0/);
+    if (quadMatch) {
+      const parseCoeff = (s, def) => {
+        if (!s || s.trim() === '' || s.trim() === '+') return def;
+        if (s.trim() === '-') return -def;
+        return parseFloat(s.replace(/\s+/g, ''));
+      };
+      const a = parseCoeff(quadMatch[1], 1);
+      const b = parseCoeff(quadMatch[2], 1);
+      const c = parseCoeff(quadMatch[3], 0);
+
+      const disc = b * b - 4 * a * c;
+      let rootText = '';
+      if (disc > 0) {
+        const r1 = ((-b + Math.sqrt(disc)) / (2 * a)).toFixed(4).replace(/\.?0+$/, '');
+        const r2 = ((-b - Math.sqrt(disc)) / (2 * a)).toFixed(4).replace(/\.?0+$/, '');
+        rootText = `Two Distinct Real Roots:\n\n$$x_1 = ${r1}, \\quad x_2 = ${r2}$$\n\n$$\\boxed{x = \\{${r1}, ${r2}\\}}$$`;
+      } else if (disc === 0) {
+        const r = (-b / (2 * a)).toFixed(4).replace(/\.?0+$/, '');
+        rootText = `One Repeated Real Root:\n\n$$x = ${r}$$\n\n$$\\boxed{x = ${r}}$$`;
+      } else {
+        const realPart = (-b / (2 * a)).toFixed(3);
+        const imagPart = (Math.sqrt(-disc) / (2 * a)).toFixed(3);
+        rootText = `Two Complex Conjugate Roots:\n\n$$x = ${realPart} \\pm ${imagPart}i$$\n\n$$\\boxed{x = ${realPart} \\pm ${imagPart}i}$$`;
+      }
+
+      return `### 📐 Quadratic Equation Analytical Proof (${tag})\n\n` +
+             `Given the second-degree polynomial equation:\n` +
+             `$$${a === 1 ? '' : a === -1 ? '-' : a}x^2 ${b >= 0 ? '+ ' + b : '- ' + Math.abs(b)}x ${c >= 0 ? '+ ' + c : '- ' + Math.abs(c)} = 0$$\n\n` +
+             `**1. Discriminant Calculation**:\n` +
+             `$$\\Delta = b^2 - 4ac = (${b})^2 - 4(${a})(${c}) = ${disc}$$\n\n` +
+             `**2. Quadratic Root Theorem**:\n` +
+             `$$x = \\frac{-b \\pm \\sqrt{\\Delta}}{2a} = \\frac{-(${b}) \\pm \\sqrt{${disc}}}{2(${a})}$$\n\n` +
+             `**3. Solutions**:\n` +
+             rootText;
+    }
+
+    // 9. Special Trigonometric Values: "sin(30)", "cos(60)", "tan(45)"
+    const trigMatch = lp.match(/\b(sin|cos|tan)\s*\(?\s*(\d+)(?:\s*(?:deg|degrees|°))?\s*\)?/);
+    if (trigMatch) {
+      const fn = trigMatch[1];
+      const deg = parseInt(trigMatch[2], 10);
+      const trigTable = {
+        'sin_0': '0', 'sin_30': '\\frac{1}{2} = 0.5', 'sin_45': '\\frac{\\sqrt{2}}{2} \\approx 0.7071', 'sin_60': '\\frac{\\sqrt{3}}{2} \\approx 0.8660', 'sin_90': '1', 'sin_180': '0',
+        'cos_0': '1', 'cos_30': '\\frac{\\sqrt{3}}{2} \\approx 0.8660', 'cos_45': '\\frac{\\sqrt{2}}{2} \\approx 0.7071', 'cos_60': '\\frac{1}{2} = 0.5', 'cos_90': '0', 'cos_180': '-1',
+        'tan_0': '0', 'tan_30': '\\frac{1}{\\sqrt{3}} \\approx 0.5774', 'tan_45': '1', 'tan_60': '\\sqrt{3} \\approx 1.732', 'tan_90': '\\text{Undefined (Asymptote)}'
+      };
+      const key = `${fn}_${deg}`;
+      if (trigTable[key]) {
+        return `### 📐 Exact Trigonometric Ratio (${tag})\n\n` +
+               `$$\\${fn}(${deg}^\\circ) = ${trigTable[key]}$$\n\n` +
+               `$$\\boxed{\\${fn}(${deg}^\\circ) = ${trigTable[key]}}$$`;
+      }
+    }
+
     return null;
   }
 
@@ -941,7 +1094,208 @@ export default function StandaloneSnakeGame() {
 \`\`\``;
       }
 
-      // 5C. Generic High Quality React Dashboard
+      // 5C. Algorithmic Implementations (Binary Search, QuickSort, LRU Cache, Debounce)
+      if (lp.includes('binary search') || lp.includes('bsearch')) {
+        return `### ⚡ Binary Search Algorithm (${tag})
+
+Binary search is an optimal $O(\\log n)$ search algorithm operating on a sorted contiguous array.
+
+\`\`\`python
+from typing import List, Optional
+
+def binary_search(arr: List[int], target: int) -> Optional[int]:
+    """
+    Performs binary search on a sorted list of integers.
+    Returns the 0-based index if target is found, otherwise None.
+    
+    Time Complexity: O(log n)
+    Space Complexity: O(1) auxiliary space
+    """
+    left, right = 0, len(arr) - 1
+
+    while left <= right:
+        # Prevent potential integer overflow
+        mid = left + (right - left) // 2
+
+        if arr[mid] == target:
+            return mid
+        elif arr[mid] < target:
+            left = mid + 1
+        else:
+            right = mid - 1
+
+    return None
+
+# --- Verification & Unit Tests ---
+def test_binary_search():
+    data = [2, 5, 8, 12, 16, 23, 38, 56, 72, 91]
+    assert binary_search(data, 23) == 5, "Target in middle failed"
+    assert binary_search(data, 2) == 0, "Target at start failed"
+    assert binary_search(data, 91) == 9, "Target at end failed"
+    assert binary_search(data, 50) is None, "Missing target failed"
+    assert binary_search([], 10) is None, "Empty array failed"
+    print("✅ All binary search assertions verified!")
+
+if __name__ == "__main__":
+    test_binary_search()
+\`\`\`
+
+**Complexity Analysis**:
+- **Best Case**: $O(1)$ when target is at the initial median.
+- **Worst / Average Case**: $O(\\log n)$ because the search interval is halved on every comparison: $N \\to N/2 \\to N/4 \\to \\dots \\to 1$.
+- **Space**: $O(1)$ iterative in-place pointer manipulation.`;
+      }
+
+      if (lp.includes('quicksort') || lp.includes('quick sort')) {
+        return `### ⚡ QuickSort In-Place Algorithm (${tag})
+
+QuickSort is an efficient divide-and-conquer sorting algorithm using Hoare partitioning.
+
+\`\`\`python
+from typing import List
+import random
+
+def quicksort(arr: List[int]) -> List[int]:
+    """
+    In-place randomized QuickSort.
+    Average Time: O(n log n) | Worst Case: O(n^2) with adversarial pivots
+    Auxiliary Space: O(log n) stack frames
+    """
+    def _quicksort(items: List[int], low: int, high: int):
+        if low < high:
+            pivot_idx = _partition(items, low, high)
+            _quicksort(items, low, pivot_idx - 1)
+            _quicksort(items, pivot_idx + 1, high)
+
+    def _partition(items: List[int], low: int, high: int) -> int:
+        # Randomized pivot avoids O(n^2) regression on pre-sorted arrays
+        rand_pivot = random.randint(low, high)
+        items[rand_pivot], items[high] = items[high], items[rand_pivot]
+        pivot = items[high]
+        
+        i = low - 1
+        for j in range(low, high):
+            if items[j] <= pivot:
+                i += 1
+                items[i], items[j] = items[j], items[i]
+                
+        items[i + 1], items[high] = items[high], items[i + 1]
+        return i + 1
+
+    _quicksort(arr, 0, len(arr) - 1)
+    return arr
+
+# Test verification
+if __name__ == "__main__":
+    test_arr = [64, 34, 25, 12, 22, 11, 90, -4, 0]
+    sorted_arr = quicksort(test_arr)
+    assert sorted_arr == sorted(test_arr), "QuickSort verification failed"
+    print("✅ QuickSort Result:", sorted_arr)
+\`\`\``;
+      }
+
+      if (lp.includes('lru cache') || lp.includes('lru')) {
+        return `### ⚡ LRU (Least Recently Used) Cache (${tag})
+
+An optimal LRU Cache implementation achieving **$O(1)$ get and $O(1)$ put** using a Doubly Linked List paired with a Hash Map.
+
+\`\`\`python
+class Node:
+    def __init__(self, key: int = 0, val: int = 0):
+        self.key = key
+        self.val = val
+        self.prev = None
+        self.next = None
+
+class LRUCache:
+    def __init__(self, capacity: int):
+        self.cap = capacity
+        self.cache = {}  # key -> Node
+        # Sentinel dummy nodes eliminate edge-case head/tail checks
+        self.head = Node()
+        self.tail = Node()
+        self.head.next = self.tail
+        self.tail.prev = self.head
+
+    def _remove(self, node: Node):
+        node.prev.next = node.next
+        node.next.prev = node.prev
+
+    def _insert_front(self, node: Node):
+        node.next = self.head.next
+        node.prev = self.head
+        self.head.next.prev = node
+        self.head.next = node
+
+    def get(self, key: int) -> int:
+        if key in self.cache:
+            node = self.cache[key]
+            self._remove(node)
+            self._insert_front(node)
+            return node.val
+        return -1
+
+    def put(self, key: int, value: int) -> None:
+        if key in self.cache:
+            self._remove(self.cache[key])
+        
+        node = Node(key, value)
+        self.cache[key] = node
+        self._insert_front(node)
+
+        if len(self.cache) > self.cap:
+            lru = self.tail.prev
+            self._remove(lru)
+            del self.cache[lru.key]
+
+# --- Verification ---
+if __name__ == "__main__":
+    lru = LRUCache(2)
+    lru.put(1, 1)
+    lru.put(2, 2)
+    assert lru.get(1) == 1
+    lru.put(3, 3)  # evicts key 2
+    assert lru.get(2) == -1
+    print("✅ LRU Cache O(1) operations verified successfully!")
+\`\`\``;
+      }
+
+      if (lp.includes('debounce')) {
+        return `### ⚡ Production JavaScript Debounce & Throttle (${tag})
+
+\`\`\`javascript
+/**
+ * Debounces a function call by waiting \`waitMs\` after the last invocation.
+ * @param {Function} func The target callback
+ * @param {number} waitMs Delay in milliseconds
+ * @param {boolean} immediate Whether to trigger on leading edge
+ */
+export function debounce(func, waitMs = 300, immediate = false) {
+  let timeoutId = null;
+
+  function debounced(...args) {
+    const callNow = immediate && !timeoutId;
+    clearTimeout(timeoutId);
+
+    timeoutId = setTimeout(() => {
+      timeoutId = null;
+      if (!immediate) func.apply(this, args);
+    }, waitMs);
+
+    if (callNow) func.apply(this, args);
+  }
+
+  debounced.cancel = () => {
+    clearTimeout(timeoutId);
+    timeoutId = null;
+  };
+
+  return debounced;
+}
+\`\`\``;
+      }
+
+      // 5D. Generic High Quality React Dashboard
       return `### ⚡ On-Device Production Component (${tag})
 
 Here is your production-ready, fully self-contained React 18 component:

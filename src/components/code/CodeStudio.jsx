@@ -23,15 +23,21 @@ import {
   Wand2,
   TestTube,
   Upload,
-  FileDown
+  FileDown,
+  Layers,
+  Gamepad2,
+  BarChart3
 } from 'lucide-react';
 import { DEMO_CODE_PROJECT } from '../../data/demoData';
+import { CODE_STUDIO_TEMPLATES } from '../../data/codeStudioTemplates';
 import { openrouter } from '../../services/openrouter';
 import { localNeuralEngine } from '../../services/localNeuralEngine';
 
 export default function CodeStudio({ activeModel, injectedCode, isTitanMode = false }) {
   const [project, setProject] = useState(DEMO_CODE_PROJECT);
   const [activeFileName, setActiveFileName] = useState('App.jsx');
+  const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
+  const templatesDropdownRef = useRef(null);
   const [copied, setCopied] = useState(false);
   const [pasted, setPasted] = useState(false);
   const [viewMode, setViewMode] = useState('desktop'); // 'desktop' | 'tablet' | 'mobile'
@@ -62,6 +68,33 @@ export default function CodeStudio({ activeModel, injectedCode, isTitanMode = fa
       });
     }
   }, [injectedCode]);
+
+  // Click outside listener for templates dropdown
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (templatesDropdownRef.current && !templatesDropdownRef.current.contains(e.target)) {
+        setIsTemplatesOpen(false);
+      }
+    };
+    if (isTemplatesOpen) {
+      window.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => window.removeEventListener('mousedown', handleClickOutside);
+  }, [isTemplatesOpen]);
+
+  const handleSelectTemplate = (template) => {
+    setProject(prev => ({
+      ...prev,
+      files: prev.files.map(f => f.name === 'App.jsx' ? { ...f, content: template.code } : f)
+    }));
+    setActiveFileName('App.jsx');
+    setIsTemplatesOpen(false);
+    setConsoleLogs(prev => [...prev, {
+      type: 'info',
+      text: `⚡ Loaded showcase template: ${template.name}`,
+      time: new Date().toLocaleTimeString()
+    }]);
+  };
 
   useEffect(() => {
     const handleWindowMessage = (event) => {
@@ -615,6 +648,60 @@ export default function CodeStudio({ activeModel, injectedCode, isTitanMode = fa
             <span>Import</span>
             <input type="file" accept=".json,.jsx,.js,.tsx,.ts,.py,.html,.css" onChange={handleImportCodeProject} className="hidden" />
           </label>
+
+          {/* Showcase Templates Dropdown */}
+          <div className="relative" ref={templatesDropdownRef}>
+            <button
+              onClick={() => setIsTemplatesOpen(!isTemplatesOpen)}
+              className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gradient-to-r from-cyan-500/20 to-purple-500/20 hover:from-cyan-500/30 hover:to-purple-500/30 text-white font-bold border border-cyan-500/40 text-xs font-mono transition-all cursor-pointer shadow-sm"
+              title="Select a pre-built interactive demo for presentation"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+              <span>⚡ Templates</span>
+              <ChevronDown className={`w-3 h-3 text-cyan-400 transition-transform ${isTemplatesOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {isTemplatesOpen && (
+              <div className="absolute left-0 mt-1.5 w-72 rounded-2xl bg-[#080B17] border border-cyan-500/40 shadow-2xl shadow-glow-cyan/20 p-2 z-50 animate-fadeIn backdrop-blur-2xl">
+                <div className="px-2.5 py-1.5 border-b border-white/10 mb-1 flex items-center justify-between">
+                  <span className="text-[10px] font-mono uppercase text-gray-400 font-bold tracking-wider">
+                    Office Showcase Demos
+                  </span>
+                  <span className="text-[10px] font-mono text-cyan-400">1-Click Live</span>
+                </div>
+
+                <div className="space-y-1">
+                  {CODE_STUDIO_TEMPLATES.map(t => (
+                    <button
+                      key={t.id}
+                      onClick={() => handleSelectTemplate(t)}
+                      className="w-full text-left p-2.5 rounded-xl hover:bg-white/[0.06] border border-transparent hover:border-cyan-500/30 transition-all flex items-start gap-2.5 group cursor-pointer"
+                    >
+                      <div className="p-1.5 rounded-lg bg-cyan-500/10 text-cyan-400 group-hover:bg-cyan-500/20 shrink-0 mt-0.5">
+                        {t.id === 'cyber-snake' ? <Gamepad2 className="w-4 h-4 text-emerald-400" /> :
+                         t.id === 'saas-dashboard' ? <BarChart3 className="w-4 h-4 text-cyan-400" /> :
+                         t.id === 'agile-kanban' ? <Layers className="w-4 h-4 text-purple-400" /> :
+                         <Sparkles className="w-4 h-4 text-amber-400" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-1">
+                          <span className="text-xs font-bold text-white group-hover:text-cyan-300 truncate">
+                            {t.name}
+                          </span>
+                          <span className="text-[9px] px-1.5 py-0.2 rounded bg-white/10 text-gray-300 shrink-0">
+                            {t.tag}
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-gray-400 line-clamp-2 mt-0.5 leading-snug">
+                          {t.description}
+                        </p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Viewport switcher & 1-Click Code Actions */}

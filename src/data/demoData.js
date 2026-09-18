@@ -223,6 +223,62 @@ export const DEMO_MATH_PROBLEMS = [
         explanation: 'The Gaussian is an eigenfunction of the Fourier operator with eigenvalue $\\sqrt{2\\pi}$.'
       }
     ]
+  },
+  {
+    id: 'basel-problem',
+    title: "Euler's Basel Problem & Weierstrass Sine Product",
+    category: 'Infinite Series & Complex Analysis',
+    difficulty: 'Eulerian Classical Rigor',
+    formula: '\\sum_{n=1}^\\infty \\frac{1}{n^2} = 1 + \\frac{1}{4} + \\frac{1}{9} + \\frac{1}{16} + \\cdots = \\frac{\\pi^2}{6}',
+    plotFunction: 'Math.sin(x) / (x || 0.001)',
+    steps: [
+      {
+        step: 1,
+        title: 'Weierstrass Infinite Product for Sine',
+        math: '\\frac{\\sin(x)}{x} = \\prod_{n=1}^\\infty \\left(1 - \\frac{x^2}{n^2 \\pi^2}\\right) = \\left(1 - \\frac{x^2}{\\pi^2}\\right)\\left(1 - \\frac{x^2}{4\\pi^2}\\right)\\cdots',
+        explanation: 'Expressing the sine function as an infinite polynomial expansion through its real roots $\\pm n\\pi$.'
+      },
+      {
+        step: 2,
+        title: 'Taylor Series Expansion & Coefficient Equating',
+        math: '\\frac{\\sin(x)}{x} = 1 - \\frac{x^2}{3!} + \\frac{x^4}{5!} - \\cdots = 1 - \\frac{x^2}{6} + \\mathcal{O}(x^4)',
+        explanation: 'Comparing the quadratic coefficient $x^2$ between the Maclaurin series and the expanded infinite product.'
+      },
+      {
+        step: 3,
+        title: 'Exact Closed-Form Convergence',
+        math: '-\\frac{1}{6} = -\\sum_{n=1}^\\infty \\frac{1}{n^2 \\pi^2} \\implies \\sum_{n=1}^\\infty \\frac{1}{n^2} = \\frac{\\pi^2}{6}',
+        explanation: 'Multiplying both sides by $-\\pi^2$ confirms Euler\'s landmark solution.'
+      }
+    ]
+  },
+  {
+    id: 'quantum-infinite-well',
+    title: 'Quantum Particle in a 1D Infinite Potential Well',
+    category: 'Quantum Mechanics & Boundary Value ODEs',
+    difficulty: 'Hamiltonian Bound States',
+    formula: 'E_n = \\frac{n^2 \\pi^2 \\hbar^2}{2m L^2}, \\qquad \\psi_n(x) = \\sqrt{\\frac{2}{L}} \\sin\\left(\\frac{n \\pi x}{L}\\right)',
+    plotFunction: 'Math.sqrt(2) * Math.sin(Math.PI * (x + 5) / 10)',
+    steps: [
+      {
+        step: 1,
+        title: 'Time-Independent Schrödinger Equation',
+        math: '-\\frac{\\hbar^2}{2m} \\frac{d^2 \\psi(x)}{dx^2} = E \\psi(x), \\quad 0 < x < L',
+        explanation: 'Within the well where potential $V(x) = 0$, wavefunctions satisfy harmonic oscillation $k = \\sqrt{2mE}/\\hbar$.'
+      },
+      {
+        step: 2,
+        title: 'Dirichlet Boundary Conditions',
+        math: '\\psi(0) = 0 \\implies B = 0, \\quad \\psi(L) = A\\sin(kL) = 0 \\implies k_n = \\frac{n\\pi}{L}',
+        explanation: 'Quantization emerges naturally from spatial confinement conditions at the infinite potential barriers.'
+      },
+      {
+        step: 3,
+        title: 'Orthonormal Probability Density',
+        math: '\\int_0^L |\\psi_n(x)|^2 dx = 1 \\implies A = \\sqrt{\\frac{2}{L}}',
+        explanation: 'Normalizing the wavepackets yields discrete orthogonal standing eigenstates.'
+      }
+    ]
   }
 ];
 

@@ -35,6 +35,9 @@ export default function SettingsModal({ isOpen, onClose, onApiKeyUpdated }) {
   const [syncStatus, setSyncStatus] = useState(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [dynamicRegistry, setDynamicRegistry] = useState(universalApiEngine.getDynamicRegistry());
+  const [alwaysDirectChat, setAlwaysDirectChat] = useState(() => {
+    try { return localStorage.getItem('girionix_always_direct_chat') === 'true'; } catch (_) { return false; }
+  });
   const [savedSuccess, setSavedSuccess] = useState(false);
 
   useEffect(() => {
@@ -50,6 +53,7 @@ export default function SettingsModal({ isOpen, onClose, onApiKeyUpdated }) {
       setVerificationStatus(null);
       setSyncStatus(null);
       setDynamicRegistry(universalApiEngine.getDynamicRegistry());
+      setAlwaysDirectChat(localStorage.getItem('girionix_always_direct_chat') === 'true');
       setSavedSuccess(false);
     }
   }, [isOpen]);
@@ -128,6 +132,10 @@ export default function SettingsModal({ isOpen, onClose, onApiKeyUpdated }) {
     if (newReplicateToken.trim()) {
       storage.setReplicateToken(newReplicateToken.trim());
     }
+
+    try {
+      localStorage.setItem('girionix_always_direct_chat', alwaysDirectChat ? 'true' : 'false');
+    } catch (_) {}
 
     storage.saveSettings(settings);
     setSavedSuccess(true);
@@ -393,7 +401,48 @@ export default function SettingsModal({ isOpen, onClose, onApiKeyUpdated }) {
             </div>
           </div>
 
-          {/* 3. VOICE ACOUSTICS & HYPERPARAMETERS */}
+          {/* 3. STARTUP & WORKSPACE ROUTING PREFERENCE */}
+          <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-mono uppercase text-gray-400 tracking-wider flex items-center gap-1.5 font-bold">
+                <Globe className="w-4 h-4 text-cyan-400" />
+                <span>Startup Landing Page & Routing</span>
+              </span>
+              <span className="text-[10px] font-mono text-cyan-400">Direct Workspace</span>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 flex items-center justify-between gap-3">
+              <div className="space-y-0.5">
+                <div className="text-xs font-bold text-white flex items-center gap-2">
+                  <span>Start directly in Chat Workspace (/chat)</span>
+                  {alwaysDirectChat && (
+                    <span className="px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 text-[9px] font-mono border border-cyan-500/30">
+                      Active
+                    </span>
+                  )}
+                </div>
+                <div className="text-[11px] text-gray-400 font-sans">
+                  When enabled, visiting <code className="text-cyan-300">https://girionix-ai.pages.dev</code> bypasses the announcement page and opens Chat immediately.
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setAlwaysDirectChat(!alwaysDirectChat)}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                  alwaysDirectChat ? 'bg-cyan-500 shadow-glow-cyan' : 'bg-white/10'
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                    alwaysDirectChat ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+
+          {/* 4. VOICE ACOUSTICS & HYPERPARAMETERS */}
           <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 space-y-4">
             <h3 className="text-xs font-mono uppercase text-gray-400 tracking-wider flex items-center gap-2 font-bold">
               <Volume2 className="w-4 h-4 text-cyan-400" />

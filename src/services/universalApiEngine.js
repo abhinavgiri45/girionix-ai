@@ -34,45 +34,45 @@ const LEGACY_STORAGE_KEYS = {
 // Default latest baseline models
 export const DEFAULT_MODEL_FAMILIES = {
   frontier: {
-    name: 'Frontier Flagship Intelligence (MiniMax M3 / 550B)',
-    currentId: 'minimax/minimax-m3:free',
-    fallbackId: 'nvidia/nemotron-3-ultra-550b-a55b:free',
-    patterns: [/minimax-m3/i, /nemotron-3-ultra/i, /claude-4/i, /claude-3\.7/i, /deepseek-r1/i, /deepseek-r2/i, /o3/i, /o1/i, /gpt-5/i, /gpt-4\.5/i],
+    name: 'Frontier Flagship Intelligence (DeepSeek R1 / 671B)',
+    currentId: 'deepseek/deepseek-r1:free',
+    fallbackId: 'meta-llama/llama-3.3-70b-instruct:free',
+    patterns: [/deepseek-r1/i, /deepseek-r2/i, /minimax-m3/i, /claude-3\.7/i, /o3/i, /gpt-4\.5/i],
     category: 'reasoning'
   },
   coding: {
-    name: 'Superhuman Coding Engine (Cohere / Claude 3.7)',
-    currentId: 'cohere/north-mini-code:free',
-    fallbackId: 'anthropic/claude-3.7-sonnet',
-    patterns: [/north-mini-code/i, /claude-4/i, /claude-3\.7-sonnet/i, /qwen-2\.5-coder/i, /deepseek-coder/i, /codestral/i],
+    name: 'Superhuman Coding Engine (Qwen 2.5 Coder 32B / Claude 3.7)',
+    currentId: 'qwen/qwen-2.5-coder-32b-instruct:free',
+    fallbackId: 'meta-llama/llama-3.3-70b-instruct:free',
+    patterns: [/qwen-2\.5-coder/i, /deepseek-coder/i, /claude-3\.7-sonnet/i, /codestral/i],
     category: 'coding'
   },
   math: {
-    name: 'Olympiad Math & Formal Logic (30B Omni Reasoning / o3-mini)',
-    currentId: 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free',
-    fallbackId: 'openai/o3-mini',
-    patterns: [/nemotron-3-nano/i, /o3/i, /o1/i, /deepseek-r1/i, /qwq-32b/i],
+    name: 'Olympiad Math & Formal Logic (DeepSeek R1 / Formal Reasoner)',
+    currentId: 'deepseek/deepseek-r1:free',
+    fallbackId: 'meta-llama/llama-3.3-70b-instruct:free',
+    patterns: [/deepseek-r1/i, /o3/i, /o1/i, /qwq-32b/i, /nemotron/i],
     category: 'reasoning'
   },
   multimodal: {
-    name: 'Omnimodal Vision & Analysis (GPT-4o / Gemini 2.0)',
+    name: 'Omnimodal Vision & Analysis (MiniMax M3 / Gemini 2.0)',
     currentId: 'minimax/minimax-m3:free',
-    fallbackId: 'openai/gpt-4o',
-    patterns: [/minimax-m3/i, /gpt-5/i, /gpt-4\.5/i, /gpt-4o/i, /gemini-2\.0-flash/i, /claude-3\.7/i],
+    fallbackId: 'google/gemini-2.0-flash-exp:free',
+    patterns: [/minimax-m3/i, /gpt-4o/i, /gemini-2\.0/i, /claude-3\.7/i],
     category: 'multimodal'
   },
   fast: {
-    name: 'High-Speed Low Latency & High Accuracy',
-    currentId: 'minimax/minimax-m3:free',
-    fallbackId: 'dots-studio/dots-3-note-preview:free',
-    patterns: [/minimax-m3/i, /dots-3-note/i, /gemini-2\.0-flash/i, /gpt-4o-mini/i, /llama-3\.3-70b/i],
+    name: 'High-Speed Low Latency (Llama 3.3 70B Instant)',
+    currentId: 'meta-llama/llama-3.3-70b-instruct:free',
+    fallbackId: 'google/gemini-2.0-flash-exp:free',
+    patterns: [/llama-3\.3-70b/i, /gemini-2\.0-flash/i, /minimax-m3/i, /gpt-4o-mini/i],
     category: 'fast'
   },
   script: {
-    name: 'Screenplay & Narrative Cinema (MiniMax M3 / Claude 3.7)',
-    currentId: 'minimax/minimax-m3:free',
-    fallbackId: 'anthropic/claude-3.7-sonnet',
-    patterns: [/minimax-m3/i, /claude-4/i, /claude-3\.7-sonnet/i, /gpt-4o/i],
+    name: 'Screenplay & Narrative Cinema (DeepSeek R1 / MiniMax M3)',
+    currentId: 'deepseek/deepseek-r1:free',
+    fallbackId: 'minimax/minimax-m3:free',
+    patterns: [/deepseek-r1/i, /minimax-m3/i, /claude-3\.7-sonnet/i],
     category: 'script'
   }
 };
@@ -398,29 +398,31 @@ export const universalApiEngine = {
     }
 
     if (!config.autoUpgradeEnabled) {
-      if (requestedModelId === 'girionix-pro') return 'minimax/minimax-m3:free';
-      if (requestedModelId === 'girionix-lite') return 'minimax/minimax-m3:free';
+      if (requestedModelId === 'girionix-pro') return 'deepseek/deepseek-r1:free';
+      if (requestedModelId === 'girionix-lite') return 'meta-llama/llama-3.3-70b-instruct:free';
       return requestedModelId;
     }
 
+    const registry = this.getDynamicRegistry() || {};
+
     // Auto-Frontier / Universal Flagship
     if (requestedModelId === 'girionix-universal-auto' || requestedModelId === 'girionix-pro') {
-      return registry.frontier?.currentId || 'minimax/minimax-m3:free';
+      return registry.frontier?.currentId || 'deepseek/deepseek-r1:free';
     }
 
     // High-Speed / Visual Engine
     if (requestedModelId === 'girionix-lite') {
-      return registry.fast?.currentId || 'minimax/minimax-m3:free';
+      return registry.fast?.currentId || 'meta-llama/llama-3.3-70b-instruct:free';
     }
 
     // Dedicated Coding Studio
     if (requestedModelId === 'girionix-codemaster-ultra' || requestedModelId === 'anthropic/claude-3.7-sonnet') {
-      return registry.coding?.currentId || 'cohere/north-mini-code:free';
+      return registry.coding?.currentId || 'qwen/qwen-2.5-coder-32b-instruct:free';
     }
 
     // Math Lab Olympiad
     if (requestedModelId === 'girionix-mathx-olympiad' || requestedModelId === 'openai/o3-mini') {
-      return registry.math?.currentId || 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free';
+      return registry.math?.currentId || 'deepseek/deepseek-r1:free';
     }
 
     // Screenplay & Script Studio

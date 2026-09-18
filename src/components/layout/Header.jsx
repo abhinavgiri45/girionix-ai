@@ -19,7 +19,10 @@ import {
   Zap,
   Copy,
   Check,
-  Share2
+  Share2,
+  Gamepad2,
+  BarChart3,
+  Presentation
 } from 'lucide-react';
 import { storage } from '../../services/storage';
 
@@ -41,7 +44,8 @@ export default function Header({
   isAppInstalled,
   isTitanMode,
   onToggleTitanMode,
-  onOpenWhySwitch
+  onOpenWhySwitch,
+  onLaunchOfficeDemo
 }) {
   const [isToolsDropdownOpen, setIsToolsDropdownOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -312,6 +316,57 @@ export default function Header({
                   <div className="text-[10px] text-gray-400 truncate">https://girionix-ai.pages.dev/chat</div>
                 </div>
               </button>
+
+              {/* Office Presentation Showcase Launcher */}
+              {onLaunchOfficeDemo && (
+                <div className="p-2 rounded-xl bg-gradient-to-br from-cyan-950/40 via-purple-950/30 to-black/60 border border-cyan-500/30 my-1 space-y-1.5">
+                  <div className="flex items-center justify-between px-1 text-[10px] font-mono text-cyan-400 font-bold uppercase tracking-wider">
+                    <span className="flex items-center gap-1">
+                      <Presentation className="w-3.5 h-3.5 text-cyan-400" />
+                      <span>Office Demo Showcase</span>
+                    </span>
+                    <span className="text-[9px] text-emerald-400">1-Click Live</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-1 text-[11px] font-mono">
+                    <button
+                      onClick={() => { setIsToolsDropdownOpen(false); onLaunchOfficeDemo('code-snake'); }}
+                      className="p-1.5 rounded-lg bg-white/5 hover:bg-cyan-500/20 text-gray-300 hover:text-white flex items-center gap-1.5 transition-colors text-left truncate cursor-pointer"
+                      title="Run Cyber Snake Game in Coding Studio"
+                    >
+                      <Gamepad2 className="w-3 h-3 text-emerald-400 shrink-0" />
+                      <span className="truncate">Cyber Snake</span>
+                    </button>
+
+                    <button
+                      onClick={() => { setIsToolsDropdownOpen(false); onLaunchOfficeDemo('code-dashboard'); }}
+                      className="p-1.5 rounded-lg bg-white/5 hover:bg-cyan-500/20 text-gray-300 hover:text-white flex items-center gap-1.5 transition-colors text-left truncate cursor-pointer"
+                      title="Run SaaS Analytics Dashboard in Coding Studio"
+                    >
+                      <BarChart3 className="w-3 h-3 text-cyan-400 shrink-0" />
+                      <span className="truncate">Analytics UI</span>
+                    </button>
+
+                    <button
+                      onClick={() => { setIsToolsDropdownOpen(false); onLaunchOfficeDemo('code-kanban'); }}
+                      className="p-1.5 rounded-lg bg-white/5 hover:bg-cyan-500/20 text-gray-300 hover:text-white flex items-center gap-1.5 transition-colors text-left truncate cursor-pointer"
+                      title="Run Agile Kanban Board in Coding Studio"
+                    >
+                      <Columns2 className="w-3 h-3 text-purple-400 shrink-0" />
+                      <span className="truncate">Kanban Board</span>
+                    </button>
+
+                    <button
+                      onClick={() => { setIsToolsDropdownOpen(false); onLaunchOfficeDemo('math-lab'); }}
+                      className="p-1.5 rounded-lg bg-white/5 hover:bg-cyan-500/20 text-gray-300 hover:text-white flex items-center gap-1.5 transition-colors text-left truncate cursor-pointer"
+                      title="Open Olympiad Math Lab & Surface Plotter"
+                    >
+                      <Activity className="w-3 h-3 text-amber-400 shrink-0" />
+                      <span className="truncate">Math Lab</span>
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* 1. API & Cloud Gateway */}
               {onOpenSettings && (

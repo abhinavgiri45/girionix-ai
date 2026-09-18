@@ -20,6 +20,7 @@ import MobileBottomNav from './components/layout/MobileBottomNav';
 import SettingsModal from './components/settings/SettingsModal';
 
 import { AI_MODELS, TITAN_AI_MODELS } from './services/modelCatalog';
+import { CODE_STUDIO_TEMPLATES } from './data/codeStudioTemplates';
 import { storage } from './services/storage';
 import { updateService } from './services/updateService';
 
@@ -108,6 +109,12 @@ export default function App() {
       const path = window.location.pathname.toLowerCase().replace(/\/+$/, '');
       const params = new URLSearchParams(window.location.search);
       
+      // User preference: Always open Chat workspace directly without going to landing page
+      const alwaysDirectChat = localStorage.getItem('girionix_always_direct_chat') === 'true';
+      if (alwaysDirectChat && (path === '' || path === '/' || path === '/chat' || path === '/workspace')) {
+        return false;
+      }
+
       // Dedicated workspace paths bypass intro completely
       if (
         path === '/chat' || 
@@ -163,6 +170,34 @@ export default function App() {
       const savedModelId = storage.getActiveModelId();
       const found = AI_MODELS.find(m => m.id === savedModelId);
       handleSetActiveModel(found || AI_MODELS[0]);
+    }
+  };
+
+  const handleLaunchOfficeDemo = (demoType) => {
+    setIsAboutOpen(false);
+    setLayoutMode('split');
+    setMobileActivePane('studio');
+
+    if (demoType === 'code-snake') {
+      setActiveStudioTab('code');
+      const template = CODE_STUDIO_TEMPLATES.find(t => t.id === 'cyber-snake');
+      if (template) setInjectedCode(template.code);
+    } else if (demoType === 'code-dashboard') {
+      setActiveStudioTab('code');
+      const template = CODE_STUDIO_TEMPLATES.find(t => t.id === 'saas-dashboard');
+      if (template) setInjectedCode(template.code);
+    } else if (demoType === 'code-kanban') {
+      setActiveStudioTab('code');
+      const template = CODE_STUDIO_TEMPLATES.find(t => t.id === 'agile-kanban');
+      if (template) setInjectedCode(template.code);
+    } else if (demoType === 'code-quantum') {
+      setActiveStudioTab('code');
+      const template = CODE_STUDIO_TEMPLATES.find(t => t.id === 'quantum-particle');
+      if (template) setInjectedCode(template.code);
+    } else if (demoType === 'math-lab') {
+      setActiveStudioTab('math');
+    } else if (demoType === 'voice-orb') {
+      setIsVoiceModeOpen(true);
     }
   };
 
@@ -428,6 +463,7 @@ export default function App() {
           isAppInstalled={isAppInstalled}
           isTitanMode={isTitanMode}
           onToggleTitanMode={handleToggleTitanMode}
+          onLaunchOfficeDemo={handleLaunchOfficeDemo}
         />
 
         {/* Mobile View Switcher when in Split Mode on small screens */}
