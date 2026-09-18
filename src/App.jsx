@@ -25,6 +25,18 @@ import { storage } from './services/storage';
 import { updateService } from './services/updateService';
 
 export default function App() {
+  const isOfficeMode = React.useMemo(() => {
+    try {
+      if (typeof window === 'undefined') return false;
+      const params = new URLSearchParams(window.location.search);
+      const isParam = params.get('mode') === 'office' || params.get('embed') === 'true' || params.get('embed') === 'office' || params.has('office');
+      const isIframe = window.self !== window.top;
+      return Boolean(isParam || isIframe);
+    } catch (_) {
+      return false;
+    }
+  }, []);
+
   const [isAppInstalled, setIsAppInstalled] = useState(() => storage.isAppInstalled());
   const [isTitanMode, setIsTitanMode] = useState(() => {
     try {
@@ -88,6 +100,9 @@ export default function App() {
     try {
       if (typeof window === 'undefined') return 'chat';
       const path = window.location.pathname.toLowerCase().replace(/\/+$/, '');
+      const params = new URLSearchParams(window.location.search);
+      const isOffice = params.get('mode') === 'office' || params.get('embed') === 'true' || params.has('office') || (window.self !== window.top);
+      if (isOffice) return 'chat';
       if (['/code', '/script', '/math', '/image', '/video', '/audio', '/studio'].includes(path)) {
         return 'split';
       }
@@ -102,42 +117,30 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [introTab, setIntroTab] = useState('overview');
 
-  // Dedicated direct URL links like https://girionix-ai.pages.dev/chat bypass the landing page immediately
+  // Direct Start: AI starts directly in the clean workspace/chat view
   const [isAboutOpen, setIsAboutOpen] = useState(() => {
     try {
-      if (typeof window === 'undefined') return true;
+      if (typeof window === 'undefined') return false;
       const path = window.location.pathname.toLowerCase().replace(/\/+$/, '');
       const params = new URLSearchParams(window.location.search);
       
-      // User preference: Always open Chat workspace directly without going to landing page
-      const alwaysDirectChat = localStorage.getItem('girionix_always_direct_chat') === 'true';
-      if (alwaysDirectChat && (path === '' || path === '/' || path === '/chat' || path === '/workspace')) {
-        return false;
-      }
-
-      // Dedicated workspace paths bypass intro completely
-      if (
-        path === '/chat' || 
-        path === '/workspace' || 
-        path === '/app' || 
-        path === '/code' || 
-        path === '/script' || 
-        path === '/math' || 
-        path === '/image' || 
-        path === '/video' || 
-        path === '/audio' || 
-        path === '/studio'
-      ) {
-        return false;
-      }
+      const isOffice = params.get('mode') === 'office' || params.get('embed') === 'true' || params.get('embed') === 'office' || params.has('office') || (window.self !== window.top);
+      if (isOffice) return false;
 
       // Skip intro if explicit native app flags or direct chat mode requested
       if (params.get('direct') === 'chat' || params.get('app') === 'true' || params.get('native') === 'true') {
         return false;
       }
-      return true;
+
+      // Explicit intro request via query param
+      if (params.get('page') === 'intro' || path === '/intro' || path === '/about') {
+        return true;
+      }
+
+      // Default: Direct start in chat workspace without landing page audio/intro
+      return false;
     } catch (_) {
-      return true;
+      return false;
     }
   });
 
@@ -155,8 +158,54 @@ export default function App() {
   const [isVoiceModeOpen, setIsVoiceModeOpen] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [isNameModalOpen, setIsNameModalOpen] = useState(false);
-  const [userName, setUserName] = useState('');
+  const [userName, setUserName] = useState(() => {
+    try {
+      return storage.getUserName() || 'Abhinav';
+    } catch (_) {
+      return 'Abhinav';
+    }
+  });
   const [injectedCode, setInjectedCode] = useState(null);
+
+  // 1-Click Bridge: Import latest AI message directly to Giri Orbit workplace (Drift, Axis, Kinetic, PDF)
+  const handleImportLatestToWorkplace = () => {
+    const curSession = sessions.find(s => s.id === activeSessionId) || sessions[0];
+    const lastMsg = curSession?.messages?.filter(m => m.role === 'assistant')?.slice(-1)[0];
+    if (lastMsg && typeof window !== 'undefined') {
+      window.parent.postMessage({
+        type: 'GIRIONIX_IMPORT_TO_WORKPLACE',
+        payload: {
+          text: lastMsg.content,
+          timestamp: Date.now()
+        }
+      }, '*');
+      try {
+        navigator.clipboard.writeText(lastMsg.content);
+      } catch (_) {}
+    }
+  };
+
+  // Bridge listener: Respond to parent window (Giri Orbit) requests for latest AI message
+  useEffect(() => {
+    const handleWindowMessage = (e) => {
+      if (!e.data || typeof e.data !== 'object') return;
+      if (e.data.type === 'GIRIONIX_REQUEST_LATEST_MESSAGE') {
+        const curSession = sessions.find(s => s.id === activeSessionId) || sessions[0];
+        const lastMsg = curSession?.messages?.filter(m => m.role === 'assistant')?.slice(-1)[0];
+        if (lastMsg && e.source) {
+          e.source.postMessage({
+            type: 'GIRIONIX_LATEST_MESSAGE_RESPONSE',
+            payload: {
+              text: lastMsg.content,
+              timestamp: Date.now()
+            }
+          }, '*');
+        }
+      }
+    };
+    window.addEventListener('message', handleWindowMessage);
+    return () => window.removeEventListener('message', handleWindowMessage);
+  }, [sessions, activeSessionId]);
 
   const handleToggleTitanMode = (enableTitan, targetModelId = null) => {
     setIsTitanMode(enableTitan);
@@ -209,11 +258,10 @@ export default function App() {
   // Load user name and settings on boot + strict app mode detection
   useEffect(() => {
     const isApp = storage.isAppInstalled();
-    const savedName = storage.getUserName();
-    if (!savedName && (storage.hasSeenIntro() || isApp)) {
+    const savedName = storage.getUserName() || 'Abhinav';
+    setUserName(savedName);
+    if (!savedName && !isOfficeMode && (storage.hasSeenIntro() || isApp)) {
       setIsNameModalOpen(true);
-    } else if (savedName) {
-      setUserName(savedName);
     }
 
     const checkAppMode = () => {
@@ -436,6 +484,7 @@ export default function App() {
         onOpenDownload={() => setIsDownloadOpen(true)}
         onOpenProStatus={() => setIsProStatusOpen(true)}
         isAppInstalled={isAppInstalled}
+        isOfficeMode={isOfficeMode}
       />
 
       {/* Main Workspace Area */}
@@ -464,6 +513,8 @@ export default function App() {
           isTitanMode={isTitanMode}
           onToggleTitanMode={handleToggleTitanMode}
           onLaunchOfficeDemo={handleLaunchOfficeDemo}
+          isOfficeMode={isOfficeMode}
+          onImportToWorkplace={handleImportLatestToWorkplace}
         />
 
         {/* Mobile View Switcher when in Split Mode on small screens */}
@@ -568,6 +619,7 @@ export default function App() {
           onOpenProStatus={() => setIsProStatusOpen(true)}
           isAppInstalled={isAppInstalled}
           isTitanMode={isTitanMode}
+          isOfficeMode={isOfficeMode}
         />
       </div>
 
@@ -663,15 +715,17 @@ export default function App() {
       />
 
       {/* Welcome Name Onboarding Modal */}
-      <WelcomeNameModal
-        isOpen={isNameModalOpen}
-        currentUserName={userName}
-        onClose={() => setIsNameModalOpen(false)}
-        onSaveName={(name) => {
-          setUserName(name);
-          setIsNameModalOpen(false);
-        }}
-      />
+      {!isOfficeMode && (
+        <WelcomeNameModal
+          isOpen={isNameModalOpen}
+          currentUserName={userName}
+          onClose={() => setIsNameModalOpen(false)}
+          onSaveName={(name) => {
+            setUserName(name);
+            setIsNameModalOpen(false);
+          }}
+        />
+      )}
 
       {/* Shortcuts Modal */}
       <ShortcutsModal

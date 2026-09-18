@@ -17,7 +17,8 @@ export default function MobileBottomNav({
   onOpenDownload,
   onOpenProStatus,
   isAppInstalled = false,
-  isTitanMode = false
+  isTitanMode = false,
+  isOfficeMode = false
 }) {
   const isChatActive = layoutMode === 'chat' || (layoutMode === 'split' && mobileActivePane === 'chat');
   const isStudioActive = layoutMode === 'studio' || (layoutMode === 'split' && mobileActivePane === 'studio');
@@ -54,25 +55,27 @@ export default function MobileBottomNav({
         <span className="text-[11px] mt-0.5 tracking-tight">Chat</span>
       </button>
 
-      {/* 2. AI Studio Tab */}
-      <button
-        onClick={handleSelectStudio}
-        className={`flex-1 flex flex-col items-center justify-center py-1.5 px-2 rounded-2xl transition-all cursor-pointer min-h-[44px] ${
-          isStudioActive
-            ? isTitanMode 
-              ? 'text-emerald-300 font-bold bg-emerald-500/10' 
-              : 'text-purple-300 font-bold bg-purple-500/10'
-            : 'text-gray-400 hover:text-white'
-        }`}
-      >
-        <div className="relative">
-          <Sparkles className={`w-5 h-5 ${isStudioActive ? (isTitanMode ? 'text-emerald-400' : 'text-purple-400') : 'text-gray-400'}`} />
-          {isStudioActive && (
-            <span className={`absolute -top-1 -right-1 w-2 h-2 rounded-full ${isTitanMode ? 'bg-emerald-400 shadow-glow-emerald' : 'bg-purple-400 shadow-glow-purple'}`} />
-          )}
-        </div>
-        <span className="text-[11px] mt-0.5 tracking-tight">AI Studio</span>
-      </button>
+      {/* 2. AI Studio Tab - Hidden in Office Mode */}
+      {!isOfficeMode && (
+        <button
+          onClick={handleSelectStudio}
+          className={`flex-1 flex flex-col items-center justify-center py-1.5 px-2 rounded-2xl transition-all cursor-pointer min-h-[44px] ${
+            isStudioActive
+              ? isTitanMode 
+                ? 'text-emerald-300 font-bold bg-emerald-500/10' 
+                : 'text-purple-300 font-bold bg-purple-500/10'
+              : 'text-gray-400 hover:text-white'
+          }`}
+        >
+          <div className="relative">
+            <Sparkles className={`w-5 h-5 ${isStudioActive ? (isTitanMode ? 'text-emerald-400' : 'text-purple-400') : 'text-gray-400'}`} />
+            {isStudioActive && (
+              <span className={`absolute -top-1 -right-1 w-2 h-2 rounded-full ${isTitanMode ? 'bg-emerald-400 shadow-glow-emerald' : 'bg-purple-400 shadow-glow-purple'}`} />
+            )}
+          </div>
+          <span className="text-[11px] mt-0.5 tracking-tight">AI Studio</span>
+        </button>
+      )}
 
       {/* 3. Tools Hub Tab */}
       <button
@@ -83,23 +86,25 @@ export default function MobileBottomNav({
         <span className="text-[11px] mt-0.5 tracking-tight">Tools</span>
       </button>
 
-      {/* 4. Get App / Pro Active Tab */}
-      <button
-        onClick={isAppInstalled ? (onOpenProStatus || onOpenDownload) : onOpenDownload}
-        className="flex-1 flex flex-col items-center justify-center py-1.5 px-2 rounded-2xl transition-all cursor-pointer min-h-[44px] text-gray-400 hover:text-white"
-      >
-        {isAppInstalled ? (
-          <>
-            <Crown className="w-5 h-5 text-amber-400 animate-pulse" />
-            <span className="text-[11px] mt-0.5 text-amber-300 font-semibold tracking-tight">Pro Active</span>
-          </>
-        ) : (
-          <>
-            <Download className="w-5 h-5 text-emerald-400" />
-            <span className="text-[11px] mt-0.5 text-emerald-300 font-semibold tracking-tight">Get App</span>
-          </>
-        )}
-      </button>
+      {/* 4. Get App / Pro Active Tab - Hidden in Office Mode */}
+      {!isOfficeMode && (
+        <button
+          onClick={isAppInstalled ? (onOpenProStatus || onOpenDownload) : onOpenDownload}
+          className="flex-1 flex flex-col items-center justify-center py-1.5 px-2 rounded-2xl transition-all cursor-pointer min-h-[44px] text-gray-400 hover:text-white"
+        >
+          {isAppInstalled ? (
+            <>
+              <Crown className="w-5 h-5 text-amber-400 animate-pulse" />
+              <span className="text-[11px] mt-0.5 text-amber-300 font-semibold tracking-tight">Pro Active</span>
+            </>
+          ) : (
+            <>
+              <Download className="w-5 h-5 text-emerald-400" />
+              <span className="text-[11px] mt-0.5 text-emerald-300 font-semibold tracking-tight">Get App</span>
+            </>
+          )}
+        </button>
+      )}
     </div>
   );
 }

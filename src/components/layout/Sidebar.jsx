@@ -31,7 +31,8 @@ export default function Sidebar({
   onOpenDownload,
   onOpenProStatus,
   isAppInstalled,
-  onOpenWhySwitch
+  onOpenWhySwitch,
+  isOfficeMode = false
 }) {
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -61,44 +62,48 @@ export default function Sidebar({
         </div>
 
         <div className="flex flex-col items-center space-y-2">
-          {onOpenDownload && (
-            isAppInstalled ? (
-              <button
-                onClick={onOpenDownload}
-                className="p-2.5 rounded-xl text-amber-400 hover:text-white hover:bg-amber-500/20 transition-colors"
-                title="Pro App Active"
-              >
-                <Crown className="w-5 h-5 animate-pulse" />
-              </button>
-            ) : (
-              <button
-                onClick={onOpenDownload}
-                className="p-2.5 rounded-xl text-emerald-400 hover:text-white hover:bg-emerald-500/20 transition-colors"
-                title="Download Apps (Android/Win/iOS/Mac)"
-              >
-                <Download className="w-5 h-5" />
-              </button>
-            )
-          )}
+          {!isOfficeMode && (
+            <>
+              {onOpenDownload && (
+                isAppInstalled ? (
+                  <button
+                    onClick={onOpenDownload}
+                    className="p-2.5 rounded-xl text-amber-400 hover:text-white hover:bg-amber-500/20 transition-colors"
+                    title="Pro App Active"
+                  >
+                    <Crown className="w-5 h-5 animate-pulse" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={onOpenDownload}
+                    className="p-2.5 rounded-xl text-emerald-400 hover:text-white hover:bg-emerald-500/20 transition-colors"
+                    title="Download Apps (Android/Win/iOS/Mac)"
+                  >
+                    <Download className="w-5 h-5" />
+                  </button>
+                )
+              )}
 
-          {onOpenWhySwitch && (
-            <button
-              onClick={onOpenWhySwitch}
-              className="p-2.5 rounded-xl text-amber-400 hover:text-white hover:bg-purple-500/20 transition-colors"
-              title="Why Switch to Girionix AI? (Model Benchmarks)"
-            >
-              <Crown className="w-5 h-5" />
-            </button>
-          )}
+              {onOpenWhySwitch && (
+                <button
+                  onClick={onOpenWhySwitch}
+                  className="p-2.5 rounded-xl text-amber-400 hover:text-white hover:bg-purple-500/20 transition-colors"
+                  title="Why Switch to Girionix AI? (Model Benchmarks)"
+                >
+                  <Crown className="w-5 h-5" />
+                </button>
+              )}
 
-          {onOpenAbout && (
-            <button
-              onClick={onOpenAbout}
-              className="p-2.5 rounded-xl text-cyan-400 hover:text-white hover:bg-cyan-500/20 transition-colors"
-              title="Introducing Girionix AI & Creator Abhinav Giri"
-            >
-              <Award className="w-5 h-5" />
-            </button>
+              {onOpenAbout && (
+                <button
+                  onClick={onOpenAbout}
+                  className="p-2.5 rounded-xl text-cyan-400 hover:text-white hover:bg-cyan-500/20 transition-colors"
+                  title="Introducing Girionix AI & Creator Abhinav Giri"
+                >
+                  <Award className="w-5 h-5" />
+                </button>
+              )}
+            </>
           )}
 
           <a
@@ -225,72 +230,76 @@ export default function Sidebar({
       </div>
 
       <div className="pt-2 border-t border-white/[0.06] space-y-1.5">
-        {isAppInstalled ? (
-          <button
-            onClick={onOpenProStatus || onOpenDownload}
-            className="w-full p-2 rounded-xl bg-amber-950/20 hover:bg-amber-950/40 border border-amber-500/20 hover:border-amber-500/40 flex items-center justify-between text-left transition-all group cursor-pointer"
-            title="Native App Active • Pro Superpowers Unlocked"
-          >
-            <div className="flex items-center gap-2">
-              <Crown className="w-4 h-4 text-amber-400 animate-pulse" />
-              <div className="flex flex-col">
-                <span className="text-xs font-bold text-white group-hover:text-amber-300">Pro Active</span>
-                <span className="text-[10px] font-mono text-amber-400/80">Local Vault Unlocked</span>
-              </div>
-            </div>
-            <ChevronRight className="w-3.5 h-3.5 text-gray-500 group-hover:text-amber-300 transition-transform" />
-          </button>
-        ) : (
-          onOpenDownload && (
-            <button
-              onClick={onOpenDownload}
-              className="w-full p-2 rounded-xl bg-white/[0.02] hover:bg-emerald-950/30 border border-white/[0.06] hover:border-emerald-500/30 flex items-center justify-between text-left transition-all group cursor-pointer"
-              title="Download Android, Windows, iOS, Mac, Linux Apps"
-            >
-              <div className="flex items-center gap-2">
-                <Download className="w-3.5 h-3.5 text-emerald-400" />
-                <div className="flex flex-col">
-                  <span className="text-xs font-medium text-gray-200 group-hover:text-emerald-300">Get Girionix App</span>
-                  <span className="text-[10px] font-mono text-gray-500">Android • Win • Mac • iOS</span>
+        {!isOfficeMode && (
+          <>
+            {isAppInstalled ? (
+              <button
+                onClick={onOpenProStatus || onOpenDownload}
+                className="w-full p-2 rounded-xl bg-gradient-to-r from-amber-950/30 to-amber-900/10 border border-amber-500/20 hover:border-amber-500/40 flex items-center justify-between text-left transition-all group cursor-pointer"
+                title="Pro Status Active"
+              >
+                <div className="flex items-center gap-2">
+                  <Crown className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-amber-300">Girionix Pro Active</span>
+                    <span className="text-[10px] font-mono text-amber-400/80">Superpowers Unlocked</span>
+                  </div>
                 </div>
-              </div>
-              <ChevronRight className="w-3.5 h-3.5 text-gray-500 group-hover:text-emerald-300 transition-transform" />
-            </button>
-          )
-        )}
+                <ChevronRight className="w-3.5 h-3.5 text-gray-500 group-hover:text-amber-300 transition-transform" />
+              </button>
+            ) : (
+              onOpenDownload && (
+                <button
+                  onClick={onOpenDownload}
+                  className="w-full p-2 rounded-xl bg-white/[0.02] hover:bg-emerald-950/30 border border-white/[0.06] hover:border-emerald-500/30 flex items-center justify-between text-left transition-all group cursor-pointer"
+                  title="Download Android, Windows, iOS, Mac, Linux Apps"
+                >
+                  <div className="flex items-center gap-2">
+                    <Download className="w-3.5 h-3.5 text-emerald-400" />
+                    <div className="flex flex-col">
+                      <span className="text-xs font-medium text-gray-200 group-hover:text-emerald-300">Get Girionix App</span>
+                      <span className="text-[10px] font-mono text-gray-500">Android • Win • Mac • iOS</span>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-3.5 h-3.5 text-gray-500 group-hover:text-emerald-300 transition-transform" />
+                </button>
+              )
+            )}
 
-        {onOpenWhySwitch && (
-          <button
-            onClick={onOpenWhySwitch}
-            className="w-full p-2 rounded-xl bg-purple-950/20 hover:bg-purple-950/40 border border-purple-500/20 hover:border-purple-500/40 flex items-center justify-between text-left transition-all group cursor-pointer"
-            title="Why Switch to Girionix AI • Model Benchmarks & Comparison"
-          >
-            <div className="flex items-center gap-2">
-              <Crown className="w-3.5 h-3.5 text-amber-400" />
-              <div className="flex flex-col">
-                <span className="text-xs font-bold text-white group-hover:text-amber-300">Why Switch to Girionix?</span>
-                <span className="text-[10px] font-mono text-purple-300/80">Benchmarks vs ChatGPT & Claude</span>
-              </div>
-            </div>
-            <ChevronRight className="w-3.5 h-3.5 text-gray-500 group-hover:text-amber-300 transition-transform" />
-          </button>
-        )}
+            {onOpenWhySwitch && (
+              <button
+                onClick={onOpenWhySwitch}
+                className="w-full p-2 rounded-xl bg-purple-950/20 hover:bg-purple-950/40 border border-purple-500/20 hover:border-purple-500/40 flex items-center justify-between text-left transition-all group cursor-pointer"
+                title="Why Switch to Girionix AI • Model Benchmarks & Comparison"
+              >
+                <div className="flex items-center gap-2">
+                  <Crown className="w-3.5 h-3.5 text-amber-400" />
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-white group-hover:text-amber-300">Why Switch to Girionix?</span>
+                    <span className="text-[10px] font-mono text-purple-300/80">Benchmarks vs ChatGPT & Claude</span>
+                  </div>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 text-gray-500 group-hover:text-amber-300 transition-transform" />
+              </button>
+            )}
 
-        {onOpenAbout && (
-          <button
-            onClick={onOpenAbout}
-            className="w-full p-2 rounded-xl bg-white/[0.02] hover:bg-cyan-950/30 border border-white/[0.06] hover:border-cyan-500/30 flex items-center justify-between text-left transition-all group cursor-pointer"
-            title="Open Introducing Girionix AI & Creator Profile"
-          >
-            <div className="flex items-center gap-2">
-              <Award className="w-3.5 h-3.5 text-cyan-400" />
-              <div className="flex flex-col">
-                <span className="text-xs font-medium text-gray-200 group-hover:text-cyan-300">About Girionix AI</span>
-                <span className="text-[10px] font-mono text-gray-500">Creator: Abhinav Giri</span>
-              </div>
-            </div>
-            <ChevronRight className="w-3.5 h-3.5 text-gray-500 group-hover:text-cyan-300 transition-transform" />
-          </button>
+            {onOpenAbout && (
+              <button
+                onClick={onOpenAbout}
+                className="w-full p-2 rounded-xl bg-white/[0.02] hover:bg-cyan-950/30 border border-white/[0.06] hover:border-cyan-500/30 flex items-center justify-between text-left transition-all group cursor-pointer"
+                title="Open Introducing Girionix AI & Creator Profile"
+              >
+                <div className="flex items-center gap-2">
+                  <Award className="w-3.5 h-3.5 text-cyan-400" />
+                  <div className="flex flex-col">
+                    <span className="text-xs font-medium text-gray-200 group-hover:text-cyan-300">About Girionix AI</span>
+                    <span className="text-[10px] font-mono text-gray-500">Creator: Abhinav Giri</span>
+                  </div>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 text-gray-500 group-hover:text-cyan-300 transition-transform" />
+              </button>
+            )}
+          </>
         )}
 
         <a

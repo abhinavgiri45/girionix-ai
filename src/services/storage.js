@@ -151,8 +151,25 @@ try {
 
 export const storage = {
   getUserName: () => {
+    try {
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        const urlUser = params.get('user') || params.get('name');
+        if (urlUser && typeof urlUser === 'string' && urlUser.trim()) {
+          safeSetItem(KEYS.USER_NAME, urlUser.trim());
+          return urlUser.trim();
+        }
+        // If in office mode or embedded inside Giri Orbit iframe, automatically recognize Abhinav
+        if (params.get('mode') === 'office' || params.get('direct') === 'chat' || params.get('embed') === 'true' || window.self !== window.top) {
+          safeSetItem(KEYS.USER_NAME, 'Abhinav');
+          return 'Abhinav';
+        }
+      }
+    } catch (_) {}
+
     const saved = safeGetItem(KEYS.USER_NAME);
-    if (saved) return saved;
+    if (saved && saved.trim()) return saved.trim();
+
     try {
       if (typeof window !== 'undefined') {
         const bridgeName = window.GirionixBridge?.getOperatorName?.() || window.GirionixAndroid?.getOperatorName?.();
@@ -162,7 +179,10 @@ export const storage = {
         }
       }
     } catch (_) {}
-    return '';
+
+    // Default to Abhinav so welcome name modal is never needed
+    safeSetItem(KEYS.USER_NAME, 'Abhinav');
+    return 'Abhinav';
   },
   setUserName: (name) => safeSetItem(KEYS.USER_NAME, (name || '').trim()),
 
@@ -356,6 +376,12 @@ export const storage = {
 
   hasSeenIntro: () => {
     try {
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('direct') === 'chat' || params.get('mode') === 'office' || params.get('embed') === 'true' || params.get('app') === 'true' || window.self !== window.top) {
+          return true;
+        }
+      }
       return safeGetItem('girionix_seen_intro') === 'true';
     } catch (_) { return false; }
   },

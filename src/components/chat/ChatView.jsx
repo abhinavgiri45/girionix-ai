@@ -967,6 +967,10 @@ export default function ChatView({
               userName={userName}
               onOpenAbout={onOpenAbout}
               onOpenWhySwitch={onOpenWhySwitch}
+              onSelectPrompt={(p) => {
+                setInput(p);
+                handleSend(p);
+              }}
             />
           </div>
         ) : (
@@ -992,101 +996,116 @@ export default function ChatView({
         )}
       </div>
 
-      {/* Chat Input Bar with Integrated AI Studio Canvas Dock */}
+      {/* Chat Input Bar with Integrated Action Dock */}
       <div className="p-3 sm:p-4 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] border-t border-white/[0.08] bg-[#0A0C14]/90 backdrop-blur-xl relative z-10">
         <div className="max-w-4xl mx-auto space-y-2">
-          {/* Integrated AI Studio Canvas Dock (ChatGPT Canvas & Claude Artifacts style) */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs font-medium no-scrollbar">
-            <button
-              onClick={() => onOpenStudioTab ? onOpenStudioTab('ai-studio') : setInput('analyze in AI Studio: ')}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-500/20 via-cyan-500/20 to-purple-500/20 text-cyan-200 border border-cyan-400/40 transition-all whitespace-nowrap cursor-pointer hover:scale-105 shadow-glow-cyan/50"
-              title="Open AI Studio (Chat, Freeform, Structured Prompts & Sandbox Execution)"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-              <span className="font-bold">✦ AI Studio</span>
-            </button>
+          {/* Action Dock: Office Suite Directives in Office Mode, Studio Dock otherwise */}
+          {(() => {
+            const isOfficeMode = (() => {
+              try {
+                if (typeof window === 'undefined') return false;
+                const p = new URLSearchParams(window.location.search);
+                return p.get('mode') === 'office' || p.get('embed') === 'true' || p.get('embed') === 'office' || p.has('office') || window.self !== window.top;
+              } catch (_) { return false; }
+            })();
 
-            <button
-              onClick={() => onOpenStudioTab ? onOpenStudioTab('code') : setInput('write a React 18 component with Tailwind CSS: ')}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 transition-all whitespace-nowrap cursor-pointer hover:scale-105 shadow-glow-cyan/50"
-              title="Open React 18 Sandboxed Code Canvas"
-            >
-              <Code2 className="w-3.5 h-3.5 text-cyan-400" />
-              <span className="font-bold">💻 Code IDE</span>
-            </button>
+            if (isOfficeMode) {
+              return (
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs font-medium no-scrollbar">
+                  <span className="text-[10px] font-mono text-cyan-400 font-bold uppercase tracking-wider px-1">Office Actions:</span>
+                  <button
+                    onClick={() => {
+                      const p = 'Draft an executive briefing memorandum with operational deliverables and recommendations.';
+                      setInput(p);
+                      handleSend(p);
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 border border-blue-500/30 transition-all whitespace-nowrap cursor-pointer hover:scale-105"
+                    title="Draft executive briefing for Drift Docs"
+                  >
+                    <span>✍️ Memo</span>
+                  </button>
 
-            <button
-              onClick={() => onOpenStudioTab ? onOpenStudioTab('script') : setInput('write a screenplay scene: ')}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 transition-all whitespace-nowrap cursor-pointer hover:scale-105"
-              title="Open Hollywood Screenplay Studio"
-            >
-              <FileCode className="w-3.5 h-3.5 text-indigo-400" />
-              <span className="font-bold">✍️ Script Writer</span>
-            </button>
+                  <button
+                    onClick={() => {
+                      const p = 'Generate a 4-quarter financial projection spreadsheet table with Revenue, OPEX, EBITDA and growth formulas.';
+                      setInput(p);
+                      handleSend(p);
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 transition-all whitespace-nowrap cursor-pointer hover:scale-105"
+                    title="Build financial spreadsheet model for Axis Sheets"
+                  >
+                    <span>📊 Financials</span>
+                  </button>
 
-            <button
-              onClick={() => onOpenStudioTab ? onOpenStudioTab('math') : setInput('derive step-by-step with KaTeX proof: ')}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 transition-all whitespace-nowrap cursor-pointer hover:scale-105"
-              title="Open Olympiad Math & 3D Plotter"
-            >
-              <Sigma className="w-3.5 h-3.5 text-purple-400" />
-              <span className="font-bold">📐 Math Lab</span>
-            </button>
+                  <button
+                    onClick={() => {
+                      const p = 'Create a 4-slide executive presentation deck outline with SWOT analysis for Kinetic Presentation.';
+                      setInput(p);
+                      handleSend(p);
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 transition-all whitespace-nowrap cursor-pointer hover:scale-105"
+                    title="Generate presentation deck for Kinetic"
+                  >
+                    <span>🎞️ Slides</span>
+                  </button>
 
-            <button
-              onClick={() => onOpenStudioTab ? onOpenStudioTab('image') : setInput('generate an 8k image of ')}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 transition-all whitespace-nowrap cursor-pointer hover:scale-105"
-              title="Open 8K FLUX.1 VisionForge"
-            >
-              <ImageIcon className="w-3.5 h-3.5 text-rose-400" />
-              <span className="font-bold">🎨 8K Vision</span>
-            </button>
+                  <button
+                    onClick={() => {
+                      const p = 'Synthesize an enterprise cryptographic audit addendum and legal compliance verification stamp.';
+                      setInput(p);
+                      handleSend(p);
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 transition-all whitespace-nowrap cursor-pointer hover:scale-105"
+                    title="Draft compliance stamp for PDF Studio"
+                  >
+                    <span>🔒 Audit Stamp</span>
+                  </button>
 
-            <button
-              onClick={() => onOpenStudioTab ? onOpenStudioTab('video') : setInput('create a cinematic 60fps video scene for: ')}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 transition-all whitespace-nowrap cursor-pointer hover:scale-105"
-              title="Open MotionLab 60FPS Video Studio"
-            >
-              <Film className="w-3.5 h-3.5 text-amber-400" />
-              <span className="font-bold">🎬 MotionLab</span>
-            </button>
+                  {/* Quick 1-click Import Last AI Message to Workplace Button */}
+                  {messages.some(m => m.role === 'assistant') && (
+                    <button
+                      onClick={() => {
+                        const lastMsg = messages.filter(m => m.role === 'assistant').slice(-1)[0];
+                        if (lastMsg && typeof window !== 'undefined') {
+                          window.parent.postMessage({
+                            type: 'GIRIONIX_IMPORT_TO_WORKPLACE',
+                            payload: { text: lastMsg.content, timestamp: Date.now() }
+                          }, '*');
+                          try { navigator.clipboard.writeText(lastMsg.content); } catch (_) {}
+                        }
+                      }}
+                      className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500/25 to-teal-500/25 hover:from-emerald-500/35 hover:to-teal-500/35 text-emerald-200 border border-emerald-500/50 transition-all whitespace-nowrap cursor-pointer hover:scale-105 shadow-glow-emerald font-bold ml-auto"
+                      title="Import last AI response directly into your active Drift/Axis/Kinetic document"
+                    >
+                      <span>📥 Import to Workplace</span>
+                    </button>
+                  )}
+                </div>
+              );
+            }
 
-            <button
-              onClick={() => onOpenStudioTab ? onOpenStudioTab('audio') : setInput('compose music: ')}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 transition-all whitespace-nowrap cursor-pointer hover:scale-105"
-              title="Open AudioLab 48kHz Stem Mixer & Voice Studio"
-            >
-              <Zap className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="font-bold">🎙️ AudioLab</span>
-            </button>
+            return (
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs font-medium no-scrollbar">
+                <button
+                  onClick={() => setIsPromptLibraryOpen(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 transition-all whitespace-nowrap cursor-pointer hover:scale-105"
+                  title="Explore Practical Prompt Templates"
+                >
+                  <Lightbulb className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="font-bold">💡 Prompts</span>
+                </button>
 
-            <button
-              onClick={() => setIsPromptEnhancerOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-gray-300 hover:text-white border border-white/[0.1] transition-all whitespace-nowrap cursor-pointer"
-              title="Enhance prompt with AI"
-            >
-              <Wand2 className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Enhance Prompt</span>
-            </button>
-
-            <button
-              onClick={() => setIsPromptLibraryOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 transition-all whitespace-nowrap cursor-pointer hover:scale-105"
-              title="Explore Practical Prompt Templates"
-            >
-              <Lightbulb className="w-3.5 h-3.5 text-amber-400" />
-              <span className="font-bold">💡 Prompts</span>
-            </button>
-
-            <button
-              onClick={() => setIsExportModalOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 transition-all whitespace-nowrap cursor-pointer hover:scale-105"
-              title="Export & Share Conversation"
-            >
-              <Share2 className="w-3.5 h-3.5 text-cyan-400" />
-              <span className="font-bold">📤 Export</span>
-            </button>
-          </div>
+                <button
+                  onClick={() => setIsExportModalOpen(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 transition-all whitespace-nowrap cursor-pointer hover:scale-105"
+                  title="Export & Share Conversation"
+                >
+                  <Share2 className="w-3.5 h-3.5 text-cyan-400" />
+                  <span className="font-bold">📤 Export</span>
+                </button>
+              </div>
+            );
+          })()}
 
           {/* File Attachment Pill */}
           {attachedFile && (

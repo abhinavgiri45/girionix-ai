@@ -45,7 +45,9 @@ export default function Header({
   isTitanMode,
   onToggleTitanMode,
   onOpenWhySwitch,
-  onLaunchOfficeDemo
+  onLaunchOfficeDemo,
+  isOfficeMode = false,
+  onImportToWorkplace
 }) {
   const [isToolsDropdownOpen, setIsToolsDropdownOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -105,117 +107,143 @@ export default function Header({
           </div>
         </div>
 
-        {/* Edition Mode Segmented Switcher (Standard vs Titan) */}
-        <div className="hidden xs:flex items-center p-0.5 rounded-xl bg-black/60 border border-white/10 text-xs font-mono ml-1 sm:ml-2">
-          <button
-            onClick={() => onToggleTitanMode && onToggleTitanMode(false)}
-            className={`px-2 sm:px-2.5 py-1 rounded-lg transition-all flex items-center gap-1 ${
-              !isTitanMode
-                ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40 shadow-sm'
-                : 'text-gray-400 hover:text-white'
-            }`}
-            title="Standard Universal Edition"
-          >
-            <Globe className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="hidden md:inline">Standard</span>
-          </button>
+        {/* Edition Mode Segmented Switcher (Standard vs Titan) - Hidden in Office Mode */}
+        {!isOfficeMode && (
+          <div className="hidden xs:flex items-center p-0.5 rounded-xl bg-black/60 border border-white/10 text-xs font-mono ml-1 sm:ml-2">
+            <button
+              onClick={() => onToggleTitanMode && onToggleTitanMode(false)}
+              className={`px-2 sm:px-2.5 py-1 rounded-lg transition-all flex items-center gap-1 ${
+                !isTitanMode
+                  ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40 shadow-sm'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+              title="Standard Universal Edition"
+            >
+              <Globe className="w-3.5 h-3.5 text-cyan-400" />
+              <span className="hidden md:inline">Standard</span>
+            </button>
 
-          <button
-            onClick={() => onToggleTitanMode && onToggleTitanMode(true)}
-            className={`px-2 sm:px-2.5 py-1 rounded-lg transition-all flex items-center gap-1 ${
-              isTitanMode
-                ? 'bg-gradient-to-r from-emerald-400 to-teal-400 text-black font-extrabold shadow-glow-emerald'
-                : 'text-emerald-400/80 hover:text-emerald-300'
-            }`}
-            title="Titan 100% On-Device Hardware Edition"
-          >
-            <Cpu className="w-3.5 h-3.5" />
-            <span className="hidden md:inline">Titan</span>
-          </button>
+            <button
+              onClick={() => onToggleTitanMode && onToggleTitanMode(true)}
+              className={`px-2 sm:px-2.5 py-1 rounded-lg transition-all flex items-center gap-1 ${
+                isTitanMode
+                  ? 'bg-gradient-to-r from-emerald-400 to-teal-400 text-black font-extrabold shadow-glow-emerald'
+                  : 'text-emerald-400/80 hover:text-emerald-300'
+              }`}
+              title="Titan 100% On-Device Hardware Edition"
+            >
+              <Cpu className="w-3.5 h-3.5" />
+              <span className="hidden md:inline">Titan</span>
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Center: Clean Layout & Studio Mode Switcher OR Dedicated Office Copilot Header */}
+      {isOfficeMode ? (
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-500/15 via-cyan-500/15 to-purple-500/15 border border-cyan-500/30 text-cyan-300 text-xs font-mono font-bold shadow-sm">
+            <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="hidden sm:inline">Office Suite Copilot</span>
+            <span className="sm:hidden">Office AI</span>
+          </div>
+
+          {onImportToWorkplace && (
+            <button
+              onClick={onImportToWorkplace}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500/25 to-teal-500/25 hover:from-emerald-500/35 hover:to-teal-500/35 text-emerald-200 border border-emerald-500/50 text-xs font-bold shadow-glow-emerald transition-all hover:scale-105 cursor-pointer"
+              title="Import current response directly into your active Drift/Axis/Kinetic document"
+            >
+              <span>📥</span>
+              <span className="hidden sm:inline">Import to Workplace</span>
+              <span className="sm:hidden">Import</span>
+            </button>
+          )}
         </div>
-      </div>
+      ) : (
+        <>
+          {/* Desktop Mode Switcher */}
+          <div className="hidden sm:flex items-center p-0.5 rounded-xl bg-black/60 border border-white/[0.08] text-xs font-medium">
+            <button
+              onClick={() => setLayoutMode('chat')}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition-all ${
+                layoutMode === 'chat'
+                  ? isTitanMode 
+                    ? 'bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30' 
+                    : 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30 shadow-sm'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+              title="Chat Focus"
+            >
+              <MessageSquare className="w-3.5 h-3.5" />
+              <span>Chat</span>
+            </button>
 
-      {/* Center: Clean Layout & Studio Mode Switcher */}
-      {/* Desktop Mode Switcher */}
-      <div className="hidden sm:flex items-center p-0.5 rounded-xl bg-black/60 border border-white/[0.08] text-xs font-medium">
-        <button
-          onClick={() => setLayoutMode('chat')}
-          className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition-all ${
-            layoutMode === 'chat'
-              ? isTitanMode 
-                ? 'bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30' 
-                : 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30 shadow-sm'
-              : 'text-gray-400 hover:text-white'
-          }`}
-          title="Chat Focus"
-        >
-          <MessageSquare className="w-3.5 h-3.5" />
-          <span>Chat</span>
-        </button>
+            <button
+              onClick={() => setLayoutMode('split')}
+              className={`hidden md:flex items-center gap-1.5 px-3 py-1 rounded-lg transition-all ${
+                layoutMode === 'split'
+                  ? isTitanMode 
+                    ? 'bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30' 
+                    : 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30 shadow-sm'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+              title="Side-by-Side Split Workspace"
+            >
+              <Columns2 className="w-3.5 h-3.5" />
+              <span>Split</span>
+            </button>
 
-        <button
-          onClick={() => setLayoutMode('split')}
-          className={`hidden md:flex items-center gap-1.5 px-3 py-1 rounded-lg transition-all ${
-            layoutMode === 'split'
-              ? isTitanMode 
-                ? 'bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30' 
-                : 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30 shadow-sm'
-              : 'text-gray-400 hover:text-white'
-          }`}
-          title="Side-by-Side Split Workspace"
-        >
-          <Columns2 className="w-3.5 h-3.5" />
-          <span>Split</span>
-        </button>
+            <button
+              onClick={() => setLayoutMode('studio')}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition-all ${
+                layoutMode === 'studio'
+                  ? isTitanMode 
+                    ? 'bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30' 
+                    : 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30 shadow-sm'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+              title="AI Studio (Prompt Lab, Code, Math & Media)"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Studio</span>
+            </button>
+          </div>
 
-        <button
-          onClick={() => setLayoutMode('studio')}
-          className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition-all ${
-            layoutMode === 'studio'
-              ? isTitanMode 
-                ? 'bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30' 
-                : 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30 shadow-sm'
-              : 'text-gray-400 hover:text-white'
-          }`}
-          title="AI Studio (Prompt Lab, Code, Math & Media)"
-        >
-          <Sparkles className="w-3.5 h-3.5" />
-          <span>Studio</span>
-        </button>
-      </div>
+          {/* Mobile Mode Switcher (< sm) */}
+          <div className="flex sm:hidden items-center p-0.5 rounded-xl bg-black/60 border border-white/10 text-xs font-medium">
+            <button
+              onClick={() => setLayoutMode('chat')}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all ${
+                layoutMode === 'chat'
+                  ? isTitanMode 
+                    ? 'bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30' 
+                    : 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+              title="Chat Focus"
+            >
+              <MessageSquare className="w-3.5 h-3.5" />
+              <span>Chat</span>
+            </button>
 
-      {/* Mobile Mode Switcher (< sm) */}
-      <div className="flex sm:hidden items-center p-0.5 rounded-xl bg-black/60 border border-white/10 text-xs font-medium">
-        <button
-          onClick={() => setLayoutMode('chat')}
-          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all ${
-            layoutMode === 'chat'
-              ? isTitanMode 
-                ? 'bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30' 
-                : 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30'
-              : 'text-gray-400 hover:text-white'
-          }`}
-          title="Chat Focus"
-        >
-          <MessageSquare className="w-3.5 h-3.5" />
-          <span>Chat</span>
-        </button>
-
-        <button
-          onClick={() => setLayoutMode('studio')}
-          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all ${
-            layoutMode === 'studio'
-              ? isTitanMode 
-                ? 'bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30' 
-                : 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-cyan-300 font-bold border border-cyan-500/30'
-              : 'text-gray-400 hover:text-white'
-          }`}
-          title="AI Studio"
-        >
-          <Sparkles className="w-3.5 h-3.5" />
-          <span>Studio</span>
-        </button>
-      </div>
+            <button
+              onClick={() => setLayoutMode('studio')}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all ${
+                layoutMode === 'studio'
+                  ? isTitanMode 
+                    ? 'bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30' 
+                    : 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-cyan-300 font-bold border border-cyan-500/30'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+              title="AI Studio"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Studio</span>
+            </button>
+          </div>
+        </>
+      )}
 
       {/* Right: Clean Action Hub (Why Switch, Get App, Unified Tools Menu & User Profile) */}
       <div className="flex items-center gap-1.5 sm:gap-2">

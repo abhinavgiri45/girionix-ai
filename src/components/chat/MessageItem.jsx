@@ -720,6 +720,25 @@ export default function MessageItem({
   const [selectedImage, setSelectedImage] = useState(null);
   const [upscaleStatus, setUpscaleStatus] = useState(null);
   const [explainedCodeIdx, setExplainedCodeIdx] = useState(null);
+  const [imported, setImported] = useState(false);
+
+  const handleImportToWorkplace = (customText = null) => {
+    const textToImport = customText || translatedText || message.content;
+    if (typeof window !== 'undefined') {
+      window.parent.postMessage({
+        type: 'GIRIONIX_IMPORT_TO_WORKPLACE',
+        payload: {
+          text: textToImport,
+          timestamp: Date.now()
+        }
+      }, '*');
+      try {
+        navigator.clipboard.writeText(textToImport);
+      } catch (_) {}
+      setImported(true);
+      setTimeout(() => setImported(false), 2500);
+    }
+  };
 
   // Video player state
   const [isVideoPlaying, setIsVideoPlaying] = useState(true);
@@ -973,6 +992,14 @@ export default function MessageItem({
                     <span>Run in Canvas</span>
                   </button>
                 )}
+
+                <button
+                  onClick={() => handleImportToWorkplace(code)}
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 text-[11px] font-bold transition-all cursor-pointer hover:scale-105"
+                  title="Import this code / data block directly into your active Giri Orbit workspace"
+                >
+                  <span>📥 Import</span>
+                </button>
 
                 {/* Gemini-Style Copy Code Button */}
                 <button
@@ -1302,6 +1329,30 @@ export default function MessageItem({
 
         {/* Action Toolbar */}
         <div className="flex items-center gap-1.5 px-1 text-[11px] text-gray-500 relative">
+          {!isUser && (
+            <button
+              onClick={() => handleImportToWorkplace()}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-semibold transition-all border shadow-sm ${
+                imported
+                  ? 'bg-emerald-500/25 text-emerald-300 border-emerald-500/50 shadow-glow-emerald'
+                  : 'bg-gradient-to-r from-emerald-500/15 to-teal-500/15 hover:from-emerald-500/25 hover:to-teal-500/25 text-emerald-300 hover:text-emerald-200 border-emerald-500/40 hover:scale-105 cursor-pointer'
+              }`}
+              title="Import this AI response directly into your active Giri Orbit workplace (Drift, Axis, Kinetic, PDF)"
+            >
+              {imported ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-emerald-400" />
+                  <span className="text-[11px] text-emerald-300 font-bold">Imported!</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-[12px]">📥</span>
+                  <span className="text-[11px] font-bold">Import to Workplace</span>
+                </>
+              )}
+            </button>
+          )}
+
           <button
             onClick={handleCopy}
             className="p-1 rounded-md hover:text-white transition-colors"
