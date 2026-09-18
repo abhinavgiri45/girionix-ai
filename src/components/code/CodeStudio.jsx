@@ -26,12 +26,41 @@ import {
   FileDown,
   Layers,
   Gamepad2,
-  BarChart3
+  BarChart3,
+  Cpu,
+  ShieldCheck,
+  Send
 } from 'lucide-react';
 import { DEMO_CODE_PROJECT } from '../../data/demoData';
 import { CODE_STUDIO_TEMPLATES } from '../../data/codeStudioTemplates';
-import { openrouter } from '../../services/openrouter';
 import { localNeuralEngine } from '../../services/localNeuralEngine';
+
+export const GIRIONIX_CODING_MODELS = [
+  {
+    id: 'girionix-titan-coder',
+    name: '⚡ Titan Matrix Coder 33B',
+    shortName: 'Titan Coder 33B',
+    tag: 'Fullstack & Live AST',
+    badge: 'FLAGSHIP CODER',
+    description: 'Superhuman React 18, Python, Tailwind, Unit Tests, and AST Compilation.'
+  },
+  {
+    id: 'girionix-titan-70b',
+    name: '⚡ Titan 70B Heavy Core',
+    shortName: 'Titan 70B Heavy',
+    tag: 'Complex Systems',
+    badge: 'HEAVY SYSTEMS',
+    description: 'Deep algorithmic derivations, state machines, and distributed architecture.'
+  },
+  {
+    id: 'girionix-titan-lite',
+    name: '🌱 Titan Lite Quantized',
+    shortName: 'Titan Lite',
+    tag: 'Instant Prototypes',
+    badge: 'ULTRA-FAST',
+    description: 'Ultra-fast sub-second code generation with minimal memory overhead.'
+  }
+];
 
 export default function CodeStudio({ activeModel, injectedCode, isTitanMode = false }) {
   const [project, setProject] = useState(DEMO_CODE_PROJECT);
@@ -45,6 +74,9 @@ export default function CodeStudio({ activeModel, injectedCode, isTitanMode = fa
   const [aiPrompt, setAiPrompt] = useState('');
   const [consoleLogs, setConsoleLogs] = useState([]);
   const [isConsoleOpen, setIsConsoleOpen] = useState(false);
+
+  // Selected Girionix Flagship Model (Zero API key required)
+  const [selectedGirionixModel, setSelectedGirionixModel] = useState('girionix-titan-coder');
 
   // Micro-Benchmark Execution state
   const [benchmarkResult, setBenchmarkResult] = useState(null);
@@ -161,39 +193,22 @@ export default function CodeStudio({ activeModel, injectedCode, isTitanMode = fa
     } catch (_) {}
   };
 
-  // 1-Click Generate Unit Tests
+  // 1-Click Generate Unit Tests with Girionix Flagship Models (0 API Key Required)
   const handleGenerateUnitTests = async () => {
     setIsGenerating(true);
     try {
       let testCode = '';
-      if (isTitanMode || activeModel?.isTitan || activeModel?.isLocal || !navigator.onLine) {
-        await localNeuralEngine.generateStream({
-          messages: [
-            {
-              role: 'system',
-              content: 'Generate clean Vitest / Jest unit tests with mock rendering and assertions for the provided React component. Return ONLY executable test code.'
-            },
-            { role: 'user', content: activeFile.content }
-          ],
-          model: 'girionix-titan-coder',
-          onChunk: (chunk, acc) => { testCode = acc; }
-        });
-      } else {
-        await openrouter.streamChat({
-          messages: [
-            {
-              role: 'system',
-              content: 'Generate clean Vitest / Jest unit tests with mock rendering and assertions for the provided React component. Return ONLY executable test code.'
-            },
-            {
-              role: 'user',
-              content: activeFile.content
-            }
-          ],
-          model: activeModel?.id || 'anthropic/claude-3.7-sonnet',
-          onChunk: (chunk, acc) => { testCode = acc; }
-        });
-      }
+      await localNeuralEngine.generateStream({
+        messages: [
+          {
+            role: 'system',
+            content: 'Generate clean Vitest / Jest unit tests with mock rendering and assertions for the provided React component. Return ONLY executable test code.'
+          },
+          { role: 'user', content: activeFile.content }
+        ],
+        model: selectedGirionixModel,
+        onChunk: (chunk, acc) => { testCode = acc; }
+      });
 
       const cleanTest = testCode.replace(/^```[a-zA-Z]*\n/i, '').replace(/```$/i, '').trim();
       if (cleanTest) {
@@ -211,6 +226,11 @@ export default function CodeStudio({ activeModel, injectedCode, isTitanMode = fa
           };
         });
         setActiveFileName('App.test.jsx');
+        setConsoleLogs(prev => [...prev, {
+          type: 'info',
+          text: `🧪 Generated unit tests via ${selectedGirionixModel} (0 API Key Needed)`,
+          time: new Date().toLocaleTimeString()
+        }]);
       }
     } catch (err) {
       console.warn('Test generation failed:', err);
@@ -260,44 +280,31 @@ export default function CodeStudio({ activeModel, injectedCode, isTitanMode = fa
     setIsRunningBenchmark(false);
   };
 
+  // 1-Click Code Auto-Fix with Girionix Flagship Models (0 API Key Required)
   const handleAutoFixCode = async () => {
     setIsAutoFixing(true);
     try {
       const errorContext = consoleLogs.filter(l => l.type === 'error').map(l => l.text).join('\n') || 'Fix syntax errors or runtime issues in this React component.';
       let fixedContent = '';
 
-      if (isTitanMode || activeModel?.isTitan || activeModel?.isLocal || !navigator.onLine) {
-        await localNeuralEngine.generateStream({
-          messages: [
-            {
-              role: 'system',
-              content: 'You are Girionix Live Code Auto-Fixer. Fix all runtime and syntax errors in the provided React code. Return ONLY valid, executable JavaScript/JSX without markdown backticks.'
-            },
-            { role: 'user', content: `Error context:\n${errorContext}\n\nCurrent Code:\n${activeFile.content}` }
-          ],
-          model: 'girionix-titan-coder',
-          onChunk: (chunk, acc) => { fixedContent = acc; }
-        });
-      } else {
-        await openrouter.streamChat({
-          messages: [
-            {
-              role: 'system',
-              content: 'You are Girionix Live Code Auto-Fixer. Fix all runtime and syntax errors in the provided React code. Return ONLY valid, executable JavaScript/JSX without markdown backticks.'
-            },
-            { role: 'user', content: `Error context:\n${errorContext}\n\nCurrent Code:\n${activeFile.content}` }
-          ],
-          model: activeModel?.id || 'anthropic/claude-3.7-sonnet',
-          onChunk: (chunk, acc) => { fixedContent = acc; }
-        });
-      }
+      await localNeuralEngine.generateStream({
+        messages: [
+          {
+            role: 'system',
+            content: 'You are Girionix Live Code Auto-Fixer. Fix all runtime and syntax errors in the provided React code. Return ONLY valid, executable JavaScript/JSX without markdown backticks.'
+          },
+          { role: 'user', content: `Error context:\n${errorContext}\n\nCurrent Code:\n${activeFile.content}` }
+        ],
+        model: selectedGirionixModel,
+        onChunk: (chunk, acc) => { fixedContent = acc; }
+      });
 
       const cleanCode = fixedContent.replace(/^```[a-zA-Z]*\n/i, '').replace(/```$/i, '').trim();
       if (cleanCode) {
         handleCodeChange(cleanCode);
         setConsoleLogs(prev => [...prev, {
           type: 'info',
-          text: '⚡ Girionix Auto-Fix applied successfully!',
+          text: `⚡ Girionix Auto-Fix applied successfully via ${selectedGirionixModel}!`,
           time: new Date().toLocaleTimeString()
         }]);
       }
@@ -342,7 +349,6 @@ export default function CodeStudio({ activeModel, injectedCode, isTitanMode = fa
             return;
           }
         }
-        // If single code file (e.g. App.jsx, script.js, Component.tsx, main.py)
         const updatedFiles = [...project.files];
         const existingIdx = updatedFiles.findIndex(f => f.name === file.name);
         if (existingIdx >= 0) {
@@ -360,52 +366,39 @@ export default function CodeStudio({ activeModel, injectedCode, isTitanMode = fa
     e.target.value = '';
   };
 
+  // AI Prompt Modification using Girionix Flagship Models (0 API Key Required)
   const handleAiModify = async () => {
     if (!aiPrompt.trim() || isGenerating) return;
     setIsGenerating(true);
 
     try {
       let fullCode = '';
-      if (isTitanMode || activeModel?.isTitan || activeModel?.isLocal || !navigator.onLine) {
-        await localNeuralEngine.generateStream({
-          messages: [
-            {
-              role: 'system',
-              content: 'You are Girionix AI Code Architect. Return ONLY the updated React 18 component code. No markdown wrapping, no conversational filler.'
-            },
-            {
-              role: 'user',
-              content: `Instruction: "${aiPrompt}"\n\nCurrent Code:\n${activeFile.content}`
-            }
-          ],
-          model: 'girionix-titan-coder',
-          onChunk: (chunk, acc) => {
-            fullCode = acc;
+      await localNeuralEngine.generateStream({
+        messages: [
+          {
+            role: 'system',
+            content: 'You are Girionix AI Code Architect. Return ONLY the updated React 18 component code. No markdown wrapping, no conversational filler.'
+          },
+          {
+            role: 'user',
+            content: `Instruction: "${aiPrompt}"\n\nCurrent Code:\n${activeFile.content}`
           }
-        });
-      } else {
-        await openrouter.streamChat({
-          messages: [
-            {
-              role: 'system',
-              content: 'You are Girionix AI Code Architect. Return ONLY the updated React 18 component code. No markdown wrapping, no conversational filler.'
-            },
-            {
-              role: 'user',
-              content: `Instruction: "${aiPrompt}"\n\nCurrent Code:\n${activeFile.content}`
-            }
-          ],
-          model: activeModel?.id || 'anthropic/claude-3.7-sonnet',
-          onChunk: (chunk, acc) => {
-            fullCode = acc;
-          }
-        });
-      }
+        ],
+        model: selectedGirionixModel,
+        onChunk: (chunk, acc) => {
+          fullCode = acc;
+        }
+      });
 
       const cleanCode = fullCode.replace(/^```[a-zA-Z]*\n/i, '').replace(/```$/i, '').trim();
       if (cleanCode) {
         handleCodeChange(cleanCode);
         setAiPrompt('');
+        setConsoleLogs(prev => [...prev, {
+          type: 'info',
+          text: `⚡ Code modified successfully with ${selectedGirionixModel}`,
+          time: new Date().toLocaleTimeString()
+        }]);
       }
     } catch (err) {
       console.warn('AI modify error:', err);
@@ -417,40 +410,22 @@ export default function CodeStudio({ activeModel, injectedCode, isTitanMode = fa
   const getSandboxHtml = () => {
     const appFile = project.files.find(f => f.name === 'App.jsx')?.content || activeFile?.content || project.files[0]?.content || '';
     
-    // Extract potential React component candidate names from user code
     const candidateMatches = appFile.match(/(?:function|class|const|let|var)\s+([A-Z][A-Za-z0-9_]*)/g) || [];
     const candidateNames = Array.from(new Set(
       candidateMatches.map(m => m.replace(/(?:function|class|const|let|var)\s+/, '').trim())
     )).filter(name => !['React', 'ReactDOM', 'LucideIcons', 'Component', 'PureComponent', 'ErrorBoundary'].includes(name));
 
-    // Clean and transform ES6 imports & exports for in-browser Babel execution
     let transformedCode = appFile
-      // Remove TS type imports
       .replace(/import\s+type\s+.*?;?/g, '')
       .replace(/import\s*\*\s*as\s+React\s+from\s+['"][^'"]+['"];?/g, '')
-      // React imports: use var so re-declarations never throw SyntaxError
-      .replace(/import\s+React\s*,\s*\{([^}]+)\}\s+from\s+['"][^'"]+['"];?/g, 'var { $1 } = (window.React || {});')
+      .replace(/import\s+React\s*,?\s*\{[^}]*\}\s+from\s+['"][^'"]+['"];?/g, '')
       .replace(/import\s+React\s+from\s+['"][^'"]+['"];?/g, '')
-      .replace(/import\s*\{([^}]+)\}\s+from\s+['"]react['"];?/g, 'var { $1 } = (window.React || {});')
-      // Lucide and icon imports
-      .replace(/import\s*\{([^}]+)\}\s+from\s+['"]lucide-react['"];?/g, 'var { $1 } = (window.LucideIcons || {});')
-      .replace(/import\s+([A-Za-z0-9_]+)\s+from\s+['"]lucide-react['"];?/g, 'var $1 = (window.LucideIcons && window.LucideIcons.$1) || (window.LucideIcons?.Sparkles);')
-      .replace(/import\s*\{([^}]+)\}\s+from\s+['"]react-icons\/?[^'"]*['"];?/g, 'var { $1 } = (window.LucideIcons || {});')
-      // Framer motion and animation mocks
-      .replace(/import\s*\{([^}]+)\}\s+from\s+['"]framer-motion['"];?/g, 'var { $1 } = (window.Motion || {});')
-      .replace(/import\s+([A-Za-z0-9_]+)\s+from\s+['"]framer-motion['"];?/g, 'var $1 = (window.Motion && window.Motion.$1) || window.Motion?.motion;')
-      .replace(/import\s+.*?from\s+['"]canvas-confetti['"];?/g, 'var confetti = window.confetti || (() => {});')
-      // Remove other CSS and external package imports gracefully
-      .replace(/import\s+['"][^'"]+\.css['"];?/g, '')
+      .replace(/import\s+\{[^}]*\}\s+from\s+['"][^'"]+['"];?/g, '')
       .replace(/import\s+.*?from\s+['"][^'"]+['"];?/g, '')
-      // Strip named exports so Babel inside new Function doesn't choke on 'export'
-      .replace(/export\s+const\s+/g, 'var ')
-      .replace(/export\s+let\s+/g, 'var ')
-      .replace(/export\s+var\s+/g, 'var ')
+      .replace(/export\s+default\s+/g, 'window.__DEFAULT_EXPORT__ = ')
       .replace(/export\s+function\s+/g, 'function ')
       .replace(/export\s+class\s+/g, 'class ')
       .replace(/export\s+\{[^}]+\};?/g, '')
-      // Handle export default variants cleanly
       .replace(/export\s+default\s+function\s+([A-Za-z0-9_]+)/g, 'window.__DEFAULT_EXPORT__ = $1; function $1')
       .replace(/export\s+default\s+function\s*\(/g, 'window.__DEFAULT_EXPORT__ = function(')
       .replace(/export\s+default\s+class\s+([A-Za-z0-9_]+)/g, 'window.__DEFAULT_EXPORT__ = $1; class $1')
@@ -459,7 +434,6 @@ export default function CodeStudio({ activeModel, injectedCode, isTitanMode = fa
 
     const escapedCode = JSON.stringify(transformedCode);
 
-    // Build return statement checking default export, App, candidates, and common component names
     const candidateChecks = candidateNames.map(name => `(typeof ${name} !== "undefined" ? ${name} : null)`).join(' || ');
     const returnStatement = `return window.__DEFAULT_EXPORT__ || (typeof App !== "undefined" ? App : null) || ${candidateChecks ? candidateChecks + ' || ' : ''}(typeof SnakeGame !== "undefined" ? SnakeGame : null) || (typeof StandaloneSnakeGame !== "undefined" ? StandaloneSnakeGame : null) || (typeof Dashboard !== "undefined" ? Dashboard : null) || (typeof QuantumVisualizer !== "undefined" ? QuantumVisualizer : null) || (typeof Component !== "undefined" ? Component : null) || (typeof Main !== "undefined" ? Main : null);`;
 
@@ -469,7 +443,6 @@ export default function CodeStudio({ activeModel, injectedCode, isTitanMode = fa
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Multi-CDN Fallback Engine for React 18 & Babel Standalone -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" crossorigin></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
@@ -489,12 +462,9 @@ export default function CodeStudio({ activeModel, injectedCode, isTitanMode = fa
     console.error = (...args) => sendLog('error', args.join(' '));
     window.onerror = (msg, url, line) => { sendLog('error', msg + (line ? ' (Line ' + line + ')' : '')); return true; };
 
-    // Universal Lucide & React Icons SVG Proxy Generator (Ensures Zero Icon Crash)
     window.LucideIcons = new Proxy({}, {
       get: function(target, prop) {
-        if (typeof prop === 'symbol' || prop === 'then' || prop === 'toJSON') {
-          return target[prop];
-        }
+        if (typeof prop === 'symbol' || prop === 'then' || prop === 'toJSON') return target[prop];
         return function DynamicIcon(props) {
           props = props || {};
           const className = props?.className || 'w-4 h-4 inline-block';
@@ -518,7 +488,6 @@ export default function CodeStudio({ activeModel, injectedCode, isTitanMode = fa
       }
     });
 
-    // Mock Framer Motion to prevent crashes in UI animations
     window.Motion = {
       motion: new Proxy({}, {
         get: (target, prop) => (props) => React.createElement(prop, props)
@@ -537,7 +506,6 @@ export default function CodeStudio({ activeModel, injectedCode, isTitanMode = fa
         return;
       }
 
-      // Pre-inject React Hooks into Global Sandbox Context
       const { useState, useEffect, useRef, useMemo, useCallback, useContext, useReducer, useId, useLayoutEffect } = window.React;
       window.useState = useState;
       window.useEffect = useEffect;
@@ -549,7 +517,6 @@ export default function CodeStudio({ activeModel, injectedCode, isTitanMode = fa
       window.useId = useId;
       window.useLayoutEffect = useLayoutEffect;
 
-      // Error Boundary Component
       class ErrorBoundary extends React.Component {
         constructor(props) {
           super(props);
@@ -579,14 +546,11 @@ export default function CodeStudio({ activeModel, injectedCode, isTitanMode = fa
         const rawCode = ${escapedCode};
         window.__DEFAULT_EXPORT__ = null;
 
-        // Transform JSX to standard JS with Babel Standalone
         const transformed = Babel.transform(rawCode, {
           presets: ['react'],
           filename: 'App.jsx'
         }).code;
 
-        // Execute Transformed Code without formal parameter collisions
-        // Inject hooks with var so redeclaration never causes SyntaxError
         const functionBody = 'var { useState, useEffect, useRef, useMemo, useCallback, useContext, useReducer, useId, useLayoutEffect } = (window.React || {});\\n' + transformed + '\\n' + ${JSON.stringify(returnStatement)};
         const execFn = new Function('React', 'ReactDOM', 'LucideIcons', functionBody);
         const Component = execFn(window.React, window.ReactDOM, window.LucideIcons);
@@ -608,69 +572,88 @@ export default function CodeStudio({ activeModel, injectedCode, isTitanMode = fa
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-[#07080F] text-gray-200 overflow-hidden">
-      {/* Top Studio Control Bar */}
-      <div className="p-3 border-b border-white/10 bg-[#090B16] flex items-center justify-between gap-3 text-xs font-mono">
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 font-bold">
-            <Code2 className="w-4 h-4" />
-            <span>Coding Studio • React 18 Live IDE</span>
+    <div className="flex-1 flex flex-col h-full bg-[#07080F] text-gray-200 overflow-hidden select-none font-sans">
+      {/* 1. Primary Clean Studio Header */}
+      <div className="px-3 sm:px-4 py-2 border-b border-white/10 bg-[#090C16] flex flex-wrap items-center justify-between gap-2.5 shrink-0 z-10">
+        {/* Left: Active File Tabs */}
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 text-xs font-mono font-bold shrink-0">
+            <Code2 className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Coding Studio</span>
           </div>
 
-          <div className="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/5">
+          <div className="flex items-center gap-1 bg-black/50 p-1 rounded-xl border border-white/10 overflow-x-auto no-scrollbar">
             {project.files.map(f => (
               <button
                 key={f.name}
                 onClick={() => setActiveFileName(f.name)}
-                className={`px-2.5 py-1 rounded-lg text-xs transition-all ${
+                className={`px-3 py-1 rounded-lg text-xs font-mono transition-all cursor-pointer whitespace-nowrap ${
                   activeFileName === f.name
-                    ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40'
-                    : 'text-gray-400 hover:text-white'
+                    ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40 shadow-sm'
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
                 }`}
               >
                 {f.name}
               </button>
             ))}
           </div>
+        </div>
 
-          {/* Export & Import File / Project Buttons */}
-          <button
-            onClick={handleExportCodeProject}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-gray-300 hover:text-white border border-white/10 text-xs font-mono transition-all cursor-pointer"
-            title="Export Project (.json)"
-          >
-            <FileDown className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Export</span>
-          </button>
+        {/* Center: Girionix 3 Flagship Models Switcher (NO API KEY REQUIRED) */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center p-1 rounded-2xl bg-black/60 border border-cyan-500/30 shadow-inner">
+            {GIRIONIX_CODING_MODELS.map((m) => {
+              const isSelected = selectedGirionixModel === m.id;
+              return (
+                <button
+                  key={m.id}
+                  onClick={() => setSelectedGirionixModel(m.id)}
+                  className={`px-2.5 sm:px-3 py-1 rounded-xl text-xs font-mono transition-all cursor-pointer flex items-center gap-1.5 ${
+                    isSelected
+                      ? 'bg-gradient-to-r from-cyan-500/25 to-blue-500/25 text-cyan-200 border border-cyan-400/50 shadow-glow-cyan font-bold scale-[1.02]'
+                      : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
+                  }`}
+                  title={`${m.name}: ${m.description}`}
+                >
+                  <Cpu className={`w-3 h-3 ${isSelected ? 'text-cyan-400 animate-pulse' : 'text-gray-500'}`} />
+                  <span className="hidden sm:inline">{m.shortName}</span>
+                  <span className="sm:hidden">{m.shortName.split(' ')[0]}</span>
+                </button>
+              );
+            })}
+          </div>
 
-          <label className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-gray-300 hover:text-white border border-white/10 text-xs font-mono transition-all cursor-pointer">
-            <Upload className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Import</span>
-            <input type="file" accept=".json,.jsx,.js,.tsx,.ts,.py,.html,.css" onChange={handleImportCodeProject} className="hidden" />
-          </label>
+          {/* Zero API Key Badge */}
+          <div className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-mono font-bold shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>0 API Key Needed • 100% Free</span>
+          </div>
+        </div>
 
-          {/* Showcase Templates Dropdown */}
+        {/* Right: Showcase Templates Dropdown & Quick Actions */}
+        <div className="flex items-center gap-2">
+          {/* Templates Dropdown */}
           <div className="relative" ref={templatesDropdownRef}>
             <button
               onClick={() => setIsTemplatesOpen(!isTemplatesOpen)}
-              className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gradient-to-r from-cyan-500/20 to-purple-500/20 hover:from-cyan-500/30 hover:to-purple-500/30 text-white font-bold border border-cyan-500/40 text-xs font-mono transition-all cursor-pointer shadow-sm"
-              title="Select a pre-built interactive demo for presentation"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-500/20 to-cyan-500/20 hover:from-purple-500/30 hover:to-cyan-500/30 text-white font-bold border border-cyan-500/30 text-xs font-mono transition-all cursor-pointer shadow-sm"
+              title="Select pre-built demo app templates"
             >
               <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-              <span>⚡ Templates</span>
+              <span>⚡ Showcase Demos</span>
               <ChevronDown className={`w-3 h-3 text-cyan-400 transition-transform ${isTemplatesOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {isTemplatesOpen && (
-              <div className="absolute left-0 mt-1.5 w-72 rounded-2xl bg-[#080B17] border border-cyan-500/40 shadow-2xl shadow-glow-cyan/20 p-2 z-50 animate-fadeIn backdrop-blur-2xl">
+              <div className="absolute right-0 mt-2 w-80 rounded-2xl bg-[#080B17] border border-cyan-500/40 shadow-2xl p-2 z-50 animate-fadeIn backdrop-blur-2xl">
                 <div className="px-2.5 py-1.5 border-b border-white/10 mb-1 flex items-center justify-between">
                   <span className="text-[10px] font-mono uppercase text-gray-400 font-bold tracking-wider">
                     Office Showcase Demos
                   </span>
-                  <span className="text-[10px] font-mono text-cyan-400">1-Click Live</span>
+                  <span className="text-[10px] font-mono text-emerald-400 font-bold">100% Interactive</span>
                 </div>
 
-                <div className="space-y-1">
+                <div className="space-y-1 max-h-72 overflow-y-auto">
                   {CODE_STUDIO_TEMPLATES.map(t => (
                     <button
                       key={t.id}
@@ -703,213 +686,264 @@ export default function CodeStudio({ activeModel, injectedCode, isTitanMode = fa
             )}
           </div>
         </div>
+      </div>
 
-        {/* Viewport switcher & 1-Click Code Actions */}
-        <div className="flex items-center gap-2">
-          {/* 1-Click Paste Button */}
-          <button
-            onClick={handlePasteFromClipboard}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-gray-300 hover:text-white border border-white/10 text-xs font-mono transition-all"
-            title="1-Click Paste from Clipboard"
-          >
-            <ClipboardPaste className="w-3.5 h-3.5 text-cyan-400" />
-            <span>{pasted ? 'Pasted!' : 'Paste Code'}</span>
-          </button>
-
-          {/* 1-Click Auto-Indent / Format */}
+      {/* 2. Secondary Clean Action Strip */}
+      <div className="px-3 sm:px-4 py-1.5 border-b border-white/10 bg-[#060810] flex items-center justify-between gap-2 text-xs font-mono flex-wrap">
+        {/* Left: Code Utilities */}
+        <div className="flex items-center gap-1.5 flex-wrap">
           <button
             onClick={handleFormatCode}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-gray-300 hover:text-white border border-white/10 text-xs font-mono transition-all"
-            title="Format Code & Auto-Indent"
+            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] text-gray-300 hover:text-white border border-white/10 text-[11px] transition-all cursor-pointer"
+            title="Auto-Indent & Format Code"
           >
-            <Wand2 className="w-3.5 h-3.5 text-purple-400" />
+            <Wand2 className="w-3 h-3 text-purple-400" />
             <span>Format</span>
           </button>
 
-          {/* 1-Click Generate Unit Tests */}
+          <button
+            onClick={handlePasteFromClipboard}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] text-gray-300 hover:text-white border border-white/10 text-[11px] transition-all cursor-pointer"
+            title="Paste code from clipboard"
+          >
+            <ClipboardPaste className="w-3 h-3 text-cyan-400" />
+            <span>{pasted ? 'Pasted!' : 'Paste'}</span>
+          </button>
+
+          <button
+            onClick={handleCopy}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] text-gray-300 hover:text-white border border-white/10 text-[11px] transition-all cursor-pointer"
+            title="Copy current code"
+          >
+            {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 text-cyan-400" />}
+            <span>{copied ? 'Copied' : 'Copy'}</span>
+          </button>
+
+          <div className="h-3 w-px bg-white/10 hidden sm:block" />
+
+          <button
+            onClick={handleExportCodeProject}
+            className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] text-gray-400 hover:text-white border border-white/5 text-[11px] transition-all cursor-pointer"
+            title="Export full project"
+          >
+            <FileDown className="w-3 h-3 text-cyan-400" />
+            <span>Export</span>
+          </button>
+
+          <label className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] text-gray-400 hover:text-white border border-white/5 text-[11px] transition-all cursor-pointer">
+            <Upload className="w-3 h-3 text-emerald-400" />
+            <span>Import</span>
+            <input type="file" accept=".json,.jsx,.js,.tsx,.ts,.py,.html,.css" onChange={handleImportCodeProject} className="hidden" />
+          </label>
+        </div>
+
+        {/* Right: Quick Tools & Viewport Mode */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {/* Unit Tests Button */}
           <button
             onClick={handleGenerateUnitTests}
             disabled={isGenerating}
-            className="hidden md:flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-gray-300 hover:text-emerald-300 border border-white/10 text-xs font-mono transition-all"
-            title="Generate Vitest / Jest Unit Tests"
+            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[11px] font-bold transition-all cursor-pointer"
+            title="Generate Vitest / Jest Unit Tests with on-device model"
           >
-            <TestTube className="w-3.5 h-3.5 text-emerald-400" />
+            <TestTube className="w-3 h-3 text-emerald-400" />
             <span>Unit Tests</span>
           </button>
 
-          <div className="hidden sm:flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/5">
+          {/* Auto-Fix Button */}
+          <button
+            onClick={handleAutoFixCode}
+            disabled={isAutoFixing}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[11px] font-bold transition-all cursor-pointer"
+            title="Auto-Fix syntax & console runtime errors"
+          >
+            <Zap className="w-3 h-3 text-amber-400" />
+            <span>{isAutoFixing ? 'Fixing...' : 'Auto-Fix'}</span>
+          </button>
+
+          {/* Benchmark Button */}
+          <button
+            onClick={handleRunBenchmark}
+            disabled={isRunningBenchmark}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[11px] font-bold transition-all cursor-pointer"
+            title="Run 100k-ops JS Benchmark"
+          >
+            <Activity className="w-3 h-3 text-purple-400" />
+            <span>{isRunningBenchmark ? 'Measuring...' : 'Benchmark'}</span>
+          </button>
+
+          <div className="h-3 w-px bg-white/10" />
+
+          {/* Viewport switcher */}
+          <div className="flex items-center p-0.5 rounded-lg bg-black/40 border border-white/10">
             <button
               onClick={() => setViewMode('desktop')}
-              className={`p-1.5 rounded-lg ${viewMode === 'desktop' ? 'bg-cyan-500/20 text-cyan-300' : 'text-gray-400 hover:text-white'}`}
-              title="Desktop 100%"
+              className={`p-1 rounded ${viewMode === 'desktop' ? 'bg-cyan-500/20 text-cyan-300' : 'text-gray-400 hover:text-white'}`}
+              title="Desktop Preview"
             >
               <Monitor className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => setViewMode('tablet')}
-              className={`p-1.5 rounded-lg ${viewMode === 'tablet' ? 'bg-cyan-500/20 text-cyan-300' : 'text-gray-400 hover:text-white'}`}
-              title="Tablet (768px)"
+              className={`p-1 rounded ${viewMode === 'tablet' ? 'bg-cyan-500/20 text-cyan-300' : 'text-gray-400 hover:text-white'}`}
+              title="Tablet Preview (768px)"
             >
               <Tablet className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => setViewMode('mobile')}
-              className={`p-1.5 rounded-lg ${viewMode === 'mobile' ? 'bg-cyan-500/20 text-cyan-300' : 'text-gray-400 hover:text-white'}`}
-              title="Mobile (375px)"
+              className={`p-1 rounded ${viewMode === 'mobile' ? 'bg-cyan-500/20 text-cyan-300' : 'text-gray-400 hover:text-white'}`}
+              title="Mobile Preview (375px)"
             >
               <Smartphone className="w-3.5 h-3.5" />
             </button>
           </div>
-
-          <button
-            onClick={handleRunBenchmark}
-            disabled={isRunningBenchmark}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 border border-purple-500/30 font-bold transition-colors"
-            title="Run 100k-ops JavaScript Execution Micro-Benchmark"
-          >
-            <Activity className="w-3.5 h-3.5" />
-            <span>{isRunningBenchmark ? 'Measuring...' : 'Benchmark'}</span>
-          </button>
-
-          <button
-            onClick={handleAutoFixCode}
-            disabled={isAutoFixing}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 font-bold transition-colors"
-            title="1-Click Code Auto-Fix: Automatically repair console errors"
-          >
-            <Zap className="w-3.5 h-3.5" />
-            <span>{isAutoFixing ? 'Fixing...' : 'Auto-Fix'}</span>
-          </button>
-
-          <button
-            onClick={handleCopy}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer shadow-sm hover:scale-105 ${
-              copied 
-                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-glow-emerald' 
-                : 'bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-200 border border-cyan-500/40 shadow-glow-cyan'
-            }`}
-            title="1-Click Copy entire code to clipboard (Ctrl+C)"
-          >
-            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-cyan-400" />}
-            <span>{copied ? 'Copied to Clipboard!' : 'Copy Code'}</span>
-          </button>
-
-          <button
-            onClick={handleDownloadActiveFile}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 cursor-pointer"
-            title="Download Active File (.jsx)"
-          >
-            <Download className="w-4 h-4" />
-          </button>
         </div>
       </div>
 
       {/* Benchmark Results HUD */}
       {benchmarkResult && (
-        <div className="px-4 py-2 bg-gradient-to-r from-purple-950/40 via-indigo-950/40 to-slate-900 border-b border-purple-500/20 flex items-center justify-between text-xs font-mono">
-          <div className="flex items-center gap-3">
-            <span className="text-purple-300 font-bold flex items-center gap-1">
-              <Gauge className="w-3.5 h-3.5 text-purple-400" />
-              <span>JS Engine Latency:</span>
+        <div className="px-4 py-2 bg-[#0c0e1a] border-b border-purple-500/30 flex items-center justify-between text-xs font-mono text-purple-300 animate-fadeIn">
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="font-bold flex items-center gap-1">
+              <Activity className="w-3.5 h-3.5 text-purple-400" />
+              <span>JS Engine Benchmark:</span>
             </span>
-            <span className="px-2 py-0.5 rounded bg-purple-500/20 text-purple-200 font-bold">
-              {benchmarkResult.durationMs} ms
-            </span>
-            <span className="text-gray-400">
-              Throughput: <strong className="text-cyan-300">{benchmarkResult.opsPerSec} ops/sec</strong> ({benchmarkResult.iterations} cycles)
-            </span>
+            <span>Duration: <strong>{benchmarkResult.durationMs} ms</strong></span>
+            <span>Throughput: <strong>{benchmarkResult.opsPerSec} ops/sec</strong></span>
+            <span>Iterations: <strong>{benchmarkResult.iterations.toLocaleString()}</strong></span>
           </div>
-          <button onClick={() => setBenchmarkResult(null)} className="text-gray-400 hover:text-white">✕</button>
+          <button onClick={() => setBenchmarkResult(null)} className="text-gray-400 hover:text-white text-xs">✕</button>
         </div>
       )}
 
-      {/* Main Split: Code Editor (Left) & Sandboxed Preview (Right) */}
-      <div className="flex-1 grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-white/10 overflow-hidden">
+      {/* 3. Main Split View: Code Editor (Left) & Sandbox Preview (Right) */}
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
         {/* Left: Code Editor */}
-        <div className="flex flex-col h-full bg-[#05060A] overflow-hidden">
-          <div className="flex-1 overflow-auto p-4 font-mono text-xs text-cyan-100">
-            <textarea
-              value={activeFile.content}
-              onChange={(e) => handleCodeChange(e.target.value)}
-              className="w-full h-full bg-transparent border-0 outline-none resize-none font-mono text-xs text-cyan-200 leading-relaxed focus:outline-none"
-              spellCheck="false"
-            />
+        <div className="w-full md:w-1/2 flex flex-col border-b md:border-b-0 md:border-r border-white/10 bg-[#060812]">
+          <div className="px-3 py-1.5 bg-[#090C16] border-b border-white/5 flex items-center justify-between text-[11px] font-mono text-gray-400">
+            <span className="flex items-center gap-1.5">
+              <FileCode className="w-3 h-3 text-cyan-400" />
+              <span>{activeFileName}</span>
+            </span>
+            <span className="text-[10px] text-gray-500">
+              {activeFile.content.split('\n').length} lines • {activeFile.content.length} chars
+            </span>
           </div>
 
-          {/* AI Code Copilot Prompt Bar */}
-          <div className="p-3 border-t border-white/10 bg-[#090B16] flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-cyan-400 flex-shrink-0" />
-            <input
-              type="text"
-              placeholder="Ask Girionix to add a feature, refactor, or style this component..."
-              value={aiPrompt}
-              onChange={(e) => setAiPrompt(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') handleAiModify(); }}
-              className="flex-1 bg-black/50 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/40"
-            />
-            <button
-              onClick={handleAiModify}
-              disabled={!aiPrompt.trim() || isGenerating}
-              className="px-3 py-1.5 rounded-xl bg-cyan-500 text-black font-bold text-xs disabled:opacity-40 shadow-glow-cyan"
-            >
-              {isGenerating ? 'Synthesizing...' : 'Refactor'}
-            </button>
-          </div>
+          <textarea
+            value={activeFile.content}
+            onChange={(e) => handleCodeChange(e.target.value)}
+            spellCheck="false"
+            className="flex-1 w-full p-4 bg-transparent text-gray-200 font-mono text-xs leading-relaxed resize-none focus:outline-none focus:ring-0 selection:bg-cyan-500/30"
+            placeholder="Write or paste React 18 / Tailwind component code here..."
+          />
         </div>
 
-        {/* Right: Live Sandboxed React 18 Runner */}
-        <div className="flex flex-col h-full bg-[#07080F] overflow-hidden">
-          <div className="flex-1 flex items-center justify-center p-3 bg-black/40 overflow-auto">
-            <div
-              className={`h-full transition-all duration-300 rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-black ${
-                viewMode === 'desktop' ? 'w-full' : viewMode === 'tablet' ? 'w-[768px] max-w-full' : 'w-[375px] max-w-full'
+        {/* Right: Live Sandbox & Console */}
+        <div className="w-full md:w-1/2 flex flex-col bg-[#05060D]">
+          <div className="px-3 py-1.5 bg-[#090C16] border-b border-white/5 flex items-center justify-between text-[11px] font-mono text-gray-400">
+            <span className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Live Preview ({viewMode})</span>
+            </span>
+
+            <button
+              onClick={() => setIsConsoleOpen(!isConsoleOpen)}
+              className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] transition-colors ${
+                consoleLogs.some(l => l.type === 'error') 
+                  ? 'bg-rose-500/20 text-rose-300 font-bold border border-rose-500/30' 
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <Terminal className="w-3 h-3" />
+              <span>Console ({consoleLogs.length})</span>
+            </button>
+          </div>
+
+          {/* Sandbox Frame Container */}
+          <div className="flex-1 flex items-center justify-center p-3 sm:p-4 bg-black/40 overflow-auto">
+            <div 
+              className={`h-full transition-all duration-300 rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-[#07080F] flex flex-col ${
+                viewMode === 'mobile' ? 'w-[375px] max-h-[667px]' :
+                viewMode === 'tablet' ? 'w-[768px] max-h-[900px]' :
+                'w-full'
               }`}
             >
               <iframe
                 ref={iframeRef}
-                title="Girionix Sandboxed Live App"
                 srcDoc={getSandboxHtml()}
-                sandbox="allow-scripts allow-modals allow-same-origin"
-                className="w-full h-full border-0 bg-[#07080F]"
+                title="Live Sandbox"
+                sandbox="allow-scripts allow-same-origin allow-modals"
+                className="w-full h-full border-0 bg-transparent flex-1"
               />
             </div>
           </div>
 
           {/* Collapsible Console Drawer */}
-          <div className="border-t border-white/10 bg-[#090B16]">
-            <button
-              onClick={() => setIsConsoleOpen(!isConsoleOpen)}
-              className="w-full px-3 py-1.5 flex items-center justify-between text-[11px] font-mono text-gray-400 hover:text-white"
-            >
-              <div className="flex items-center gap-2">
-                <Terminal className="w-3.5 h-3.5 text-cyan-400" />
-                <span>Console ({consoleLogs.length})</span>
-                {consoleLogs.some(l => l.type === 'error') && (
-                  <span className="px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-300 text-[10px]">Errors</span>
-                )}
+          {isConsoleOpen && (
+            <div className="h-44 border-t border-white/10 bg-[#070914] flex flex-col font-mono text-xs">
+              <div className="px-3 py-1.5 bg-black/40 border-b border-white/5 flex items-center justify-between text-[10px] text-gray-400">
+                <span>Console Logs</span>
+                <button onClick={() => setConsoleLogs([])} className="hover:text-white">Clear</button>
               </div>
-              {isConsoleOpen ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
-            </button>
-
-            {isConsoleOpen && (
-              <div className="p-3 max-h-36 overflow-y-auto font-mono text-[11px] space-y-1 bg-[#05060A]">
+              <div className="flex-1 p-2 overflow-y-auto space-y-1">
                 {consoleLogs.length === 0 ? (
-                  <div className="text-gray-600">No console outputs yet.</div>
+                  <div className="text-gray-600 text-[10px] italic">No console logs recorded yet.</div>
                 ) : (
-                  consoleLogs.map((log, i) => (
-                    <div
-                      key={i}
-                      className={`flex items-start gap-2 ${
-                        log.type === 'error' ? 'text-rose-400' : log.type === 'warn' ? 'text-amber-400' : 'text-cyan-200'
+                  consoleLogs.map((log, idx) => (
+                    <div 
+                      key={idx} 
+                      className={`text-[11px] leading-snug flex items-start gap-1.5 ${
+                        log.type === 'error' ? 'text-rose-400' : 
+                        log.type === 'warn' ? 'text-amber-300' : 'text-gray-300'
                       }`}
                     >
-                      <span className="text-gray-600 flex-shrink-0">{log.time}</span>
+                      <span className="text-gray-600 shrink-0 text-[9px]">{log.time}</span>
                       <span className="break-all">{log.text}</span>
                     </div>
                   ))
                 )}
               </div>
-            )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 4. Bottom AI Assistant Dock with Girionix Flagship Models (0 API Key Needed) */}
+      <div className="p-2.5 sm:p-3 bg-[#080B15] border-t border-white/10 shrink-0 z-10">
+        <div className="flex items-center gap-2 max-w-4xl mx-auto">
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 text-xs font-mono shrink-0 hidden sm:flex">
+            <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="font-bold">{GIRIONIX_CODING_MODELS.find(m => m.id === selectedGirionixModel)?.shortName}</span>
+          </div>
+
+          <div className="flex-1 relative flex items-center">
+            <input
+              type="text"
+              value={aiPrompt}
+              onChange={(e) => setAiPrompt(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAiModify()}
+              placeholder={`Ask AI to modify this code (e.g. "Add a dark/light mode toggle", "Add search filter")...`}
+              className="w-full px-3.5 py-2.5 pr-20 rounded-xl bg-black/60 border border-white/15 focus:border-cyan-400 focus:outline-none text-xs text-white placeholder-gray-500 font-mono"
+            />
+            <div className="absolute right-1.5 flex items-center gap-1">
+              <button
+                type="button"
+                onClick={handleAiModify}
+                disabled={isGenerating || !aiPrompt.trim()}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-xs font-bold disabled:opacity-30 transition-all cursor-pointer"
+              >
+                {isGenerating ? (
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <>
+                    <span>Generate</span>
+                    <Send className="w-3 h-3" />
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </div>

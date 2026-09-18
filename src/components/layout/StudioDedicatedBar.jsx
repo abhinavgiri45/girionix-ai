@@ -91,16 +91,26 @@ export default function StudioDedicatedBar({
           )}
 
           {/* Dynamic API Provider & Key Indicator */}
-          <div 
-            onClick={() => setIsDetailsOpen(!isDetailsOpen)}
-            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-[11px] font-mono text-gray-300 cursor-pointer transition-all hover:scale-105"
-            title="Active AI Provider & API Key Routing"
-          >
-            <Key className="w-3 h-3 text-cyan-400" />
-            <span className="text-cyan-300 font-bold">
-              {universalApiEngine.getProviderConfig().apiKey ? 'API Connected' : 'Free Neural Gateway'}
-            </span>
-          </div>
+          {activeStudioTab === 'code' ? (
+            <div 
+              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-[11px] font-mono text-emerald-300"
+              title="Coding Studio uses Girionix 3 Flagship Models - Zero API key required"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="font-bold">No API Key Needed</span>
+            </div>
+          ) : (
+            <div 
+              onClick={() => setIsDetailsOpen(!isDetailsOpen)}
+              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-[11px] font-mono text-gray-300 cursor-pointer transition-all hover:scale-105"
+              title="Active AI Provider & API Key Routing"
+            >
+              <Key className="w-3 h-3 text-cyan-400" />
+              <span className="text-cyan-300 font-bold">
+                {universalApiEngine.getProviderConfig().apiKey ? `${universalApiEngine.getProviderConfig().providerName.split(' ')[0]} Active` : 'Free Universal API'}
+              </span>
+            </div>
+          )}
 
           <div 
             onClick={() => setIsDetailsOpen(!isDetailsOpen)}

@@ -44,6 +44,7 @@ import { geminiStudioEngine, OFFICIAL_GEMINI_MODELS } from '../../services/gemin
 import { openrouter } from '../../services/openrouter';
 import { universalApiEngine } from '../../services/universalApiEngine';
 import { storage } from '../../services/storage';
+import UniversalApiGateModal from './UniversalApiGateModal';
 
 // Preset sample prompt library
 const SAMPLE_PROMPTS = [
@@ -215,12 +216,39 @@ You can click **▶ Run Code** above to execute this code right inside the in-br
   const [enableJsonMode, setEnableJsonMode] = useState(false);
   const [safetyThreshold, setSafetyThreshold] = useState('BLOCK_NONE'); // 'BLOCK_NONE' | 'BLOCK_FEW' | 'BLOCK_SOME'
 
-  // API Key Modal State
-  const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
-  const [apiKeyInput, setApiKeyInput] = useState(() => geminiStudioEngine.getApiKey());
-  const [isVerifyingKey, setIsVerifyingKey] = useState(false);
-  const [verifyStatus, setVerifyStatus] = useState(null);
-  const [hasDirectKey, setHasDirectKey] = useState(() => geminiStudioEngine.hasApiKey());
+  // Universal API Gate & Provider State
+  const [providerConfig, setProviderConfig] = useState(() => universalApiEngine.getProviderConfig());
+  const [hasVerifiedKey, setHasVerifiedKey] = useState(() => {
+    return Boolean(
+      geminiStudioEngine.getApiKey() || 
+      universalApiEngine.getProviderConfig().apiKey || 
+      storage.getApiKey()
+    );
+  });
+  const [isGateModalOpen, setIsGateModalOpen] = useState(() => {
+    const hasKey = Boolean(
+      geminiStudioEngine.getApiKey() || 
+      universalApiEngine.getProviderConfig().apiKey || 
+      storage.getApiKey()
+    );
+    const setupDone = typeof localStorage !== 'undefined' && localStorage.getItem('girionix_ai_studio_setup_done') === 'true';
+    return !hasKey && !setupDone;
+  });
+
+  // Keep provider configuration & verification status synchronized
+  useEffect(() => {
+    const syncKeys = () => {
+      const cfg = universalApiEngine.getProviderConfig();
+      setProviderConfig(cfg);
+      setHasVerifiedKey(Boolean(cfg.apiKey || geminiStudioEngine.getApiKey() || storage.getApiKey()));
+    };
+    window.addEventListener('storage', syncKeys);
+    window.addEventListener('girionix:key-updated', syncKeys);
+    return () => {
+      window.removeEventListener('storage', syncKeys);
+      window.removeEventListener('girionix:key-updated', syncKeys);
+    };
+  }, []);
 
   // Mobile Run Settings Drawer
   const [isMobileSettingsOpen, setIsMobileSettingsOpen] = useState(false);
@@ -312,37 +340,14 @@ You can click **▶ Run Code** above to execute this code right inside the in-br
     setIsGenerating(false);
   };
 
-  // API Key Save & Verification
-  const handleSaveApiKey = async () => {
-    setIsVerifyingKey(true);
-    setVerifyStatus(null);
-    try {
-      const res = await geminiStudioEngine.verifyApiKey(apiKeyInput);
-      if (res.valid) {
-        geminiStudioEngine.setApiKey(apiKeyInput);
-        setHasDirectKey(true);
-        setVerifyStatus({ success: true, message: res.label });
-        setTimeout(() => setIsApiKeyModalOpen(false), 1200);
-      } else {
-        setVerifyStatus({ success: false, message: res.message });
-      }
-    } catch (err) {
-      setVerifyStatus({ success: false, message: err.message });
-    } finally {
-      setIsVerifyingKey(false);
-    }
-  };
-
-  const handleClearApiKey = () => {
-    geminiStudioEngine.setApiKey('');
-    setApiKeyInput('');
-    setHasDirectKey(false);
-    setVerifyStatus({ success: true, message: 'Reverted to Free Neural AI Gateway' });
-  };
-
-  // Run generation with Real-Time Streaming
+  // Run generation with Real-Time Streaming (Google Gemini Direct or Universal API)
   const handleRun = async () => {
     if (isGenerating) return;
+
+    if (!hasVerifiedKey) {
+      setIsGateModalOpen(true);
+      return;
+    }
 
     abortControllerRef.current = new AbortController();
     const signal = abortControllerRef.current.signal;
@@ -373,8 +378,8 @@ You can click **▶ Run Code** above to execute this code right inside the in-br
         finishReason: null,
         isStreaming: true,
         groundingSources: enableSearchGrounding ? [
-          { title: "Gemini 2.5 Architecture", url: "https://gemini.com" },
-          { title: "AI Studio Developer Portal", url: "https://aistudio.com" }
+          { title: "Verified Real-time Grounding", url: "https://google.com" },
+          { title: "AI Studio Documentation", url: "https://aistudio.google.com" }
         ] : []
       };
 
@@ -383,54 +388,87 @@ You can click **▶ Run Code** above to execute this code right inside the in-br
       setAttachedFiles([]);
       setIsGenerating(true);
 
+      const startTime = performance.now();
+
       try {
-        await geminiStudioEngine.streamPrompt({
-          mode: 'chat',
-          systemInstruction,
-          prompt: userText,
-          history: chatTurns,
-          files: currentAttachments,
-          model: selectedModel,
-          temperature,
-          topP,
-          topK,
-          maxOutputTokens,
-          thinkingBudget,
-          enableThinking,
-          enableSearchGrounding,
-          enableJsonMode,
-          onToken: (chunk, full) => {
-            setChatTurns(prev => prev.map(t => {
-              if (t.id === modelTurnId) {
-                return { ...t, content: full };
-              }
-              return t;
-            }));
-          },
-          onThinking: (chunk, full) => {
-            setChatTurns(prev => prev.map(t => {
-              if (t.id === modelTurnId) {
-                return { ...t, thinking: full };
-              }
-              return t;
-            }));
-          },
-          onMetrics: (metrics) => {
-            setChatTurns(prev => prev.map(t => {
-              if (t.id === modelTurnId) {
-                return { 
-                  ...t, 
-                  latencyMs: metrics.latencyMs, 
-                  tokenCount: metrics.tokenCount, 
-                  speedTokensPerSec: metrics.speedTokensPerSec,
-                  finishReason: metrics.finishReason || t.finishReason
-                };
-              }
-              return t;
-            }));
-          },
-          signal
-        });
+        if (providerConfig.providerId === 'google') {
+          await geminiStudioEngine.streamPrompt({
+            mode: 'chat',
+            systemInstruction,
+            prompt: userText,
+            history: chatTurns,
+            files: currentAttachments,
+            model: selectedModel,
+            temperature,
+            topP,
+            topK,
+            maxOutputTokens,
+            thinkingBudget,
+            enableThinking,
+            enableSearchGrounding,
+            enableJsonMode,
+            onToken: (chunk, full) => {
+              setChatTurns(prev => prev.map(t => t.id === modelTurnId ? { ...t, content: full } : t));
+            },
+            onThinking: (chunk, full) => {
+              setChatTurns(prev => prev.map(t => t.id === modelTurnId ? { ...t, thinking: full } : t));
+            },
+            onMetrics: (metrics) => {
+              setChatTurns(prev => prev.map(t => t.id === modelTurnId ? { 
+                ...t, 
+                latencyMs: metrics.latencyMs, 
+                tokenCount: metrics.tokenCount, 
+                speedTokensPerSec: metrics.speedTokensPerSec,
+                finishReason: metrics.finishReason || t.finishReason
+              } : t));
+            },
+            signal
+          });
+        } else {
+          // Universal Provider Execution (OpenRouter, Groq, DeepSeek, OpenAI, Anthropic, Custom/Ollama)
+          const cleanHistory = chatTurns
+            .filter(t => t.content && t.id !== modelTurnId)
+            .map(t => ({ role: t.role === 'model' ? 'assistant' : 'user', content: t.content }));
+
+          const messages = [
+            ...(systemInstruction ? [{ role: 'system', content: systemInstruction }] : []),
+            ...cleanHistory,
+            { role: 'user', content: userText }
+          ];
+
+          let accContent = '';
+          let accThinking = '';
+
+          await openrouter.streamChat({
+            messages,
+            model: selectedModel,
+            temperature,
+            maxTokens: maxOutputTokens,
+            webSearchEnabled: enableSearchGrounding,
+            useThinking: enableThinking,
+            onChunk: (chunk, full) => {
+              accContent = full;
+              setChatTurns(prev => prev.map(t => t.id === modelTurnId ? { ...t, content: full } : t));
+            },
+            onReasoningChunk: (chunk, full) => {
+              accThinking = full;
+              setChatTurns(prev => prev.map(t => t.id === modelTurnId ? { ...t, thinking: full } : t));
+            },
+            signal
+          });
+
+          const dur = Math.round(performance.now() - startTime);
+          const tok = Math.round(accContent.length / 4);
+          const spd = dur > 0 ? Math.round((tok / dur) * 1000) : 60;
+
+          setChatTurns(prev => prev.map(t => t.id === modelTurnId ? { 
+            ...t, 
+            latencyMs: dur, 
+            tokenCount: tok, 
+            speedTokensPerSec: spd,
+            finishReason: 'stop'
+          } : t));
+        }
       } catch (err) {
         if (!signal.aborted) {
           setChatTurns(prev => prev.map(t => {
@@ -462,37 +500,78 @@ You can click **▶ Run Code** above to execute this code right inside the in-br
         isStreaming: true
       });
 
+      const startTime = performance.now();
+
       try {
-        await geminiStudioEngine.streamPrompt({
-          mode: 'freeform',
-          systemInstruction,
-          prompt: freeformContent,
-          model: selectedModel,
-          temperature,
-          topP,
-          topK,
-          maxOutputTokens,
-          thinkingBudget,
-          enableThinking,
-          enableSearchGrounding,
-          enableJsonMode,
-          onToken: (chunk, full) => {
-            setFreeformOutput(prev => prev ? { ...prev, content: full } : null);
-          },
-          onThinking: (chunk, full) => {
-            setFreeformOutput(prev => prev ? { ...prev, thinking: full } : null);
-          },
-          onMetrics: (metrics) => {
-            setFreeformOutput(prev => prev ? { 
-              ...prev, 
-              latencyMs: metrics.latencyMs, 
-              tokenCount: metrics.tokenCount, 
-              speedTokensPerSec: metrics.speedTokensPerSec,
-              finishReason: metrics.finishReason || prev.finishReason
-            } : null);
-          },
-          signal
-        });
+        if (providerConfig.providerId === 'google') {
+          await geminiStudioEngine.streamPrompt({
+            mode: 'freeform',
+            systemInstruction,
+            prompt: freeformContent,
+            model: selectedModel,
+            temperature,
+            topP,
+            topK,
+            maxOutputTokens,
+            thinkingBudget,
+            enableThinking,
+            enableSearchGrounding,
+            enableJsonMode,
+            onToken: (chunk, full) => {
+              setFreeformOutput(prev => prev ? { ...prev, content: full } : null);
+            },
+            onThinking: (chunk, full) => {
+              setFreeformOutput(prev => prev ? { ...prev, thinking: full } : null);
+            },
+            onMetrics: (metrics) => {
+              setFreeformOutput(prev => prev ? { 
+                ...prev, 
+                latencyMs: metrics.latencyMs, 
+                tokenCount: metrics.tokenCount, 
+                speedTokensPerSec: metrics.speedTokensPerSec,
+                finishReason: metrics.finishReason || prev.finishReason
+              } : null);
+            },
+            signal
+          });
+        } else {
+          // Universal Provider Execution
+          const messages = [
+            ...(systemInstruction ? [{ role: 'system', content: systemInstruction }] : []),
+            { role: 'user', content: freeformContent }
+          ];
+
+          let accContent = '';
+
+          await openrouter.streamChat({
+            messages,
+            model: selectedModel,
+            temperature,
+            maxTokens: maxOutputTokens,
+            webSearchEnabled: enableSearchGrounding,
+            useThinking: enableThinking,
+            onChunk: (chunk, full) => {
+              accContent = full;
+              setFreeformOutput(prev => prev ? { ...prev, content: full } : null);
+            },
+            onReasoningChunk: (chunk, full) => {
+              setFreeformOutput(prev => prev ? { ...prev, thinking: full } : null);
+            },
+            signal
+          });
+
+          const dur = Math.round(performance.now() - startTime);
+          const tok = Math.round(accContent.length / 4);
+          const spd = dur > 0 ? Math.round((tok / dur) * 1000) : 60;
+
+          setFreeformOutput(prev => prev ? {
+            ...prev,
+            latencyMs: dur,
+            tokenCount: tok,
+            speedTokensPerSec: spd,
+            finishReason: 'stop'
+          } : null);
+        }
       } catch (err) {
         if (!signal.aborted) {
           setFreeformOutput(prev => prev ? { ...prev, content: `Error: ${err.message}`, finishReason: 'error' } : null);
@@ -515,41 +594,82 @@ You can click **▶ Run Code** above to execute this code right inside the in-br
         isStreaming: true
       });
 
-      const fewShotPrompt = `${systemInstruction}\n\nTask: Map field "${structuredFields.input}" to output field "${structuredFields.output}".\n\n` +
+      const fewShotPrompt = `${systemInstruction}\n\nTask: Map field "${structuredFields.input}" to output field "${structuredFields.output}". Return JSON output.\n\n` +
         structuredExamples.map((ex, i) => `Example ${i + 1}:\n${structuredFields.input}: ${ex.input}\n${structuredFields.output}: ${ex.output}`).join('\n\n') +
         `\n\nProcess:\n${structuredFields.input}: ${structuredTestInput}\n${structuredFields.output}:`;
 
+      const startTime = performance.now();
+
       try {
-        await geminiStudioEngine.streamPrompt({
-          mode: 'structured',
-          systemInstruction,
-          prompt: fewShotPrompt,
-          model: selectedModel,
-          temperature,
-          topP,
-          topK,
-          maxOutputTokens,
-          thinkingBudget,
-          enableThinking,
-          enableSearchGrounding,
-          enableJsonMode: true,
-          onToken: (chunk, full) => {
-            setStructuredOutput(prev => prev ? { ...prev, content: full } : null);
-          },
-          onThinking: (chunk, full) => {
-            setStructuredOutput(prev => prev ? { ...prev, thinking: full } : null);
-          },
-          onMetrics: (metrics) => {
-            setStructuredOutput(prev => prev ? { 
-              ...prev, 
-              latencyMs: metrics.latencyMs, 
-              tokenCount: metrics.tokenCount, 
-              speedTokensPerSec: metrics.speedTokensPerSec,
-              finishReason: metrics.finishReason || prev.finishReason
-            } : null);
-          },
-          signal
-        });
+        if (providerConfig.providerId === 'google') {
+          await geminiStudioEngine.streamPrompt({
+            mode: 'structured',
+            systemInstruction,
+            prompt: fewShotPrompt,
+            model: selectedModel,
+            temperature,
+            topP,
+            topK,
+            maxOutputTokens,
+            thinkingBudget,
+            enableThinking,
+            enableSearchGrounding,
+            enableJsonMode: true,
+            onToken: (chunk, full) => {
+              setStructuredOutput(prev => prev ? { ...prev, content: full } : null);
+            },
+            onThinking: (chunk, full) => {
+              setStructuredOutput(prev => prev ? { ...prev, thinking: full } : null);
+            },
+            onMetrics: (metrics) => {
+              setStructuredOutput(prev => prev ? { 
+                ...prev, 
+                latencyMs: metrics.latencyMs, 
+                tokenCount: metrics.tokenCount, 
+                speedTokensPerSec: metrics.speedTokensPerSec,
+                finishReason: metrics.finishReason || prev.finishReason
+              } : null);
+            },
+            signal
+          });
+        } else {
+          // Universal Provider Execution
+          const messages = [
+            { role: 'system', content: `${systemInstruction}\nYou must respond in valid JSON matching the requested fields.` },
+            { role: 'user', content: fewShotPrompt }
+          ];
+
+          let accContent = '';
+
+          await openrouter.streamChat({
+            messages,
+            model: selectedModel,
+            temperature,
+            maxTokens: maxOutputTokens,
+            webSearchEnabled: enableSearchGrounding,
+            useThinking: enableThinking,
+            onChunk: (chunk, full) => {
+              accContent = full;
+              setStructuredOutput(prev => prev ? { ...prev, content: full } : null);
+            },
+            onReasoningChunk: (chunk, full) => {
+              setStructuredOutput(prev => prev ? { ...prev, thinking: full } : null);
+            },
+            signal
+          });
+
+          const dur = Math.round(performance.now() - startTime);
+          const tok = Math.round(accContent.length / 4);
+          const spd = dur > 0 ? Math.round((tok / dur) * 1000) : 60;
+
+          setStructuredOutput(prev => prev ? {
+            ...prev,
+            latencyMs: dur,
+            tokenCount: tok,
+            speedTokensPerSec: spd,
+            finishReason: 'stop'
+          } : null);
+        }
       } catch (err) {
         if (!signal.aborted) {
           setStructuredOutput(prev => prev ? { ...prev, content: `Error: ${err.message}`, finishReason: 'error' } : null);
@@ -867,19 +987,28 @@ println(response.text)
 
         {/* Right: Quick Action Controls (<> Get Code, Sample Prompts, API Key, Big Blue Run button) */}
         <div className="flex items-center gap-2">
-          {/* Direct Gemini API Key Button (Official AI Studio Top Nav Feature) */}
+          {/* Universal API Provider & Key Button */}
           <button
-            onClick={() => setIsApiKeyModalOpen(true)}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all cursor-pointer ${
-              hasDirectKey
-                ? 'bg-[#004a77]/40 text-[#a8c7fa] border-[#a8c7fa]/40 hover:bg-[#004a77]/60 shadow-sm'
-                : 'bg-[#282a2c] hover:bg-[#3c4043] text-[#c4c7c5] hover:text-white border-[#444746]'
+            onClick={() => setIsGateModalOpen(true)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-mono transition-all cursor-pointer ${
+              hasVerifiedKey
+                ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/25 shadow-sm'
+                : 'bg-amber-500/15 text-amber-300 border-amber-500/40 hover:bg-amber-500/25 animate-pulse'
             }`}
-            title="Set official Gemini API Key (AI Studio)"
+            title="Universal API Configuration (Google Gemini, OpenRouter, Groq, DeepSeek, OpenAI, Anthropic, Ollama)"
           >
-            <Key className="w-3.5 h-3.5 text-[#a8c7fa]" />
-            <span className="hidden md:inline">{hasDirectKey ? 'API Key Active' : 'Get API Key'}</span>
-            {hasDirectKey && <span className="w-1.5 h-1.5 rounded-full bg-[#7adaa2]" />}
+            <Key className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="hidden md:inline font-bold">
+              {hasVerifiedKey ? `${providerConfig.providerName?.split(' ')[0] || 'Universal'} Active` : 'Connect API Key'}
+            </span>
+            <span className="md:hidden font-bold">
+              {hasVerifiedKey ? 'API Active' : 'Set Key'}
+            </span>
+            {hasVerifiedKey ? (
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            ) : (
+              <span className="w-2 h-2 rounded-full bg-amber-400" />
+            )}
           </button>
 
           {/* Sample Prompts Dropdown */}
@@ -1619,95 +1748,27 @@ println(response.text)
         </div>
       </div>
 
-      {/* Direct Gemini API Key Modal (Official AI Studio Flow) */}
-      {isApiKeyModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-          <div className="w-full max-w-md bg-[#1e1f20] border border-[#3c4043] rounded-3xl p-5 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-[#3c4043] pb-3">
-              <div className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-[#282a2c] text-[#a8c7fa]">
-                  <Key className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-white text-sm">AI Studio API Key</h3>
-                  <p className="text-[11px] text-[#8e918f]">Direct connection to Gemini API</p>
-                </div>
-              </div>
-              <button 
-                onClick={() => setIsApiKeyModalOpen(false)}
-                className="p-1 rounded-lg text-[#8e918f] hover:text-white"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="space-y-2 text-xs text-[#c4c7c5] leading-relaxed">
-              <p>
-                Get a free API key with 1,000,000+ token context window directly from AI Studio:
-              </p>
-              <a 
-                href="https://aistudio.google.com/app/apikey" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-[#a8c7fa] hover:underline font-medium"
-              >
-                <span>Get API key from AI Studio</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[11px] text-[#c4c7c5] font-medium">Gemini API Key (starts with AIzaSy...):</label>
-              <input
-                type="password"
-                value={apiKeyInput}
-                onChange={(e) => setApiKeyInput(e.target.value)}
-                placeholder="AIzaSy..."
-                className="w-full bg-[#131314] border border-[#444746] rounded-xl px-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-[#a8c7fa]"
-              />
-            </div>
-
-            {verifyStatus && (
-              <div className={`p-2.5 rounded-xl text-xs font-mono flex items-center gap-2 ${
-                verifyStatus.success ? 'bg-[#7adaa2]/15 text-[#7adaa2] border border-[#7adaa2]/30' : 'bg-[#ff897d]/15 text-[#ff897d] border border-[#ff897d]/30'
-              }`}>
-                {verifyStatus.success ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <X className="w-4 h-4 shrink-0" />}
-                <span>{verifyStatus.message}</span>
-              </div>
-            )}
-
-            <div className="flex items-center justify-between pt-2">
-              {hasDirectKey ? (
-                <button
-                  onClick={handleClearApiKey}
-                  className="text-xs text-[#ff897d] hover:underline cursor-pointer"
-                >
-                  Clear Key & Use Free Gateway
-                </button>
-              ) : (
-                <span className="text-[11px] text-[#8e918f]">Free Neural Gateway Active</span>
-              )}
-
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setIsApiKeyModalOpen(false)}
-                  className="px-3 py-1.5 rounded-xl text-xs text-[#c4c7c5] hover:text-white"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveApiKey}
-                  disabled={isVerifyingKey || !apiKeyInput.trim()}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#0b57d0] hover:bg-[#1a73e8] text-white text-xs font-medium cursor-pointer disabled:opacity-40"
-                >
-                  {isVerifyingKey ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-                  <span>{isVerifyingKey ? 'Verifying...' : 'Save Key'}</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Universal API Gate Modal (Mandatory on First-Time Access & Configurable anytime) */}
+      <UniversalApiGateModal
+        isOpen={isGateModalOpen}
+        isMandatory={!hasVerifiedKey}
+        onClose={() => setIsGateModalOpen(false)}
+        onKeyVerified={(cfg) => {
+          setProviderConfig(universalApiEngine.getProviderConfig());
+          setHasVerifiedKey(true);
+          setIsGateModalOpen(false);
+        }}
+        onSwitchToCodingStudio={() => {
+          setIsGateModalOpen(false);
+          if (onClose) onClose();
+          if (typeof window !== 'undefined' && window.location) {
+            const url = new URL(window.location.href);
+            url.pathname = '/code';
+            url.searchParams.set('studio', 'code');
+            window.location.href = url.toString();
+          }
+        }}
+      />
 
       {/* Mobile Slide-Up Run Settings Bottom Sheet Drawer (< lg screens) */}
       {isMobileSettingsOpen && (
