@@ -12,21 +12,24 @@ export const localCodeSynthesizer = {
   isCodeQuery(prompt) {
     if (!prompt) return false;
     const p = prompt.toLowerCase().trim();
-    return /\b(code|write\s+code|program|script|build\s+an\s+app|create\s+an\s+app|react\s+component|build\s+a\s+website|make\s+a\s+game|snake\s+game|tic\s+tac\s+toe|calculator|dashboard|algorithm|function|component|todo|task\s*list|navbar|navigation|counter|timer|stopwatch|modal|dialog|table|grid|carousel|slider|tabs|accordion|faq|card|login|signup|auth|register|form|weather\s*app|api|fetch|axios|express|fastapi|flask|sql|query|database|two\s*sum|binary\s*search|quicksort|mergesort|linked\s*list|lru\s*cache|debounce|throttle|fibonacci|reverse\s*string|palindrome|html|css|javascript|typescript|python|c\+\+|rust|golang|dockerfile|unit\s*test|regex)\b/i.test(p) ||
-      p.includes('write code for') ||
+    // Exclude purely conceptual or scientific inquiries with words like "brain function", "function of"
+    if (/\b(brain\s+function|cognitive\s+function|function\s+of\s+(the\s+)?(cell|heart|liver|kidney|brain|organ|dna|rna|protein|mitochondria|government|state|bank)|executive\s+function)\b/i.test(p)) {
+      return false;
+    }
+    return /\b(code|codes|coding|program|programs|programmer|programming|script|scripts|scripting|build\s+an?\s+app|create\s+an?\s+app|react\s+component|build\s+a\s+website|create\s+a\s+website|make\s+a\s+game|snake\s+game|tic\s+tac\s+toe|calculator\s+app|dashboard\s+ui|todo\s*list|todo\s*app|navbar|navigation\s*bar|counter\s*app|stopwatch|modal\s*dialog|data\s*table|carousel|slider|accordion|product\s*card|login\s*form|signup\s*form|auth\s*form|weather\s*app|fastapi|flask|express\s*server|sql\s*query|two\s*sum|binary\s*search|quicksort|mergesort|linked\s*list|lru\s*cache|debounce|throttle|html\s*page|css\s*style|javascript\s*code|typescript\s*code|python\s*code|c\+\+\s*code|rust\s*code|golang\s*code|dockerfile|unit\s*test|regex|pytest|jest|portfolio\s*website|landing\s*page|rest\s*api)\b/i.test(p) ||
+      /\b(write|create|build|generate|make|show|give|implement|develop|debug|refactor)\b.*\b(code|script|app|website|webpage|component|function|api|program|algorithm|query|sql|dockerfile|unit\s*test)\b/i.test(p) ||
+      p.includes('write code') ||
       p.includes('code for') ||
-      p.includes('build code') ||
-      p.includes('implement') ||
-      p.includes('how to code') ||
       p.includes('show me code') ||
+      p.includes('give me code') ||
       p.includes('generate code') ||
-      p.includes('how to build') ||
-      p.includes('make an app') ||
+      p.includes('how to code') ||
+      p.includes('code in python') ||
+      p.includes('code in react') ||
+      p.includes('code in javascript') ||
       p.includes('in react') ||
       p.includes('in python') ||
-      p.includes('in javascript') ||
-      p.includes('in c++') ||
-      p.includes('in html');
+      p.includes('in javascript');
   },
 
   /**

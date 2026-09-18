@@ -8,6 +8,7 @@
 import { liveWebSearch } from './liveWebSearch.js';
 import { conversationMemory } from './conversationMemory.js';
 import { localCodeSynthesizer } from './localCodeSynthesizer.js';
+import { localDomainKnowledge } from './localDomainKnowledge.js';
 
 export const TITAN_REQUIREMENTS = {
   ultra: {
@@ -920,8 +921,13 @@ $$e^{i\\pi} + 1 = 0$$`;
     }
 
     // =========================================================================
-    // 7. COMPREHENSIVE ENCYCLOPEDIC KNOWLEDGE MATRIX
+    // 7. COMPREHENSIVE SOVEREIGN DOMAIN KNOWLEDGE MATRIX (ALL FIELDS)
     // =========================================================================
+    const domainKnowledgeMatch = localDomainKnowledge.matchDomainKnowledge(p, tag);
+    if (domainKnowledgeMatch) {
+      return domainKnowledgeMatch;
+    }
+
     const knowledgeBase = [
       {
         keys: ['why is the sky blue', 'sky blue'],
@@ -1252,64 +1258,134 @@ $$e^{i\\pi} + 1 = 0$$`;
       return this.pickDiverse(whyStyles, `why_${p.slice(0, 30)}`);
     }
 
-    // 6. General Topics: 5 DIVERSE STRUCTURAL ARCHETYPES (Non-repetitive & Context-Rich)
-    let hash = 0;
-    for (let i = 0; i < p.length; i++) hash = ((hash << 5) - hash) + p.charCodeAt(i);
-    const archetypeIndex = Math.abs(hash) % 5;
+    // 6. Domain-Aware Dynamic Polymath Synthesis (Grounded, Substantive, Non-Robotic)
+    const isPhysicalScience = /\b(physics|gravity|relativity|quantum|energy|force|wave|particle|thermodynamic|magnetic|electric|optic|light|sound|atom|nuclear|astronomy|star|planet|cosmo|black\s*hole|galaxy|motion|mechanics|acceleration|velocity)\b/i.test(lp);
+    const isLifeScience = /\b(biology|cell|cells|gene|genes|genetic|dna|rna|protein|enzyme|organism|bacteria|virus|immune|brain|neuron|tissue|organ|evolution|ecology|species|medical|disease|physiology|photosynthesis|mitochondria)\b/i.test(lp);
+    const isChemistry = /\b(chemistry|chemical|reaction|molecule|bond|acid|base|ph|electron|element|compound|catalyst|organic|inorganic|stoichiometry|polymer|solvent|solution|periodic|ion|covalent)\b/i.test(lp);
+    const isMathLogic = /\b(math|algebra|geometry|calculus|derivative|integral|matrix|vector|probability|statistic|theorem|proof|axiom|equation|logarithm|prime|graph\s*theory|combinator|set\s*theory)\b/i.test(lp);
+    const isTechComputing = /\b(software|computer|system|network|database|server|cloud|architecture|algorithm|hardware|operating\s*system|linux|memory|cache|cpu|gpu|security|crypto|compiler|microservice|distributed|api)\b/i.test(lp);
+    const isEconFinance = /\b(economy|economics|finance|financial|market|stock|invest|inflation|currency|valuation|capital|bank|trade|business|gdp|asset|liability|revenue|profit|margin|cost|pricing|moat)\b/i.test(lp);
+    const isPhilosophyEthics = /\b(philosophy|ethics|moral|morality|stoic|logic|truth|knowledge|epistemology|metaphysics|virtue|existential|justice|meaning|consciousness|free\s*will|kant|aristotle|plato|nietzsche)\b/i.test(lp);
+    const isHistoryPolitics = /\b(history|historical|war|empire|revolution|civilization|treaty|government|democracy|politics|constitution|monarchy|dynasty|century|president|ruler|treaty|ancient|medieval)\b/i.test(lp);
 
-    if (archetypeIndex === 0) {
-      // ARCHETYPE 1: Direct Answer & Key Pillars
-      return `### ${capitalizedSubject}\n\n` +
-`**${cleanSubject}** is best understood through its core purpose and direct practical value.\n\n` +
-`#### Key Pillars:\n` +
-`1. **Foundational Concept**: It provides the underlying rules and framework necessary to organize complex operations into structured, predictable actions.\n` +
-`2. **Operational Function**: By standardizing interactions and minimizing friction, it allows systems or individuals to accomplish objectives with elevated reliability.\n` +
-`3. **Practical Application**: From technical architectures to day-to-day problem-solving, applying this approach ensures consistency and clear visibility into outcomes.\n\n` +
-`💡 **Core Takeaway**: Mastering **${cleanSubject}** is fundamentally about focusing on high-leverage fundamentals and systematically removing friction.`;
+    if (isPhysicalScience) {
+      return `### ⚛️ Physical Science & Core Principles: ${capitalizedSubject} (${tag})\n\n` +
+`In fundamental physics and physical sciences, **${cleanSubject}** is governed by foundational conservation laws, field equations, and empirical boundary conditions.\n\n` +
+`#### 1. Core Physical Definition & Governing Invariant\n` +
+`At its essence, ${cleanSubject} describes how physical mass-energy, fields, or spacetime coordinates interact under deterministic or quantum constraints. In classical regimes, energy and momentum are conserved globally; in relativistic and quantum domains, invariance under gauge symmetries and the principle of least action ($\\delta S = 0$) dictate system evolution.\n\n` +
+`#### 2. First-Principles Mechanics\n` +
+`• **The Driving Potential**: State evolution proceeds along gradients that minimize thermodynamic free energy or maximize physical entropy.\n` +
+`• **Field Interactions**: Forces act through gauge bosons or spacetime curvature rather than instantaneous distance interaction.\n` +
+`• **Boundary Constraints**: Physical observables are bounded by fundamental natural constants ($c$, $\\hbar$, $G$, $k_B$).\n\n` +
+`#### 3. Practical Applications & Technological Realization\n` +
+`Principles of ${cleanSubject} are applied directly across precision instrumentation, aerospace engineering, semiconductor lithography, and astrophysics.\n\n` +
+`💡 **Scientific Invariant**: Deeply analyzing ${cleanSubject} always requires isolating the active forces, identifying conserved quantities, and verifying whether classical, relativistic, or quantum approximations apply.`;
     }
 
-    if (archetypeIndex === 1) {
-      // ARCHETYPE 2: Intuitive First-Principles Explanation (Feynman Technique)
-      return `### Understanding ${capitalizedSubject}: An Intuitive Guide\n\n` +
-`To understand **${cleanSubject}** without unnecessary jargon, picture it like a well-tuned navigation system. Instead of wandering randomly through trial and error, it gives you a verified path based on tested coordinates.\n\n` +
-`• **The Problem It Solves**: In any domain, complexity tends to multiply quickly. ${cleanSubject} establishes boundaries that keep things manageable.\n` +
-`• **How It Actually Operates**: It breaks down large, ambiguous goals into discrete, verifiable components.\n` +
-`• **Why It Matters**: By reducing uncertainty, it frees up mental bandwidth and technical resources for creative and strategic decisions.\n\n` +
-`*In simple terms: It takes what could be chaotic and turns it into a repeatable, understandable process.*`;
+    if (isLifeScience) {
+      return `### 🧬 Biological & Life Sciences: ${capitalizedSubject} (${tag})\n\n` +
+`In molecular biology, physiology, and evolutionary science, **${cleanSubject}** operates as a homeostatic regulatory mechanism shaped by natural selection over billions of years.\n\n` +
+`#### 1. Biological Architecture & Function\n` +
+`${cleanSubject} represents a specialized bio-molecular or physiological pathway that coordinates cellular metabolism, genetic replication, or organ-level homeostasis. Living systems maintain low internal entropy by consuming free chemical energy (primarily via ATP hydrolysis).\n\n` +
+`#### 2. Underlying Molecular Cascades\n` +
+`• **Signaling & Transduction**: Chemical signals bind receptor proteins, triggering enzyme cascades that alter gene expression or ionic permeability.\n` +
+`• **Feedback Regulation**: Negative feedback loops stabilize physiological setpoints (temperature, pH, ion concentrations), while positive feedback drives rapid all-or-none biological transitions.\n` +
+`• **Evolutionary Conservation**: Core biochemical machinery responsible for this mechanism is strongly conserved across diverse phylogenetic domains.\n\n` +
+`#### 3. Biomedical & Clinical Significance\n` +
+`Disruptions in this pathway often manifest in clinical pathologies. Targeting specific receptor sites or enzymatic checkpoints provides the foundation for therapeutic pharmacology and modern molecular medicine.`;
     }
 
-    if (archetypeIndex === 2) {
-      // ARCHETYPE 3: Executive Brief & Strategic Overview
-      return `### Executive Brief: ${capitalizedSubject}\n\n` +
-`**Topic**: ${capitalizedSubject}\n` +
-`**Category**: Strategic & Practical Intelligence\n\n` +
-`#### Overview & Significance\n` +
-`${cleanSubject} represents a pivotal discipline with immediate relevance to modern workflows. Its primary advantage lies in transforming abstract requirements into reliable, deterministic execution.\n\n` +
-`#### Critical Considerations\n` +
-`• **Scalability**: When structured correctly from the outset, it scales smoothly as complexity grows.\n` +
-`• **Resilience**: It incorporates natural fault tolerance by ensuring each component can be independently inspected and validated.\n` +
-`• **Efficiency**: By minimizing redundant effort, it maximizes resource utilization and team velocity.`;
+    if (isChemistry) {
+      return `### 🧪 Chemical Dynamics & Molecular Architecture: ${capitalizedSubject} (${tag})\n\n` +
+`In chemical systems, **${cleanSubject}** is determined by electronic orbital configurations, thermodynamic stability, and activation energy kinetics.\n\n` +
+`#### 1. Chemical Foundations\n` +
+`${cleanSubject} governs how atoms and molecules rearrange covalent, ionic, or intermolecular bonds to achieve thermodynamic minimum energy configurations.\n\n` +
+`#### 2. Thermodynamic vs. Kinetic Control\n` +
+`• **Thermodynamic Spontaneity**: Dictated by Gibbs Free Energy ($\\Delta G = \\Delta H - T\\Delta S$). Reactions proceed spontaneously when $\\Delta G < 0$.\n` +
+`• **Kinetic Rates (Arrhenius)**: The reaction velocity depends exponentially on temperature and activation energy: $k = A e^{-E_a/(RT)}$. Catalysts accelerate reaction rates by stabilizing transition states without shifting thermodynamic equilibrium.\n` +
+`• **Electronic Transitions**: Valence orbital overlap (e.g., $sp^3, sp^2, sp$ hybridization) determines molecular stereochemistry and electrostatic polarities.\n\n` +
+`#### 3. Industrial & Laboratory Applications\n` +
+`Mastering the equilibria and kinetics of ${cleanSubject} enables high-yield chemical synthesis, battery electrochemistry, and advanced polymer material engineering.`;
     }
 
-    if (archetypeIndex === 3) {
-      // ARCHETYPE 4: Socratic Exploration
-      return `### Deep-Dive: ${capitalizedSubject}\n\n` +
-`To analyze **${cleanSubject}** with depth and clarity, let's explore three critical questions:\n\n` +
-`**1. What is the fundamental objective?**\n` +
-`The primary objective is to create clear order, reliable repeatability, and quantifiable outcomes in environments that would otherwise be unpredictable.\n\n` +
-`**2. What are the common failure modes to avoid?**\n` +
-`The most frequent pitfall is premature complexity—trying to optimize before mastering the baseline prerequisites. Keeping initial iterations simple and modular prevents architectural drift.\n\n` +
-`**3. What is the highest-leverage next step?**\n` +
-`Start with a small, testable prototype or scenario. Verify results against clear benchmarks before expanding the scope.`;
+    if (isMathLogic) {
+      return `### 📐 Mathematical Rigor & Formal Analysis: ${capitalizedSubject} (${tag})\n\n` +
+`From an analytical perspective, **${cleanSubject}** is defined by formal axioms, structural invariants, and deductive mathematical proofs.\n\n` +
+`#### 1. Formal Conceptual Definition\n` +
+`${cleanSubject} maps relationships within a formal system (such as Euclidean spaces, algebraic fields, or discrete graph topologies) where truth is derived deductively from foundational postulates.\n\n` +
+`#### 2. Structural Dynamics & Invariants\n` +
+`• **Axiomatic Consistency**: Statements must remain free of logical contradictions under the system's operational rules.\n` +
+`• **Transformational Invariance**: Identifying symmetry operations, eigenvalues, or conservation properties under coordinate transformations.\n` +
+`• **Asymptotic & Boundary Analysis**: Examining convergence, singularity behavior, and asymptotic limits as parameters approach critical thresholds ($0$ or $\\infty$).\n\n` +
+`#### 3. Computational & Analytical Utility\n` +
+`Analytical models of ${cleanSubject} provide the bedrock algorithms for quantitative finance, computational geometry, cryptography, and physical simulations.`;
     }
 
-    // ARCHETYPE 5: Systematic Framework & Architecture
-    return `### Framework Breakdown: ${capitalizedSubject}\n\n` +
-`A comprehensive breakdown of **${cleanSubject}** encompasses three interconnected dimensions:\n\n` +
-`• **The Baseline (Inputs & Constraints)**: The essential parameters, assumptions, and resources required to begin.\n` +
-`• **The Engine (Mechanism of Action)**: The sequence of transformations and interactions that convert initial conditions into the intended state.\n` +
-`• **The Value (Outcomes & Impact)**: The measurable benefits, efficiencies, and capabilities unlocked by its successful execution.\n\n` +
-`Applying this mental model provides both conceptual clarity and an actionable roadmap for real-world implementation.`;
+    if (isTechComputing) {
+      return `### 🖥️ Systems & Computing Architecture: ${capitalizedSubject} (${tag})\n\n` +
+`In computer science and production software engineering, **${cleanSubject}** solves core trade-offs among latency, throughput, consistency, and resource constraints.\n\n` +
+`#### 1. Architectural Core\n` +
+`${cleanSubject} establishes clean abstractions that allow developers and automated runtimes to manage state transitions and data pipelines with deterministic predictability.\n\n` +
+`#### 2. Key Engineering Invariants\n` +
+`• **Time & Space Complexity**: Computational cost conforms strictly to asymptotic Big-$O$ theoretical bounds ($O(1)$, $O(\\log N)$, $O(N)$).\n` +
+`• **Concurrency & Memory Management**: Eliminating race conditions, memory leaks, and thread deadlocks through atomic primitives and non-blocking I/O.\n` +
+`• **Failure Isolation & Resilience**: Incorporating circuit breakers, exponential backoff, and idempotent retries to maintain high availability under partial infrastructure failures.\n\n` +
+`#### 3. Production Best Practices\n` +
+`When implementing ${cleanSubject} in high-scale systems, decouple stateful components, enforce end-to-end telemetry (metrics, distributed tracing), and benchmark performance against real-world traffic profiles.`;
+    }
+
+    if (isEconFinance) {
+      return `### 💼 Economics, Finance & Strategic Capital: ${capitalizedSubject} (${tag})\n\n` +
+`In modern economics and corporate finance, **${cleanSubject}** analyzes capital allocation, incentive structures, risk-adjusted returns, and market equilibrium.\n\n` +
+`#### 1. Economic Fundamentals\n` +
+`${cleanSubject} operates within an environment of scarce resources, where market participants make rational decisions governed by marginal utility and opportunity costs.\n\n` +
+`#### 2. Key Financial Mechanisms\n` +
+`• **Risk-Adjusted Expected Return**: Higher volatility and liquidity risks demand a commensurate risk premium over the risk-free rate ($R_f$).\n` +
+`• **Discounting & Time Value of Money**: Future cash flows are worth less than present capital due to inflationary erosion and cost of capital ($PV = \\frac{FV}{(1+r)^t}$).\n` +
+`• **Market Equilibrium & Price Discovery**: Prices adjust dynamically until supply matches demand, eliminating arbitrage opportunities in efficient market regimes.\n\n` +
+`#### 3. Strategic Execution\n` +
+`Applying ${cleanSubject} in enterprise management requires optimizing unit economics (LTV:CAC), safeguarding working capital liquidity, and constructing defensible economic moats against competitive entry.`;
+    }
+
+    if (isPhilosophyEthics) {
+      return `### 🏛️ Philosophical Dialectic & Moral Reason: ${capitalizedSubject} (${tag})\n\n` +
+`In classical and contemporary philosophy, **${cleanSubject}** investigates epistemic validity, ontological nature, and normative ethical frameworks.\n\n` +
+`#### 1. Epistemic & Ontological Foundations\n` +
+`${cleanSubject} addresses foundational questions regarding how we acquire reliable knowledge (epistemology), what fundamentally exists (ontology), and how human consciousness navigates purpose.\n\n` +
+`#### 2. Primary Dialectical Frameworks\n` +
+`• **First-Principles Reduction**: Stripping away dogmatic assumptions to interrogate the foundational axioms supporting the argument.\n` +
+`• **Ethical Evaluation**: Scrutinizing actions through consequentialism (maximizing net utility), deontology (universal duty and intrinsic human dignity), or virtue ethics (cultivating human excellence and *eudaimonia*).\n` +
+`• **Counter-Arguments & Antinomies**: Examining edge-case dilemmas where competing ethical imperatives or logical premises collide.\n\n` +
+`💡 **Philosophical Insight**: Clarity on ${cleanSubject} comes from distinguishing between descriptive facts (what is) and normative values (what ought to be), grounding reasoning in rigorous intellectual honesty.`;
+    }
+
+    if (isHistoryPolitics) {
+      return `### 📜 Historical Context & Geopolitical Dynamics: ${capitalizedSubject} (${tag})\n\n` +
+`From a historical and geopolitical viewpoint, **${cleanSubject}** represents a pivotal nexus where technological capability, economic incentives, and institutional power converge.\n\n` +
+`#### 1. Historical Genesis & Preconditions\n` +
+`${cleanSubject} did not emerge in a vacuum; it was catalyzed by structural economic pressures, ideological movements, and institutional transformations that made traditional models unsustainable.\n\n` +
+`#### 2. Catalysts & Structural Forces\n` +
+`• **Technological & Economic Drivers**: Shifts in productive capacity, trade networks, and capital accumulation created new social classes and political interests.\n` +
+`• **Institutional & Ideological Shifts**: Legal frameworks, treaties, and philosophical narratives legitimized the redistribution of authority and resources.\n` +
+`• **Geopolitical Realignments**: Balance-of-power dynamics among sovereign states shifted, provoking alliances, conflicts, or systemic reform.\n\n` +
+`#### 3. Long-Term Civilizational Legacy\n` +
+`The lasting consequence of ${cleanSubject} continues to influence modern legal structures, constitutional governance, and geopolitical alignments today.`;
+    }
+
+    // 7. General Masterclass Polymath Fallback
+    return `### 🌟 Comprehensive Analysis: ${capitalizedSubject} (${tag})\n\n` +
+`To master **${cleanSubject}** with depth and practical clarity, consider its core mechanics, structural dimensions, and real-world execution:\n\n` +
+`#### 1. Definitive Conceptual Core\n` +
+`${cleanSubject} is fundamentally defined by its ability to transform abstract goals or raw parameters into structured, deterministic outcomes. By establishing clear operational boundaries, it reduces friction and coordinates complex operations.\n\n` +
+`#### 2. First-Principles Mechanics\n` +
+`• **Invariant Baseline**: Every system requires clear inputs and verified baseline prerequisites before execution begins.\n` +
+`• **Deterministic Transformation**: Operations proceed through modular stages where each step validates prerequisites before committing state changes.\n` +
+`• **Feedback & Recovery**: Robust implementations anticipate edge cases, isolating faults to maintain global stability.\n\n` +
+`#### 3. Applied Methodologies & Best Practices\n` +
+`1. **Focus on High-Leverage Fundamentals**: Master the core 20% of principles that generate 80% of reliable performance.\n` +
+`2. **Eliminate Unnecessary Complexity**: Avoid premature optimization; start with modular, testable units and iterate based on verified telemetry.\n` +
+`3. **Continuous Benchmarking**: Measure real-world outputs against strict standards to lock in repeatability and performance.\n\n` +
+`💡 **Strategic Summary**: Approaching ${cleanSubject} systematically—from first principles through iterative validation—ensures both conceptual clarity and resilient, world-class execution.`;
   }
 
   /**
