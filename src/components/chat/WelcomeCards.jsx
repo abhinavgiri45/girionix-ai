@@ -1,7 +1,51 @@
 import React from 'react';
-import { Crown, Sparkles, FileText, Table, Presentation, ShieldCheck } from 'lucide-react';
+import { Crown, Sparkles, FileText, Table, Presentation, ShieldCheck, Code2, Image as ImageIcon, Sigma, Film } from 'lucide-react';
 
-export default function WelcomeCards({ userName, onOpenAbout, onOpenWhySwitch, onSelectPrompt }) {
+export default function WelcomeCards({ userName, onOpenAbout, onOpenWhySwitch, onSelectPrompt, onOpenStudioTab }) {
+  const isOfficeMode = (() => {
+    try {
+      if (typeof window === 'undefined') return false;
+      const p = new URLSearchParams(window.location.search);
+      return p.get('mode') === 'office' || p.get('embed') === 'true' || p.get('embed') === 'office' || p.has('office') || window.self !== window.top;
+    } catch (_) { return false; }
+  })();
+
+  const standardCards = [
+    {
+      tool: 'Coding Studio',
+      icon: <Code2 className="w-4 h-4 text-cyan-400" />,
+      tag: 'React 18 & Live Sandbox',
+      title: 'Interactive Web & React App',
+      desc: 'Build, edit, and preview responsive UI components in the live Sandboxed IDE.',
+      prompt: 'Build a live interactive React component with Tailwind CSS: ',
+      studioTab: 'code'
+    },
+    {
+      tool: '8K Art Lab',
+      icon: <ImageIcon className="w-4 h-4 text-rose-400" />,
+      tag: 'FLUX.1 Photorealism',
+      title: 'Hyper-Realistic Visual Render',
+      desc: 'Render ultra-detailed 8K photorealistic concepts, wallpapers, and character designs.',
+      prompt: 'generate an 8k photorealistic image of a futuristic sovereign cybernetic city at neon dusk'
+    },
+    {
+      tool: 'Math & Proofs',
+      icon: <Sigma className="w-4 h-4 text-emerald-400" />,
+      tag: 'KaTeX & Olympiad Math',
+      title: 'Deep Derivations & 3D Plots',
+      desc: 'Solve complex physics derivations, Olympiad proofs, and visualize calculus equations.',
+      prompt: 'derive step-by-step with KaTeX proof: Schrödinger wave equation in 3D spherical coordinates'
+    },
+    {
+      tool: 'Cinematic Video',
+      icon: <Film className="w-4 h-4 text-amber-400" />,
+      tag: '60 FPS Multi-Shot',
+      title: 'Cinematic Screenplay & Storyboard',
+      desc: 'Direct a 3-shot cinematic video scene with camera angles and motion choreography.',
+      prompt: 'create a cinematic 3D multi-shot video scene for: interstellar deep space probe reaching a Dyson sphere'
+    }
+  ];
+
   const officeCards = [
     {
       tool: 'Giri Drift',
@@ -37,6 +81,8 @@ export default function WelcomeCards({ userName, onOpenAbout, onOpenWhySwitch, o
     }
   ];
 
+  const activeCards = isOfficeMode ? officeCards : standardCards;
+
   return (
     <div className="flex flex-col items-center justify-center text-center px-3 sm:px-4 py-4 sm:py-6 max-w-3xl mx-auto w-full animate-fadeIn select-none">
       {/* Official Brand Logo Icon & Hero */}
@@ -59,20 +105,28 @@ export default function WelcomeCards({ userName, onOpenAbout, onOpenWhySwitch, o
       <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-1">
         <span className="text-white">Hello, </span>
         <span className="bg-gradient-to-r from-blue-400 via-cyan-300 to-indigo-400 bg-clip-text text-transparent">
-          {userName || 'Orbit User'}
+          {userName || 'Abhinav'}
         </span>
       </h1>
       
       <h2 className="text-xs sm:text-base md:text-lg font-medium text-gray-400 tracking-tight mb-4 sm:mb-5">
-        What document, spreadsheet, or presentation would you like to build today?
+        {isOfficeMode 
+          ? 'What document, spreadsheet, or presentation would you like to build today?'
+          : 'What would you like to build, code, or explore today?'}
       </h2>
 
-      {/* 4 Dedicated Office Suite Quick Action Cards */}
+      {/* 4 Dedicated Quick Action Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 w-full mb-4 text-left">
-        {officeCards.map((card, idx) => (
+        {activeCards.map((card, idx) => (
           <div
             key={idx}
-            onClick={() => onSelectPrompt && onSelectPrompt(card.prompt)}
+            onClick={() => {
+              if (card.studioTab && onOpenStudioTab) {
+                onOpenStudioTab(card.studioTab);
+              } else if (onSelectPrompt) {
+                onSelectPrompt(card.prompt);
+              }
+            }}
             className="p-3 sm:p-3.5 rounded-2xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/10 hover:border-cyan-500/40 transition-all cursor-pointer group shadow-sm hover:scale-[1.01]"
           >
             <div className="flex items-center justify-between mb-1.5">
@@ -83,7 +137,7 @@ export default function WelcomeCards({ userName, onOpenAbout, onOpenWhySwitch, o
                 </span>
               </div>
               <span className="text-[10px] text-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity font-mono">
-                Run ⚡
+                Launch ⚡
               </span>
             </div>
             <h4 className="text-xs sm:text-sm font-bold text-white mb-0.5 group-hover:text-cyan-200">

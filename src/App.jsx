@@ -103,6 +103,10 @@ export default function App() {
       const params = new URLSearchParams(window.location.search);
       const isOffice = params.get('mode') === 'office' || params.get('embed') === 'true' || params.has('office') || (window.self !== window.top);
       if (isOffice) return 'chat';
+      const studioParam = params.get('studio');
+      if (studioParam) {
+        return params.get('view') === 'studio' ? 'studio' : 'split';
+      }
       if (['/code', '/script', '/math', '/image', '/video', '/audio', '/studio'].includes(path)) {
         return 'split';
       }
@@ -126,6 +130,11 @@ export default function App() {
       
       const isOffice = params.get('mode') === 'office' || params.get('embed') === 'true' || params.get('embed') === 'office' || params.has('office') || (window.self !== window.top);
       if (isOffice) return false;
+
+      // Direct studio or workspace link
+      if (params.get('studio')) {
+        return false;
+      }
 
       // Skip intro if explicit native app flags or direct chat mode requested
       if (params.get('direct') === 'chat' || params.get('app') === 'true' || params.get('native') === 'true') {
@@ -160,9 +169,9 @@ export default function App() {
   const [isNameModalOpen, setIsNameModalOpen] = useState(false);
   const [userName, setUserName] = useState(() => {
     try {
-      return storage.getUserName() || 'Orbit User';
+      return storage.getUserName() || 'Abhinav';
     } catch (_) {
-      return 'Orbit User';
+      return 'Abhinav';
     }
   });
   const [injectedCode, setInjectedCode] = useState(null);
@@ -170,7 +179,16 @@ export default function App() {
   const [activeSessionId, setActiveSessionId] = useState(() => storage.getActiveSessionId());
   const [pinnedItems, setPinnedItems] = useState(() => storage.getPinnedItems());
   const [activePersona, setActivePersona] = useState(() => storage.getSettings().activePersona || 'default');
-  const [mobileActivePane, setMobileActivePane] = useState('chat'); // 'chat' | 'studio'
+  const [mobileActivePane, setMobileActivePane] = useState(() => {
+    try {
+      if (typeof window === 'undefined') return 'chat';
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('studio') || params.get('view') === 'studio') return 'studio';
+      return 'chat';
+    } catch (_) {
+      return 'chat';
+    }
+  });
 
   // 1-Click Bridge: Import latest AI message directly to Giri Orbit workplace (Drift, Axis, Kinetic, PDF)
   const handleImportLatestToWorkplace = () => {
@@ -348,6 +366,15 @@ export default function App() {
     if (typeof window === 'undefined') return;
     const handlePopState = () => {
       const path = window.location.pathname.toLowerCase().replace(/\/+$/, '');
+      const params = new URLSearchParams(window.location.search);
+      const studioParam = params.get('studio');
+      if (studioParam) {
+        setIsAboutOpen(false);
+        setLayoutMode(params.get('view') === 'studio' ? 'studio' : 'split');
+        setActiveStudioTab(studioParam);
+        setMobileActivePane('studio');
+        return;
+      }
       if (path === '/chat' || path === '/workspace' || path === '/app') {
         setIsAboutOpen(false);
         setLayoutMode('chat');

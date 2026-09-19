@@ -71,7 +71,7 @@ export default function ChatView({
   onOpenStudioTab,
   layoutMode,
   setLayoutMode,
-  userName = 'Orbit User',
+  userName = 'Abhinav',
   sessions,
   setSessions,
   activeSessionId,
@@ -255,6 +255,23 @@ export default function ChatView({
   };
 
   const handleKeyDown = (e) => {
+    if (showSlashMenu) {
+      if (e.key === 'Escape') {
+        setShowSlashMenu(false);
+        return;
+      }
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const clean = (slashFilter.startsWith('/') ? slashFilter.slice(1) : slashFilter).toLowerCase().trim();
+        const commands = ['/code', '/studio', '/image', '/video', '/audio', '/math', '/script', '/prompts', '/export', '/voice', '/web', '/enhance', '/clear', '/incognito', '/founder', '/download'];
+        const matched = commands.find(c => c.slice(1).startsWith(clean)) || commands[0];
+        if (matched) {
+          handleSelectSlashCommand(matched);
+        }
+        return;
+      }
+    }
+
     if (e.key === 'ArrowUp' && input === '' && promptHistory.length > 0) {
       e.preventDefault();
       const newIdx = historyIndex === -1 ? promptHistory.length - 1 : Math.max(0, historyIndex - 1);
@@ -328,7 +345,22 @@ export default function ChatView({
       return;
     }
     if (cmd === '/code') {
-      setInput('Build a live interactive React component with Tailwind CSS: ');
+      if (onOpenStudioTab) {
+        onOpenStudioTab('code');
+      } else if (onOpenInCodeStudio) {
+        onOpenInCodeStudio();
+      }
+      setInput('');
+      return;
+    }
+    if (cmd === '/studio') {
+      if (onOpenStudioTab) onOpenStudioTab('ai-studio');
+      setInput('');
+      return;
+    }
+    if (cmd === '/audio') {
+      if (onOpenStudioTab) onOpenStudioTab('audio');
+      setInput('');
       return;
     }
     if (cmd === '/script') {
@@ -632,6 +664,13 @@ export default function ChatView({
   const handleSend = async (customPrompt) => {
     const promptToSend = customPrompt || input;
     if ((!promptToSend.trim() && !attachedFile) || isStreaming) return;
+
+    // Direct Slash Command Interception (e.g. user typed "/code" or "/studio" and hit Enter)
+    const trimmedPrompt = promptToSend.trim();
+    if (trimmedPrompt.startsWith('/') && !trimmedPrompt.includes(' ')) {
+      handleSelectSlashCommand(trimmedPrompt);
+      return;
+    }
 
     if (isListening) {
       speech.stopListening();
@@ -974,6 +1013,7 @@ export default function ChatView({
               userName={userName}
               onOpenAbout={onOpenAbout}
               onOpenWhySwitch={onOpenWhySwitch}
+              onOpenStudioTab={onOpenStudioTab}
               onSelectPrompt={(p) => {
                 setInput(p);
                 handleSend(p);
@@ -1005,7 +1045,7 @@ export default function ChatView({
 
       {/* Chat Input Bar with Integrated Action Dock */}
       <div className="p-3 sm:p-4 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] border-t border-white/[0.08] bg-[#0A0C14]/90 backdrop-blur-xl relative z-10">
-        <div className="max-w-4xl mx-auto space-y-2">
+        <div className="max-w-4xl mx-auto space-y-2 relative">
           {/* Action Dock: Office Suite Directives in Office Mode, Studio Dock otherwise */}
           {(() => {
             const isOfficeMode = (() => {
@@ -1126,7 +1166,10 @@ export default function ChatView({
           {/* Slash Commands Dropdown Menu */}
           {showSlashMenu && (
             <SlashCommandMenu
+              isOpen={showSlashMenu}
+              filterText={slashFilter}
               filter={slashFilter}
+              onSelectCommand={handleSelectSlashCommand}
               onSelect={handleSelectSlashCommand}
             />
           )}

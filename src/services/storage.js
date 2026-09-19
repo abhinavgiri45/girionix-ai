@@ -151,46 +151,85 @@ try {
 
 export const storage = {
   getUserName: () => {
+    // 1. Check explicit URL query parameters (?user= or ?name=)
     try {
       if (typeof window !== 'undefined') {
         const params = new URLSearchParams(window.location.search);
         const urlUser = params.get('user') || params.get('name');
         if (urlUser && typeof urlUser === 'string' && urlUser.trim()) {
-          safeSetItem(KEYS.USER_NAME, urlUser.trim());
-          return urlUser.trim();
-        }
-        // If in office mode or embedded inside Giri Orbit iframe, automatically recognize Orbit User
-        if (params.get('mode') === 'office' || params.get('direct') === 'chat' || params.get('embed') === 'true' || window.self !== window.top) {
-          safeSetItem(KEYS.USER_NAME, 'Orbit User');
-          return 'Orbit User';
+          const clean = urlUser.trim();
+          safeSetItem(KEYS.USER_NAME, clean);
+          safeSetItem('girionix_registered_name', clean);
+          return clean;
         }
       }
     } catch (_) {}
+
+    // Check if the user is truly accessing through https://giri-orbit.pages.dev
+    const isFromOrbit = () => {
+      try {
+        if (typeof window === 'undefined') return false;
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('source') === 'orbit' || params.get('ref') === 'orbit' || params.get('origin') === 'orbit') return true;
+        if (typeof document !== 'undefined' && document.referrer && document.referrer.includes('giri-orbit.pages.dev')) return true;
+        return false;
+      } catch (_) {
+        return false;
+      }
+    };
+
+    // 2. Check registered / saved name in storage
+    const registered = safeGetItem('girionix_registered_name');
+    if (registered && registered.trim() && registered.trim() !== 'Orbit User') {
+      safeSetItem(KEYS.USER_NAME, registered.trim());
+      return registered.trim();
+    }
 
     const saved = safeGetItem(KEYS.USER_NAME);
     if (saved && saved.trim()) {
-      if (saved.trim() === 'Abhinav') {
-        safeSetItem(KEYS.USER_NAME, 'Orbit User');
-        return 'Orbit User';
+      const clean = saved.trim();
+      // If storage had 'Orbit User' from the previous auto-overwrite bug, and user is NOT on giri-orbit.pages.dev:
+      if (clean === 'Orbit User') {
+        if (isFromOrbit()) {
+          return 'Orbit User';
+        }
+        // Restore actual owner/registered user name
+        safeSetItem(KEYS.USER_NAME, 'Abhinav');
+        return 'Abhinav';
       }
-      return saved.trim();
+      return clean;
     }
 
+    // 3. Check native app bridge
     try {
       if (typeof window !== 'undefined') {
         const bridgeName = window.GirionixBridge?.getOperatorName?.() || window.GirionixAndroid?.getOperatorName?.();
-        if (bridgeName && typeof bridgeName === 'string') {
-          safeSetItem(KEYS.USER_NAME, bridgeName);
-          return bridgeName;
+        if (bridgeName && typeof bridgeName === 'string' && bridgeName.trim()) {
+          const clean = bridgeName.trim();
+          safeSetItem(KEYS.USER_NAME, clean);
+          safeSetItem('girionix_registered_name', clean);
+          return clean;
         }
       }
     } catch (_) {}
 
-    // Default to Orbit User so welcome name modal is never needed
-    safeSetItem(KEYS.USER_NAME, 'Orbit User');
-    return 'Orbit User';
+    // 4. If truly coming from giri-orbit.pages.dev, default to Orbit User
+    if (isFromOrbit()) {
+      safeSetItem(KEYS.USER_NAME, 'Orbit User');
+      return 'Orbit User';
+    }
+
+    // 5. Default to the registered user name
+    safeSetItem(KEYS.USER_NAME, 'Abhinav');
+    return 'Abhinav';
   },
-  setUserName: (name) => safeSetItem(KEYS.USER_NAME, (name || '').trim()),
+  setUserName: (name) => {
+    const clean = (name || '').trim();
+    if (clean) {
+      safeSetItem(KEYS.USER_NAME, clean);
+      safeSetItem('girionix_registered_name', clean);
+    }
+  },
 
   getApiKey: () => {
     try {

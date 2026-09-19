@@ -19,7 +19,7 @@ export default function WelcomeNameModal({ isOpen, onSaveName, onClose, currentU
 
   const handleSubmit = (e) => {
     if (e) e.preventDefault();
-    const finalName = name.trim() || 'Orbit User';
+    const finalName = name.trim() || 'Abhinav';
     storage.setUserName(finalName);
     try {
       localStorage.removeItem('girionix_saved_profiles');
@@ -76,7 +76,7 @@ export default function WelcomeNameModal({ isOpen, onSaveName, onClose, currentU
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Orbit User"
+              placeholder="e.g. Abhinav"
               autoFocus
               className="w-full px-4 py-2.5 rounded-2xl bg-[#0F1122] border border-white/15 focus:border-cyan-400 text-white placeholder-gray-500 text-sm font-sans focus:outline-none shadow-inner"
             />
