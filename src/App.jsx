@@ -166,6 +166,11 @@ export default function App() {
     }
   });
   const [injectedCode, setInjectedCode] = useState(null);
+  const [sessions, setSessions] = useState(() => storage.getSessions());
+  const [activeSessionId, setActiveSessionId] = useState(() => storage.getActiveSessionId());
+  const [pinnedItems, setPinnedItems] = useState(() => storage.getPinnedItems());
+  const [activePersona, setActivePersona] = useState(() => storage.getSettings().activePersona || 'default');
+  const [mobileActivePane, setMobileActivePane] = useState('chat'); // 'chat' | 'studio'
 
   // 1-Click Bridge: Import latest AI message directly to Giri Orbit workplace (Drift, Axis, Kinetic, PDF)
   const handleImportLatestToWorkplace = () => {
@@ -249,11 +254,6 @@ export default function App() {
       setIsVoiceModeOpen(true);
     }
   };
-
-  const [sessions, setSessions] = useState(() => storage.getSessions());
-  const [activeSessionId, setActiveSessionId] = useState(() => storage.getActiveSessionId());
-  const [pinnedItems, setPinnedItems] = useState(() => storage.getPinnedItems());
-  const [activePersona, setActivePersona] = useState(() => storage.getSettings().activePersona || 'default');
 
   // Load user name and settings on boot + strict app mode detection
   useEffect(() => {
@@ -429,8 +429,6 @@ export default function App() {
     setSessions([freshSession]);
     setActiveSessionId(freshSession.id);
   };
-
-  const [mobileActivePane, setMobileActivePane] = useState('chat'); // 'chat' | 'studio'
 
   const handleOpenInCodeStudio = (code) => {
     setInjectedCode(code);

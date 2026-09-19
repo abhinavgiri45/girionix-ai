@@ -136,6 +136,10 @@ export default function ChatView({
       return false;
     }
   });
+  const [promptHistory, setPromptHistory] = useState([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const [showSlashMenu, setShowSlashMenu] = useState(false);
+  const [slashFilter, setSlashFilter] = useState('');
 
   // Keep API key status synchronized in real time
   useEffect(() => {
@@ -183,11 +187,6 @@ export default function ChatView({
     return () => window.removeEventListener('girionix:model-sync', handleModelSync);
   }, [activeModel, isTitanMode, setActiveModel]);
 
-  const [promptHistory, setPromptHistory] = useState([]);
-  const [historyIndex, setHistoryIndex] = useState(-1);
-
-  const [showSlashMenu, setShowSlashMenu] = useState(false);
-  const [slashFilter, setSlashFilter] = useState('');
 
   const abortControllerRef = useRef(null);
   const messagesEndRef = useRef(null);
@@ -899,6 +898,18 @@ export default function ChatView({
       setIsStreaming(false);
     }
   };
+
+  // Cross-Window / Iframe Bridge: Handle incoming prompts from Giri Orbit parent window
+  useEffect(() => {
+    const handleBridgeMessage = (e) => {
+      if (!e.data || typeof e.data !== 'object') return;
+      if (e.data.type === 'GIRIONIX_EXECUTE_PROMPT' && e.data.payload?.prompt) {
+        handleSend(e.data.payload.prompt);
+      }
+    };
+    window.addEventListener('message', handleBridgeMessage);
+    return () => window.removeEventListener('message', handleBridgeMessage);
+  }, [handleSend]);
 
   return (
     <div className="flex-1 flex flex-col h-full bg-[#07080E] relative overflow-hidden">
