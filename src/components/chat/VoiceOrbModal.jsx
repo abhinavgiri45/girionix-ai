@@ -212,6 +212,13 @@ export default function VoiceOrbModal({ isOpen, onClose, onExportToChat }) {
       const turnsWithAssistant = [...updatedTurns, { role: 'assistant', text: cleanReply }];
       setChatTurns(turnsWithAssistant);
 
+      // Determine language-appropriate voice profile
+      const effectiveProfile = (currentLang === 'hi-IN' && voiceProfile !== 'kalpana' && voiceProfile !== 'madhur') 
+        ? 'kalpana' 
+        : (currentLang === 'en-IN' && voiceProfile !== 'neerja' && voiceProfile !== 'ravi') 
+        ? 'neerja' 
+        : voiceProfile;
+
       // Play human speech
       speech.speak(
         cleanReply,
@@ -223,7 +230,7 @@ export default function VoiceOrbModal({ isOpen, onClose, onExportToChat }) {
         },
         voiceSpeed,
         currentLang,
-        voiceProfile
+        effectiveProfile
       );
     } catch (err) {
       console.warn('Voice AI processing error:', err);
@@ -232,6 +239,12 @@ export default function VoiceOrbModal({ isOpen, onClose, onExportToChat }) {
       const fallbackMsg = voiceAiEngine.generateDynamicVoiceFallback(userPrompt, currentLang, updatedTurns);
       setAiResponse(fallbackMsg);
       setConnectionStatus('speaking');
+
+      const effectiveProfile = (currentLang === 'hi-IN' && voiceProfile !== 'kalpana' && voiceProfile !== 'madhur') 
+        ? 'kalpana' 
+        : (currentLang === 'en-IN' && voiceProfile !== 'neerja' && voiceProfile !== 'ravi') 
+        ? 'neerja' 
+        : voiceProfile;
 
       speech.speak(
         fallbackMsg,
@@ -242,7 +255,7 @@ export default function VoiceOrbModal({ isOpen, onClose, onExportToChat }) {
         },
         voiceSpeed,
         currentLang,
-        voiceProfile
+        effectiveProfile
       );
     }
   };
@@ -282,7 +295,18 @@ export default function VoiceOrbModal({ isOpen, onClose, onExportToChat }) {
 
   const handleLanguageSwitch = (langId) => {
     setVoiceLang(langId);
+    storage.setVoiceLanguage(langId);
     speech.setLanguage(langId);
+
+    let targetProfile = voiceProfile;
+    if (langId === 'hi-IN') targetProfile = 'kalpana';
+    else if (langId === 'en-IN') targetProfile = 'neerja';
+    else if (langId === 'en-US' && (voiceProfile === 'kalpana' || voiceProfile === 'neerja' || voiceProfile === 'madhur' || voiceProfile === 'ravi')) {
+      targetProfile = 'nova';
+    }
+
+    setVoiceProfile(targetProfile);
+    speech.setVoiceProfile(targetProfile);
     startListeningTurn(langId);
   };
 
@@ -568,10 +592,31 @@ export default function VoiceOrbModal({ isOpen, onClose, onExportToChat }) {
             <button
               onClick={handleInterrupt}
               className="p-2.5 rounded-2xl bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 border border-rose-500/40 transition-all shadow-glow-rose animate-pulse flex items-center gap-1.5 text-xs font-mono font-bold cursor-pointer"
-              title="Stop AI Voice & Speak"
+              title="Interrupt / Stop AI Speech and start talking"
             >
               <VolumeX className="w-3.5 h-3.5" />
-              <span>Mute</span>
+              <span>Stop</span>
+            </button>
+          ) : aiResponse ? (
+            <button
+              onClick={() => {
+                const effectiveProfile = (voiceLang === 'hi-IN' && voiceProfile !== 'kalpana' && voiceProfile !== 'madhur') 
+                  ? 'kalpana' 
+                  : (voiceLang === 'en-IN' && voiceProfile !== 'neerja' && voiceProfile !== 'ravi') 
+                  ? 'neerja' 
+                  : voiceProfile;
+                setConnectionStatus('speaking');
+                speech.speak(aiResponse, () => {
+                  if (isMountedRef.current && isSessionActiveRef.current) {
+                    startListeningTurn(voiceLang);
+                  }
+                }, voiceSpeed, voiceLang, effectiveProfile);
+              }}
+              className="p-2.5 rounded-2xl bg-white/5 hover:bg-white/10 text-cyan-300 border border-white/10 transition-colors text-xs font-mono flex items-center gap-1.5 cursor-pointer"
+              title="Replay Spoken Audio"
+            >
+              <Volume2 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Replay</span>
             </button>
           ) : (
             <div className="w-9" />

@@ -19,7 +19,9 @@ export const HUMAN_VOICE_PROFILES = [
   { id: 'nova', name: 'Nova (Warm & Expressive)', gender: 'female', lang: 'en-US', pitch: 1.0, rate: 1.02 },
   { id: 'atlas', name: 'Atlas (Deep & Confident)', gender: 'male', lang: 'en-US', pitch: 0.98, rate: 1.0 },
   { id: 'neerja', name: 'Neerja (Indian English / Hinglish)', gender: 'female', lang: 'en-IN', pitch: 1.0, rate: 1.02 },
+  { id: 'ravi', name: 'Ravi (Indian English Male)', gender: 'male', lang: 'en-IN', pitch: 0.98, rate: 1.0 },
   { id: 'kalpana', name: 'Kalpana (हिन्दी Hindi Natural)', gender: 'female', lang: 'hi-IN', pitch: 1.0, rate: 0.98 },
+  { id: 'madhur', name: 'Madhur (हिन्दी Hindi Male)', gender: 'male', lang: 'hi-IN', pitch: 0.96, rate: 0.98 },
   { id: 'aura', name: 'Aura (Calm & Empathetic)', gender: 'female', lang: 'en-US', pitch: 1.02, rate: 0.96 }
 ];
 
@@ -82,8 +84,11 @@ class SpeechService {
 
     if (this.synth) {
       this.loadVoices();
-      if (this.synth.onvoiceschanged !== undefined) {
-        this.synth.onvoiceschanged = () => this.loadVoices();
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.onvoiceschanged = () => this.loadVoices();
+        if (window.speechSynthesis.addEventListener) {
+          window.speechSynthesis.addEventListener('voiceschanged', () => this.loadVoices());
+        }
       }
     }
   }
@@ -470,14 +475,53 @@ class SpeechService {
     return t.replace(/\s+/g, ' ').trim();
   }
 
+  devanagariToHinglish(str) {
+    if (!str) return '';
+    const charMap = {
+      'क': 'k', 'ख': 'kh', 'ग': 'g', 'घ': 'gh', 'ङ': 'ng',
+      'च': 'ch', 'छ': 'chh', 'ज': 'j', 'झ': 'jh', 'ञ': 'ny',
+      'ट': 't', 'ठ': 'th', 'ड': 'd', 'ढ': 'dh', 'ण': 'n',
+      'त': 't', 'थ': 'th', 'द': 'd', 'ध': 'dh', 'न': 'n',
+      'प': 'p', 'फ': 'ph', 'ब': 'b', 'भ': 'bh', 'म': 'm',
+      'य': 'y', 'र': 'r', 'ल': 'l', 'व': 'v', 'श': 'sh', 'ष': 'sh', 'स': 's', 'ह': 'h',
+      'ड़': 'r', 'ढ़': 'rh', 'क़': 'q', 'ख़': 'kh', 'ग़': 'gh', 'ज़': 'z', 'फ़': 'f',
+      'अ': 'a', 'आ': 'aa', 'इ': 'i', 'ई': 'ee', 'उ': 'u', 'ऊ': 'oo', 'ऋ': 'ri',
+      'ए': 'e', 'ऐ': 'ai', 'ओ': 'o', 'औ': 'au', 'अं': 'am', 'अः': 'ah',
+      'ा': 'aa', 'ि': 'i', 'ी': 'ee', 'ु': 'u', 'ू': 'oo', 'ृ': 'ri', 'े': 'e', 'ै': 'ai', 'ो': 'o', 'ौ': 'au', 'ं': 'n', 'ँ': 'n', 'ः': 'h'
+    };
+    const matras = new Set(['ा', 'ि', 'ी', 'ु', 'ू', 'ृ', 'े', 'ै', 'ो', 'ौ', 'ं', 'ँ', 'ः', '्', '\u094D']);
+    let res = '';
+    for (let i = 0; i < str.length; i++) {
+      const ch = str[i];
+      const next = str[i + 1];
+      if (ch === '्' || ch === '\u094D') {
+        continue;
+      }
+      if (charMap[ch]) {
+        res += charMap[ch];
+        const isConsonant = (ch >= 'क' && ch <= 'ह') || ['ड़', 'ढ़', 'क़', 'ख़', 'ग़', 'ज़', 'फ़'].includes(ch);
+        if (isConsonant && next && !matras.has(next) && /[^\s।,!?.]/.test(next)) {
+          res += 'a';
+        }
+      } else if (ch === '।') {
+        res += '.';
+      } else {
+        res += ch;
+      }
+    }
+    return res;
+  }
+
   getBestVoice(targetLang, profileId = this.currentVoiceProfile) {
     if (!this.voices || this.voices.length === 0) {
       this.loadVoices();
     }
 
     const profile = HUMAN_VOICE_PROFILES.find(p => p.id === profileId) || HUMAN_VOICE_PROFILES[0];
+    const wantsMale = profile?.gender === 'male';
     const isHindi = targetLang === 'hi-IN' || profile.lang === 'hi-IN';
     const isIndianEn = targetLang === 'en-IN' || profile.lang === 'en-IN';
+
     // Exclude robotic legacy desktop voices (e.g. SAPI5 "Microsoft David Desktop", "Zira Desktop", eSpeak)
     const isRoboticDesktop = (name) => {
       const lower = name.toLowerCase();
@@ -486,13 +530,19 @@ class SpeechService {
 
     // 1. High-Fidelity Hindi Neural/Natural Voice Matching
     if (isHindi) {
-      const topHindiKeywords = ['Natural', 'Neural', 'Google', 'Swara', 'Kalpana', 'Madhur', 'हिन्दी', 'hi-IN', 'hi_IN', 'Hindi'];
+      const topHindiKeywords = wantsMale
+        ? ['Madhur', 'Natural', 'Neural', 'Google', 'Prabhat', 'Ravi', 'हिन्दी', 'hi-IN', 'hi_IN', 'Hindi']
+        : ['Swara', 'Kalpana', 'Natural', 'Neural', 'Google', 'Neerja', 'Aarti', 'हिन्दी', 'hi-IN', 'hi_IN', 'Hindi'];
       for (const kw of topHindiKeywords) {
         const match = this.voices.find(v => (v.lang.includes('hi') || v.name.toLowerCase().includes('hindi')) && v.name.toLowerCase().includes(kw.toLowerCase()) && !isRoboticDesktop(v.name));
         if (match) return match;
       }
       const genericHindi = this.voices.find(v => (v.lang.includes('hi') || v.name.toLowerCase().includes('hindi')) && !isRoboticDesktop(v.name));
       if (genericHindi) return genericHindi;
+
+      // Fallback to Indian English voice if no native Hindi voice is installed on OS
+      const indianFallback = this.voices.find(v => (v.lang === 'en-IN' || v.lang === 'en_IN' || v.name.toLowerCase().includes('india')) && !isRoboticDesktop(v.name));
+      if (indianFallback) return indianFallback;
     }
 
     // 2. High-Fidelity Indian English / Hinglish Voice Matching
@@ -569,43 +619,18 @@ class SpeechService {
     this.isSpeaking = true;
     this.isProcessing = false;
 
-    // Unstick Chromium synthesis thread if paused
-    try {
-      if (this.synth.paused) this.synth.resume();
-    } catch (_) {}
-
-    const isHindi = this.hasDevanagari(text);
-    const targetLang = customLang || (isHindi ? 'hi-IN' : (this.currentLanguage === 'en-IN' ? 'en-IN' : 'en-US'));
-    const spokenText = this.naturalizeSpokenText(text, targetLang);
-
-    if (!spokenText) {
-      this.isSpeaking = false;
-      if (onEnd) onEnd();
-      return;
-    }
-
-    const profileId = voiceProfileId || this.currentVoiceProfile || 'nova';
-    const profile = HUMAN_VOICE_PROFILES.find(p => p.id === profileId) || HUMAN_VOICE_PROFILES[0];
-
-    const utterance = new SpeechSynthesisUtterance(spokenText);
-    utterance.rate = Math.max(0.85, Math.min(1.25, (profile.rate || 1.02) * speedMultiplier));
-    utterance.pitch = profile.pitch || 1.0;
-    utterance.lang = targetLang;
-
-    const matchedVoice = this.getBestVoice(targetLang, profileId);
-    if (matchedVoice) {
-      utterance.voice = matchedVoice;
-    }
-
     let ended = false;
+    let resumeInterval = null;
+
     const handleFinished = () => {
       if (ended) return;
       ended = true;
+      if (resumeInterval) clearInterval(resumeInterval);
       clearTimeout(this.watchdogTimer);
       this.isSpeaking = false;
       this.currentUtterance = null;
       if (typeof window !== 'undefined') {
-        window._activeSpeechUtterances = window._activeSpeechUtterances.filter(u => u !== utterance);
+        window._activeSpeechUtterances = (window._activeSpeechUtterances || []).filter(u => u !== utterance);
       }
       // 150ms acoustic cooldown so speaker audio doesn't re-trigger microphone
       setTimeout(() => {
@@ -613,29 +638,92 @@ class SpeechService {
       }, 150);
     };
 
-    utterance.onend = handleFinished;
-    utterance.onerror = (e) => {
-      console.warn('Speech synthesis notice:', e);
-      handleFinished();
-    };
-
-    // Store in global array to prevent Chromium GC drop
-    if (typeof window !== 'undefined') {
-      window._activeSpeechUtterances.push(utterance);
-    }
-    this.currentUtterance = utterance;
-
-    // Accurate Watchdog Timer: calculated safely for long-form essays and speeches
-    const words = spokenText.split(' ').length;
-    const estimatedDurationMs = Math.max(4000, (words / 1.6) * 1000 + 10000);
-    this.watchdogTimer = setTimeout(handleFinished, estimatedDurationMs);
+    let utterance = null;
 
     try {
+      // Unstick Chromium synthesis thread if paused
+      if (this.synth.paused) {
+        try { this.synth.resume(); } catch (_) {}
+      }
+
+      const isHindi = this.hasDevanagari(text) || customLang === 'hi-IN';
+      const targetLang = customLang || (isHindi ? 'hi-IN' : (this.currentLanguage === 'en-IN' ? 'en-IN' : 'en-US'));
+      let spokenText = this.naturalizeSpokenText(text, targetLang);
+
+      if (!spokenText) {
+        this.isSpeaking = false;
+        if (onEnd) onEnd();
+        return;
+      }
+
+      const profileId = voiceProfileId || this.currentVoiceProfile || (isHindi ? 'kalpana' : (targetLang === 'en-IN' ? 'neerja' : 'nova'));
+      const profile = HUMAN_VOICE_PROFILES.find(p => p.id === profileId) || HUMAN_VOICE_PROFILES[0];
+
+      const matchedVoice = this.getBestVoice(targetLang, profileId);
+
+      const voiceSupportsHindi = matchedVoice && (
+        matchedVoice.lang.includes('hi') || 
+        matchedVoice.name.toLowerCase().includes('hindi') || 
+        matchedVoice.name.toLowerCase().includes('kalpana') || 
+        matchedVoice.name.toLowerCase().includes('swara') || 
+        matchedVoice.name.toLowerCase().includes('madhur')
+      );
+
+      // If text is written in Devanagari script but the available browser voice is English/Indian English,
+      // transliterate to phonetic Latin/Hinglish so the voice pronounces it clearly rather than staying silent!
+      if (this.hasDevanagari(spokenText) && !voiceSupportsHindi) {
+        spokenText = this.devanagariToHinglish(spokenText);
+      }
+
+      utterance = new SpeechSynthesisUtterance(spokenText);
+      utterance.rate = Math.max(0.85, Math.min(1.25, (profile.rate || 1.02) * speedMultiplier));
+      utterance.pitch = profile.pitch || 1.0;
+      utterance.lang = voiceSupportsHindi ? 'hi-IN' : (matchedVoice?.lang || (targetLang === 'hi-IN' ? 'en-IN' : targetLang));
+
+      if (matchedVoice) {
+        utterance.voice = matchedVoice;
+      }
+
+      utterance.onend = handleFinished;
+      utterance.onerror = (e) => {
+        console.warn('Speech synthesis notice:', e);
+        handleFinished();
+      };
+
+      // Store in global array to prevent Chromium GC drop
+      if (typeof window !== 'undefined') {
+        window._activeSpeechUtterances = window._activeSpeechUtterances || [];
+        window._activeSpeechUtterances.push(utterance);
+      }
+      this.currentUtterance = utterance;
+
+      // Accurate Watchdog Timer: calculated safely for long-form essays and speeches
+      const words = spokenText.split(' ').length;
+      const estimatedDurationMs = Math.max(4000, (words / 1.6) * 1000 + 10000);
+      this.watchdogTimer = setTimeout(handleFinished, estimatedDurationMs);
+
+      // Periodic Chromium synthesis unfreezer
+      resumeInterval = setInterval(() => {
+        if (!this.isSpeaking || ended) {
+          clearInterval(resumeInterval);
+          return;
+        }
+        if (this.synth && this.synth.paused) {
+          try { this.synth.resume(); } catch (_) {}
+        }
+      }, 2500);
+
       this.synth.speak(utterance);
+
       // Extra safeguard: resume after speak to prevent Chrome queue freeze
-      if (this.synth.paused) this.synth.resume();
+      setTimeout(() => {
+        if (this.synth && this.synth.paused) {
+          try { this.synth.resume(); } catch (_) {}
+        }
+      }, 50);
+
     } catch (err) {
-      console.error('Speech speak failed:', err);
+      console.error('Speech speak outer error:', err);
       handleFinished();
     }
   }
