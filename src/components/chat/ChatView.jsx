@@ -71,7 +71,7 @@ export default function ChatView({
   onOpenStudioTab,
   layoutMode,
   setLayoutMode,
-  userName = 'Abhinav',
+  userName = 'Orbit User',
   sessions,
   setSessions,
   activeSessionId,

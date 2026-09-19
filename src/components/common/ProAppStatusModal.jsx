@@ -15,7 +15,7 @@ import {
   ArrowRight 
 } from 'lucide-react';
 
-export default function ProAppStatusModal({ isOpen, onClose, userName = 'Abhinav' }) {
+export default function ProAppStatusModal({ isOpen, onClose, userName = 'Orbit User' }) {
   if (!isOpen) return null;
 
   const getPlatformInfo = () => {

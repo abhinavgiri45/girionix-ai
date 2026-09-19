@@ -85,6 +85,7 @@ export default function AIStudio({
   isTitanMode = false,
   injectedCode = null,
   onClose = null,
+  onSelectStudio = null,
   initialMode = 'chat'
 }) {
   // Mode: 'chat' | 'freeform' | 'structured'
@@ -1758,12 +1759,22 @@ println(response.text)
           setHasVerifiedKey(true);
           setIsGateModalOpen(false);
         }}
+        onSelectStudio={(studioId) => {
+          setIsGateModalOpen(false);
+          if (onSelectStudio) {
+            onSelectStudio(studioId);
+          } else if (typeof window !== 'undefined' && window.location) {
+            const url = new URL(window.location.href);
+            url.searchParams.set('studio', studioId);
+            window.location.href = url.toString();
+          }
+        }}
         onSwitchToCodingStudio={() => {
           setIsGateModalOpen(false);
-          if (onClose) onClose();
-          if (typeof window !== 'undefined' && window.location) {
+          if (onSelectStudio) {
+            onSelectStudio('code');
+          } else if (typeof window !== 'undefined' && window.location) {
             const url = new URL(window.location.href);
-            url.pathname = '/code';
             url.searchParams.set('studio', 'code');
             window.location.href = url.toString();
           }

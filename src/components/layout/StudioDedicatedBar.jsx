@@ -40,8 +40,8 @@ export default function StudioDedicatedBar({
     { id: 'script', label: 'Script Writer', icon: <ScrollText className="w-3.5 h-3.5" />, color: 'indigo' },
     { id: 'math', label: 'Math Lab', icon: <Sigma className="w-3.5 h-3.5" />, color: 'purple' },
     { id: 'image', label: '8K Vision', icon: <ImageIcon className="w-3.5 h-3.5" />, color: 'rose' },
-    { id: 'video', label: 'MotionLab 4K/8K', icon: <Clapperboard className="w-3.5 h-3.5" />, color: 'amber' },
-    { id: 'audio', label: 'AudioLab HD', icon: <Music className="w-3.5 h-3.5" />, color: 'emerald' }
+    { id: 'video', label: 'Nano Banana Video (MotionLab 4K/8K)', icon: <Clapperboard className="w-3.5 h-3.5" />, color: 'amber' },
+    { id: 'audio', label: 'ElevenLabs Audio (AudioLab HD)', icon: <Music className="w-3.5 h-3.5" />, color: 'emerald' }
   ];
 
   const currentDedicatedModel = getDedicatedStudioModel(activeStudioTab, isTitanMode);
@@ -91,13 +91,21 @@ export default function StudioDedicatedBar({
           )}
 
           {/* Dynamic API Provider & Key Indicator */}
-          {activeStudioTab === 'code' ? (
+          {['code', 'script', 'math', 'image'].includes(activeStudioTab) ? (
             <div 
               className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-[11px] font-mono text-emerald-300"
-              title="Coding Studio uses Girionix 3 Flagship Models - Zero API key required"
+              title="This studio runs on sovereign built-in engines - Zero API key required"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               <span className="font-bold">No API Key Needed</span>
+            </div>
+          ) : ['video', 'audio'].includes(activeStudioTab) ? (
+            <div 
+              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] font-mono text-amber-300"
+              title="Nano Banana & ElevenLabs sovereign engines ready • Cloud API keys optional"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+              <span className="font-bold">Engine Ready (Key Optional)</span>
             </div>
           ) : (
             <div 

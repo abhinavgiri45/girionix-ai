@@ -18,6 +18,8 @@ export const IMAGE_MODELS = [
 ];
 
 export const VIDEO_MODELS = [
+  { id: 'nano-banana-turbo', name: 'Nano Banana Turbo 2.5', desc: 'Sub-second real-time camera tracking & frame synthesis' },
+  { id: 'nano-banana-pro', name: 'Nano Banana Pro Cinema 8K', desc: 'True cinematic temporal consistency & 8K IMAX clarity' },
   { id: 'motion-v3', name: 'MotionLab V3 Cinema (60 FPS)', desc: 'Hollywood multi-shot continuity & dynamic camera trajectories' },
   { id: 'luma-neural', name: 'Luma Dream Neural (4K)', desc: 'Photorealistic physics & fluid motion synthesis' },
   { id: 'kling-motion', name: 'Kling-AI Motion Engine', desc: 'High-action tracking & complex character movement' },
@@ -195,6 +197,9 @@ export const imageGenerator = {
   async generateVideoStoryboard({ 
     prompt, 
     referenceImage = null,
+    endFrameImage = null,
+    motionIntensity = 6,
+    engineModel = 'nano-banana-turbo',
     audioTheme = 'epic',
     stylePreset = 'Hollywood Blockbuster Sci-Fi',
     resolution = '4k',
@@ -224,7 +229,7 @@ export const imageGenerator = {
       resHeight = resWidth;
     }
 
-    const styleTags = 'Arri Alexa 65 cinematic film still, Master Anamorphic lenses, natural lighting, 8k resolution, volumetric atmosphere, ultra-detailed';
+    const styleTags = `Arri Alexa 65 cinematic film still, Master Anamorphic lenses, natural lighting, 8k resolution, volumetric atmosphere, motion intensity ${motionIntensity}/10, ultra-detailed`;
 
     // 4 Evolving Storyboard Shots
     const shot1Prompt = `masterpiece cinematic movie establishing wide panoramic shot of ${cleanSubject}, camera ${cameraMotion}, atmospheric volumetric depth, ${styleTags}`;
@@ -236,12 +241,15 @@ export const imageGenerator = {
       referenceImage ? { url: referenceImage } : this.generate({ prompt: shot1Prompt, width: resWidth, height: resHeight, seed: baseSeed + 111, model: 'flux', stylePreset }),
       this.generate({ prompt: shot2Prompt, width: resWidth, height: resHeight, seed: baseSeed + 3333, model: 'flux', stylePreset }),
       this.generate({ prompt: shot3Prompt, width: resWidth, height: resHeight, seed: baseSeed + 5555, model: 'flux', stylePreset }),
-      this.generate({ prompt: shot4Prompt, width: resWidth, height: resHeight, seed: baseSeed + 7777, model: 'flux', stylePreset })
+      endFrameImage ? { url: endFrameImage } : this.generate({ prompt: shot4Prompt, width: resWidth, height: resHeight, seed: baseSeed + 7777, model: 'flux', stylePreset })
     ]);
 
     return {
       title: cleanSubject,
       referenceImage: referenceImage || null,
+      endFrameImage: endFrameImage || null,
+      engineModel,
+      motionIntensity,
       fps: fps === '120 FPS' ? 120 : (fps === '24 FPS' ? 24 : 60),
       resolution: resolution === '8k' ? '8K IMAX Master (4320p)' : (resolution === '4k' ? '4K UHD Cinema (2160p)' : '1080p Full HD'),
       aspectRatio,

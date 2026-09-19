@@ -391,24 +391,25 @@ export const STUDIO_DEDICATED_MODELS = {
     benchmark: "8K Sub-Pixel Sharpness • 0.4s Generation"
   },
   video: {
-    id: "girionix-cinemotion-max",
-    name: "Girionix CineMotion 4K/8K Max (Hollywood Director)",
-    provider: "Runway Gen-3 / Sora V2 Cinema Engine",
+    id: "nano-banana-video-cinema",
+    name: "Nano Banana Video (MotionLab 4K/8K)",
+    provider: "Nano Banana Turbo / Runway Gen-3 Cinema Engine",
     workDomain: "Cinematic Multi-Shot 60FPS Video Generation",
     badgeColor: "amber",
-    tag: "Multi-Shot Evolving Continuity & 60/120 FPS Motion",
+    tag: "Nano Banana First/Last Frame Interpolation & 3D Camera Rig",
     speed: "⚡ 60 FPS Real-Time Canvas Motion",
     contextWindow: 128000,
     openRouterModel: "openai/gpt-4o",
     titanModelId: "girionix-titan-vision",
     languages: ["4-Shot Storyboard", "24/60/120 FPS", "2.39:1 Anamorphic", "4K UHD 2160p", "8K IMAX"],
     capabilities: [
-      "Multi-Shot Scene Continuity (4 Evolving Hollywood Frames)",
-      "Camera Trajectories: Orbit 360°, Hyper-Dolly Zoom, FPV Drone Dive, Crane",
-      "Web Audio API Dynamic Orchestral Score & SFX Sync",
+      "First & Last Frame Interpolation Continuity",
+      "Interactive 3D Camera Rig D-Pad (Pan, Tilt, Zoom, Orbit 360°, FPV Drone)",
+      "Motion Intensity Sliders (1-10) with Dynamic Easing",
+      "Web Audio API Dynamic Orchestral Score & Foley SFX Sync",
       "Lossless MP4 / 60FPS GIF Video Master Exporter"
     ],
-    benchmark: "4K/8K 60FPS Cinema Grade • 100% Continuity"
+    benchmark: "Nano Banana 8K Cinema Grade • 100% Temporal Continuity"
   },
   script: {
     id: "girionix-scriptmaster-cinema",
@@ -431,24 +432,25 @@ export const STUDIO_DEDICATED_MODELS = {
     benchmark: "Industry Standard Screenplay Format • Table-Read Mode"
   },
   audio: {
-    id: "girionix-audiocraft-hd",
-    name: "Girionix AudioCraft & NeuralVoice HD",
-    provider: "ElevenLabs V3 Neural Studio",
-    workDomain: "Studio Voice Synthesis & Sound Score Lab",
+    id: "elevenlabs-audiolab-hd",
+    name: "ElevenLabs Audio Studio (AudioLab HD)",
+    provider: "ElevenLabs V3 Neural Voice Architecture",
+    workDomain: "ElevenLabs Voice Library, Instant Cloning & 5-Track Stems",
     badgeColor: "emerald",
-    tag: "48kHz Lossless Voice & Multi-Track Foley Engine",
+    tag: "48kHz Lossless Voice, Cloning & Multi-Track Foley Engine",
     speed: "⚡ Sub-50ms Real-Time Synthesis",
     contextWindow: 64000,
     openRouterModel: "openai/gpt-4o-mini",
     titanModelId: "girionix-titan-70b",
-    languages: ["English", "Hindi", "Multilingual", "Polyphonic Foley", "48kHz Studio WAV"],
+    languages: ["ElevenLabs Voice Library", "Instant Voice Cloning", "Multilingual", "Polyphonic Foley", "48kHz Studio WAV"],
     capabilities: [
-      "Emotional Tone & Timbre Customization",
-      "Real-Time Web Audio Spectrum Frequency Visualizer",
-      "Procedural Cinematic Soundtrack Generator",
-      "Bilingual Studio Narrators (English & Hindi)"
+      "ElevenLabs Voice Library (Rachel, Adam, Antoni, Bella, Arnold, Neerja)",
+      "Stability, Similarity, Style Exaggeration & Speaker Boost Controls",
+      "Instant Voice Cloning (Microphone Record & Audio File Upload)",
+      "Sound Effects (SFX) Prompt-to-Audio Generator",
+      "5-Track Studio Stem Mixer with Live Frequency Visualizer"
     ],
-    benchmark: "48kHz Studio Quality • Zero-Latency Voice"
+    benchmark: "ElevenLabs 48kHz Studio Quality • Zero-Latency Voice"
   }
 };
 

@@ -15,6 +15,11 @@ import {
   Server,
   Layers,
   Code2,
+  ScrollText,
+  Sigma,
+  Image as ImageIcon,
+  Clapperboard,
+  Music,
   RefreshCw,
   HelpCircle
 } from 'lucide-react';
@@ -22,6 +27,79 @@ import { universalApiEngine, SUPPORTED_PROVIDERS } from '../../services/universa
 import { geminiStudioEngine } from '../../services/geminiStudioEngine';
 import { openrouter } from '../../services/openrouter';
 import { storage } from '../../services/storage';
+
+const WORKSPACE_STUDIOS = [
+  {
+    id: 'code',
+    name: 'Coding Studio',
+    subtitle: 'Girionix 3 Flagship Models',
+    badge: '100% FREE • NO KEY NEEDED',
+    badgeColor: 'emerald',
+    icon: Code2,
+    desc: 'Code generation, AST debugging & live preview. Zero API key required.',
+    isFree: true
+  },
+  {
+    id: 'script',
+    name: 'Script Writer',
+    subtitle: 'Cinema & Screenplay',
+    badge: '100% FREE • NO KEY NEEDED',
+    badgeColor: 'indigo',
+    icon: ScrollText,
+    desc: 'Screenplays, YouTube scripts & table-read teleprompter. Zero API key needed.',
+    isFree: true
+  },
+  {
+    id: 'math',
+    name: 'Math Lab',
+    subtitle: 'KaTeX & Olympiad',
+    badge: '100% FREE • NO KEY NEEDED',
+    badgeColor: 'purple',
+    icon: Sigma,
+    desc: 'Rigorous theorem derivations, calculus & proofs. Zero API key needed.',
+    isFree: true
+  },
+  {
+    id: 'image',
+    name: '8K Vision',
+    subtitle: 'FLUX & SDXL Engine',
+    badge: '100% FREE • NO KEY NEEDED',
+    badgeColor: 'rose',
+    icon: ImageIcon,
+    desc: 'Photorealistic 8K imagery & prompt optics. Zero API key needed.',
+    isFree: true
+  },
+  {
+    id: 'video',
+    name: 'Nano Banana Video',
+    subtitle: 'MotionLab 4K/8K',
+    badge: 'ENGINE READY (KEY OPTIONAL)',
+    badgeColor: 'amber',
+    icon: Clapperboard,
+    desc: '3D Camera Rig D-Pad, first/last frame animation & audio sync.',
+    isFree: true
+  },
+  {
+    id: 'audio',
+    name: 'ElevenLabs Audio Studio',
+    subtitle: 'AudioLab HD',
+    badge: 'ENGINE READY (KEY OPTIONAL)',
+    badgeColor: 'emerald',
+    icon: Music,
+    desc: 'ElevenLabs Voice Library, Instant Cloning & 5-track stem mixer.',
+    isFree: true
+  },
+  {
+    id: 'ai-studio',
+    name: 'Frontier AI Studio',
+    subtitle: 'Universal LLMs',
+    badge: 'REQUIRES UNIVERSAL KEY',
+    badgeColor: 'cyan',
+    icon: Sparkles,
+    desc: 'Multi-turn chat, system prompts & JSON schemas with Gemini, Groq, Claude, OpenAI.',
+    isFree: false
+  }
+];
 
 const PROVIDER_INFO = {
   google: {
@@ -80,9 +158,11 @@ export default function UniversalApiGateModal({
   isMandatory = false, 
   onClose, 
   onKeyVerified,
+  onSelectStudio,
   onSwitchToCodingStudio
 }) {
   const currentConfig = universalApiEngine.getProviderConfig();
+  const [selectedStudio, setSelectedStudio] = useState('ai-studio');
   const [selectedProvider, setSelectedProvider] = useState(currentConfig.providerId || 'google');
   const [apiKeyInput, setApiKeyInput] = useState(() => {
     return currentConfig.apiKey || geminiStudioEngine.getApiKey() || storage.getApiKey() || '';
@@ -106,6 +186,19 @@ export default function UniversalApiGateModal({
 
   if (!isOpen) return null;
 
+  const handleStudioCardClick = (studio) => {
+    setSelectedStudio(studio.id);
+    if (studio.id !== 'ai-studio') {
+      // Immediate switch to chosen free / sovereign studio without requiring any API key
+      if (onSelectStudio) {
+        onSelectStudio(studio.id);
+      } else if (studio.id === 'code' && onSwitchToCodingStudio) {
+        onSwitchToCodingStudio();
+      }
+      if (onClose) onClose();
+    }
+  };
+
   const handleProviderSelect = (provId) => {
     setSelectedProvider(provId);
     setStatus(null);
@@ -113,6 +206,28 @@ export default function UniversalApiGateModal({
     if (provMeta) {
       setBaseUrlInput(provMeta.defaultBaseUrl);
     }
+    const existing = universalApiEngine.getProviderConfig();
+    if (existing.providerId === provId && existing.apiKey) {
+      setApiKeyInput(existing.apiKey);
+    }
+  };
+
+  const handleSaveAndDismiss = () => {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('girionix_ai_studio_setup_done', 'true');
+    }
+    if (onClose) onClose();
+  };
+
+  const handleSafeDismiss = () => {
+    if (isMandatory) {
+      if (onSelectStudio) {
+        onSelectStudio('code');
+      } else if (onSwitchToCodingStudio) {
+        onSwitchToCodingStudio();
+      }
+    }
+    handleSaveAndDismiss();
   };
 
   const handleApiKeyChange = (val) => {
@@ -240,45 +355,132 @@ export default function UniversalApiGateModal({
         <div className="p-5 sm:p-6 border-b border-white/10 flex items-start justify-between relative z-10">
           <div className="space-y-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider ${
-                isMandatory 
-                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' 
-                  : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
-              }`}>
-                {isMandatory ? 'Required For AI Studio' : 'Universal API Setup'}
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                Workspace Hub & API Gateway
               </span>
-              <span className="text-[10px] font-mono text-gray-400">
-                Live Key Validation Active
+              <span className="text-[10px] font-mono text-emerald-400 font-bold">
+                ✓ 4 Studios 100% Free (No Key Required)
               </span>
             </div>
 
             <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
               <Key className="w-5 h-5 text-cyan-400" />
-              <span>Connect Universal API for AI Studio</span>
+              <span>Select Studio & API Engine</span>
             </h2>
 
             <p className="text-xs sm:text-sm text-gray-400 max-w-xl">
-              AI Studio enables frontier multi-turn chat, freeform prompt development, and schema-structured JSON output. Connect any verified AI provider below.
+              Choose your target studio below. <strong>Coding Studio, Script Writer, Math Lab, and 8K Vision</strong> run entirely free with zero API keys. Connect an API key below to unlock <strong>Frontier AI Studio</strong>.
             </p>
           </div>
 
-          {!isMandatory && (
-            <button
-              onClick={onClose}
-              className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          )}
+          <button
+            onClick={handleSafeDismiss}
+            className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors cursor-pointer shrink-0"
+            title="Close or switch to Free Coding Studio"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         {/* Scrollable Content Body */}
         <div className="p-5 sm:p-6 overflow-y-auto space-y-5 text-xs">
-          {/* Provider Selection Grid */}
+          {/* STEP 0: STUDIO SELECTION WORKSPACE HUB */}
+          <div className="space-y-2.5 p-3.5 rounded-2xl bg-white/[0.02] border border-cyan-500/20 shadow-inner">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div>
+                <label className="text-xs font-mono text-cyan-300 font-bold block flex items-center gap-1.5">
+                  <Layers className="w-4 h-4 text-cyan-400" />
+                  <span>0. Select Your Target Studio Workspace</span>
+                </label>
+                <p className="text-[11px] text-gray-400">
+                  Select where you want to work. Free studios require zero keys and open immediately:
+                </p>
+              </div>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                Click any free studio to jump straight in
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 pt-1">
+              {WORKSPACE_STUDIOS.map((studio) => {
+                const isSelected = selectedStudio === studio.id;
+                const IconComp = studio.icon;
+
+                return (
+                  <button
+                    key={studio.id}
+                    type="button"
+                    onClick={() => handleStudioCardClick(studio)}
+                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between group relative overflow-hidden ${
+                      isSelected
+                        ? 'bg-cyan-500/15 border-cyan-400 shadow-glow-cyan text-white scale-[1.01]'
+                        : studio.isFree
+                          ? 'bg-black/40 border-white/10 hover:border-emerald-500/40 hover:bg-emerald-950/20 text-gray-300'
+                          : 'bg-black/40 border-white/10 hover:border-cyan-500/40 hover:bg-cyan-950/20 text-gray-300'
+                    }`}
+                  >
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between gap-1.5">
+                        <div className="flex items-center gap-2">
+                          <span className={`p-1.5 rounded-lg ${
+                            studio.id === 'code' ? 'bg-cyan-500/20 text-cyan-300' :
+                            studio.id === 'script' ? 'bg-indigo-500/20 text-indigo-300' :
+                            studio.id === 'math' ? 'bg-purple-500/20 text-purple-300' :
+                            studio.id === 'image' ? 'bg-rose-500/20 text-rose-300' :
+                            studio.id === 'video' ? 'bg-amber-500/20 text-amber-300' :
+                            studio.id === 'audio' ? 'bg-emerald-500/20 text-emerald-300' :
+                            'bg-cyan-500/20 text-cyan-300'
+                          }`}>
+                            <IconComp className="w-4 h-4" />
+                          </span>
+                          <div>
+                            <div className="font-bold text-xs text-white group-hover:text-cyan-200">
+                              {studio.name}
+                            </div>
+                            {studio.subtitle && (
+                              <div className="text-[10px] text-gray-400 font-mono">
+                                {studio.subtitle}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono font-bold shrink-0 ${
+                          studio.isFree
+                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                            : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                        }`}>
+                          {studio.isFree ? 'FREE' : 'KEY REQ'}
+                        </span>
+                      </div>
+
+                      <p className="text-[10px] text-gray-400 leading-snug">
+                        {studio.desc}
+                      </p>
+                    </div>
+
+                    <div className="mt-2.5 pt-2 border-t border-white/5 flex items-center justify-between text-[10px] font-mono">
+                      <span className={studio.isFree ? 'text-emerald-400' : 'text-cyan-400'}>
+                        {studio.isFree ? '⚡ Open Free (No Key)' : '🔑 Configure API Key'}
+                      </span>
+                      <ArrowRight className="w-3 h-3 text-gray-400 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Provider Selection Grid (For AI Studio) */}
           <div className="space-y-2">
-            <label className="text-xs font-mono text-gray-300 font-bold block">
-              1. Choose AI Provider
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-mono text-gray-300 font-bold block">
+                1. Choose Frontier AI Provider (For AI Studio)
+              </label>
+              <span className="text-[10px] font-mono text-gray-500">
+                Powers AI Studio & Custom LLM Sandbox
+              </span>
+            </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {SUPPORTED_PROVIDERS.map((prov) => {
@@ -418,24 +620,29 @@ export default function UniversalApiGateModal({
             </div>
           )}
 
-          {/* Mandatory Fallback Notice for Coding Studio */}
-          {isMandatory && onSwitchToCodingStudio && (
-            <div className="p-3 rounded-2xl bg-white/[0.02] border border-white/5 flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <Code2 className="w-4 h-4 text-cyan-400 shrink-0" />
-                <span className="text-[11px] text-gray-400">
-                  Don't have an API key right now? Coding Studio requires <strong>zero API keys</strong>.
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={onSwitchToCodingStudio}
-                className="shrink-0 px-2.5 py-1 rounded-xl bg-white/5 hover:bg-white/10 text-cyan-300 hover:text-cyan-200 text-[11px] font-mono border border-cyan-500/20 transition-all cursor-pointer"
-              >
-                Go to Coding Studio
-              </button>
+          {/* Universal Fallback Notice for Free Studios */}
+          <div className="p-3 rounded-2xl bg-white/[0.02] border border-white/5 flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Code2 className="w-4 h-4 text-cyan-400 shrink-0" />
+              <span className="text-[11px] text-gray-400">
+                Don't have an API key right now? <strong>Coding Studio, Script Writer, Math Lab & 8K Vision</strong> require zero API keys.
+              </span>
             </div>
-          )}
+            <button
+              type="button"
+              onClick={() => {
+                if (onSelectStudio) {
+                  onSelectStudio('code');
+                } else if (onSwitchToCodingStudio) {
+                  onSwitchToCodingStudio();
+                }
+                handleSaveAndDismiss();
+              }}
+              className="shrink-0 px-3 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 hover:text-cyan-200 text-[11px] font-mono border border-cyan-500/30 transition-all cursor-pointer"
+            >
+              Open Free Coding Studio →
+            </button>
+          </div>
         </div>
 
         {/* Modal Actions Footer */}
@@ -446,15 +653,13 @@ export default function UniversalApiGateModal({
           </div>
 
           <div className="flex items-center gap-2 ml-auto">
-            {!isMandatory && (
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white text-xs font-semibold transition-all cursor-pointer"
-              >
-                Cancel
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={handleSafeDismiss}
+              className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white text-xs font-semibold transition-all cursor-pointer"
+            >
+              Skip / Free Studios
+            </button>
 
             <button
               type="button"

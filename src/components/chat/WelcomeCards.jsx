@@ -59,7 +59,7 @@ export default function WelcomeCards({ userName, onOpenAbout, onOpenWhySwitch, o
       <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-1">
         <span className="text-white">Hello, </span>
         <span className="bg-gradient-to-r from-blue-400 via-cyan-300 to-indigo-400 bg-clip-text text-transparent">
-          {userName || 'Abhinav'}
+          {userName || 'Orbit User'}
         </span>
       </h1>
       

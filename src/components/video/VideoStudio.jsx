@@ -32,20 +32,34 @@ import {
   Wand2,
   ImageIcon,
   History,
-  Trash2
+  Trash2,
+  ArrowUp,
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  Move,
+  Volume2,
+  VolumeX,
+  Key,
+  Repeat
 } from 'lucide-react';
 import { imageGenerator, VIDEO_MODELS } from '../../services/imageGenerator';
 import CinematicVideoPlayer from './CinematicVideoPlayer';
 
 export default function VideoStudio({ activeModel, isAppInstalled = false, isTitanMode = false, onOpenDownload }) {
-  const [generationMode, setGenerationMode] = useState('text'); // 'text' | 'image'
+  // Modes: 'text' | 'image' | 'interpolate' | 'loop'
+  const [generationMode, setGenerationMode] = useState('text');
   const [customPrompt, setCustomPrompt] = useState('a majestic cybernetic dragon soaring above futuristic neo-Tokyo skyscrapers at midnight with volumetric rain reflections');
   const [referenceImage, setReferenceImage] = useState(null);
+  const [endFrameImage, setEndFrameImage] = useState(null);
   const [cameraMotion, setCameraMotion] = useState('Orbit 360° Counter-Clockwise');
+  const [motionIntensity, setMotionIntensity] = useState(6); // 1-10
+  const [engineModel, setEngineModel] = useState('nano-banana-turbo');
   const [cinematicStyle, setCinematicStyle] = useState('Hollywood Blockbuster Sci-Fi');
   const [resolution, setResolution] = useState('4k'); // '1080p' | '4k' | '8k'
   const [aspectRatio, setAspectRatio] = useState('2.39:1 Anamorphic Cinema');
   const [audioGenre, setAudioGenre] = useState('epic');
+  const [includeAudio, setIncludeAudio] = useState(true);
   const [fps, setFps] = useState('60 FPS');
   const [duration, setDuration] = useState(12); // 12 | 30 | 60 | 120
   const [isGenerating, setIsGenerating] = useState(false);
@@ -53,6 +67,12 @@ export default function VideoStudio({ activeModel, isAppInstalled = false, isTit
   const [activeVideoData, setActiveVideoData] = useState(null);
   const [showDirectorSettings, setShowDirectorSettings] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [showKeyDrawer, setShowKeyDrawer] = useState(false);
+  const [bananaApiKey, setBananaApiKey] = useState(() => {
+    try {
+      return localStorage.getItem('girionix_banana_api_key') || '';
+    } catch (_) { return ''; }
+  });
 
   // Video Generation History from localStorage
   const [videoHistory, setVideoHistory] = useState(() => {
@@ -63,10 +83,16 @@ export default function VideoStudio({ activeModel, isAppInstalled = false, isTit
   });
 
   const durationOptions = [
-    { value: 12, label: '12s (Cinema Teaser)' },
-    { value: 30, label: '30s (Short Film)' },
-    { value: 60, label: '60s (Master Trailer)' },
-    { value: 120, label: '2 Min (Extended Cinematic)' }
+    { value: 5, label: '5s (Quick Action Clip)' },
+    { value: 10, label: '10s (High-Def Cinema Shot)' },
+    { value: 12, label: '12s (Director Teaser)' },
+    { value: 30, label: '30s (Short Sequence)' }
+  ];
+
+  const bananaEngines = [
+    { id: 'nano-banana-turbo', name: 'Nano Banana Turbo 2.5', speed: '0.8s Ultra-Fast', desc: 'Real-time multi-shot camera synthesis' },
+    { id: 'nano-banana-pro', name: 'Nano Banana Pro Cinema 8K', speed: 'High Consistency', desc: 'Sub-pixel temporal morphing & 8K physics' },
+    { id: 'luma-dream-motion', name: 'Luma Dream & Runway Gen-3', speed: 'Fluid Dynamics', desc: 'Anamorphic cinema optics & fluid simulation' }
   ];
 
   const motions = [
@@ -132,7 +158,9 @@ export default function VideoStudio({ activeModel, isAppInstalled = false, isTit
         resolution,
         fps,
         aspectRatio,
-        cameraMotion
+        cameraMotion,
+        motionIntensity,
+        engineModel
       })
         .then(storyboard => {
           storyboard.duration = duration;
@@ -257,47 +285,85 @@ export default function VideoStudio({ activeModel, isAppInstalled = false, isTit
     e.target.value = '';
   };
 
+  const handleEndFrameUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      setEndFrameImage(evt.target.result);
+      setGenerationMode('interpolate');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSaveBananaKey = (key) => {
+    setBananaApiKey(key);
+    try {
+      localStorage.setItem('girionix_banana_api_key', key);
+    } catch (_) {}
+  };
+
   return (
     <div className="flex-1 flex flex-col h-full bg-[#06070D] overflow-y-auto p-3 sm:p-5 space-y-3 font-sans">
-      {/* Clean, Streamlined Header & Command Bar */}
-      <div className="p-4 rounded-2xl bg-[#0A0D1B]/90 backdrop-blur-xl border border-white/10 space-y-3 shadow-xl">
-        <div className="flex items-center justify-between gap-3 flex-wrap">
+      {/* Nano Banana Video Header & Command Bar */}
+      <div className="p-4 rounded-2xl bg-[#0A0D1B]/95 backdrop-blur-xl border border-amber-500/20 space-y-3 shadow-xl relative overflow-hidden">
+        {/* Ambient Top Glow */}
+        <div className="absolute top-0 left-1/4 w-1/2 h-10 bg-amber-500/10 blur-xl pointer-events-none" />
+
+        <div className="flex items-center justify-between gap-3 flex-wrap relative z-10">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30">
-              <Film className="w-4 h-4" />
+            <div className="p-2.5 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-black font-black shadow-glow-amber">
+              <Film className="w-5 h-5 text-black" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-sm font-bold text-white tracking-wide">MotionLab 4K/8K Video Studio</h2>
-                <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-mono font-bold">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-base font-black text-white tracking-wide flex items-center gap-1.5">
+                  <span>Nano Banana Video</span>
+                  <span className="text-amber-400 font-mono text-xs font-normal">(MotionLab 4K/8K)</span>
+                </h2>
+                <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-mono font-bold">
+                  🍌 Turbo 2.5 • Runway Gen-3 Continuity
+                </span>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-mono">
                   {resolution.toUpperCase()} • {fps}
                 </span>
               </div>
-              <p className="text-[11px] text-gray-400 font-mono">Hollywood Multi-Shot Continuity & Foley Audio Engine</p>
+              <p className="text-[11px] text-gray-400 font-mono">
+                First & Last Frame Interpolation • 3D Camera Rig • Hollywood Foley Audio Sync
+              </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
-            {/* Mode Switcher: Text-to-Video vs Image-to-Video */}
+            {/* Banana Engine Selector */}
             <div className="flex items-center gap-1 bg-black/60 p-1 rounded-xl border border-white/10 text-xs font-mono">
-              <button
-                onClick={() => setGenerationMode('text')}
-                className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
-                  generationMode === 'text' ? 'bg-amber-500 text-black font-bold shadow-sm' : 'text-gray-400 hover:text-white'
-                }`}
+              <span className="text-gray-500 text-[10px] px-1.5 hidden lg:inline">ENGINE:</span>
+              <select
+                value={engineModel}
+                onChange={(e) => setEngineModel(e.target.value)}
+                className="bg-transparent text-amber-300 font-bold text-xs focus:outline-none cursor-pointer py-0.5 px-1"
               >
-                Text-to-Video
-              </button>
-              <button
-                onClick={() => setGenerationMode('image')}
-                className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
-                  generationMode === 'image' ? 'bg-amber-500 text-black font-bold shadow-sm' : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                <ImageIcon className="w-3 h-3" />
-                <span>Image-to-Video</span>
-              </button>
+                {bananaEngines.map(eng => (
+                  <option key={eng.id} value={eng.id} className="bg-gray-900 text-white">
+                    {eng.name}
+                  </option>
+                ))}
+              </select>
             </div>
+
+            {/* Optional Engine Key Drawer Toggle */}
+            <button
+              onClick={() => setShowKeyDrawer(!showKeyDrawer)}
+              className={`px-2.5 py-1.5 rounded-xl border text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer ${
+                showKeyDrawer || bananaApiKey
+                  ? 'bg-amber-500/15 border-amber-500/40 text-amber-300'
+                  : 'bg-white/5 hover:bg-white/10 text-gray-400 border-white/10'
+              }`}
+              title="Configure Cloud Banana / Gemini Omni API Key (Optional)"
+            >
+              <Key className="w-3.5 h-3.5 text-amber-400" />
+              <span className="hidden sm:inline">{bananaApiKey ? 'Key Active' : 'Key (Optional)'}</span>
+            </button>
 
             <button
               onClick={() => setShowDirectorSettings(!showDirectorSettings)}
@@ -308,7 +374,7 @@ export default function VideoStudio({ activeModel, isAppInstalled = false, isTit
               }`}
             >
               <SlidersHorizontal className="w-3.5 h-3.5" />
-              <span>Director</span>
+              <span>Camera Rig</span>
             </button>
 
             <button
@@ -341,23 +407,98 @@ export default function VideoStudio({ activeModel, isAppInstalled = false, isTit
           </div>
         </div>
 
-        {/* Image Reference Uploader (for Image-to-Video mode) */}
+        {/* Optional Cloud Banana API Key Drawer */}
+        {showKeyDrawer && (
+          <div className="p-3 rounded-xl bg-amber-950/20 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 text-xs font-mono animate-fadeIn">
+            <div className="space-y-0.5">
+              <span className="font-bold text-amber-300 flex items-center gap-1">
+                <Key className="w-3.5 h-3.5" /> Banana Video Engine API Key (Optional)
+              </span>
+              <p className="text-[10px] text-gray-400">
+                Leave blank to use sovereign built-in browser engine. Input your custom Gemini Omni / Runway key if desired.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <input
+                type="password"
+                value={bananaApiKey}
+                onChange={(e) => handleSaveBananaKey(e.target.value)}
+                placeholder="Paste optional API key..."
+                className="px-3 py-1.5 rounded-lg bg-black/60 border border-white/15 text-white text-xs w-full sm:w-64 focus:outline-none focus:border-amber-400"
+              />
+              {bananaApiKey && (
+                <button
+                  onClick={() => handleSaveBananaKey('')}
+                  className="p-1.5 rounded-lg bg-white/5 text-gray-400 hover:text-rose-400"
+                  title="Remove Key"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* 4 Generation Modes Bar */}
+        <div className="flex items-center gap-1.5 bg-black/60 p-1.5 rounded-2xl border border-white/10 overflow-x-auto text-xs font-mono">
+          <button
+            onClick={() => setGenerationMode('text')}
+            className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+              generationMode === 'text' ? 'bg-amber-400 text-black font-bold shadow-glow-amber' : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            <Film className="w-3.5 h-3.5" />
+            <span>Text to Video</span>
+          </button>
+
+          <button
+            onClick={() => setGenerationMode('image')}
+            className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+              generationMode === 'image' ? 'bg-amber-400 text-black font-bold shadow-glow-amber' : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            <ImageIcon className="w-3.5 h-3.5" />
+            <span>Image to Video (First Frame)</span>
+          </button>
+
+          <button
+            onClick={() => setGenerationMode('interpolate')}
+            className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+              generationMode === 'interpolate' ? 'bg-gradient-to-r from-amber-400 to-rose-500 text-black font-bold shadow-glow-amber' : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            <Repeat className="w-3.5 h-3.5" />
+            <span>First + Last Frame (Interpolate)</span>
+          </button>
+
+          <button
+            onClick={() => setGenerationMode('loop')}
+            className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+              generationMode === 'loop' ? 'bg-amber-400 text-black font-bold' : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            <Move className="w-3.5 h-3.5" />
+            <span>Extend & Loop</span>
+          </button>
+        </div>
+
+        {/* First Frame Uploader (for Image-to-Video mode) */}
         {generationMode === 'image' && (
-          <div className="p-3 rounded-xl bg-black/50 border border-cyan-500/30 flex items-center justify-between gap-3 text-xs font-mono">
+          <div className="p-3 rounded-xl bg-black/50 border border-cyan-500/30 flex items-center justify-between gap-3 text-xs font-mono animate-fadeIn">
             <div className="flex items-center gap-3">
               {referenceImage ? (
-                <img src={referenceImage} alt="Reference" className="w-12 h-12 object-cover rounded-lg border border-cyan-500/40" />
+                <img src={referenceImage} alt="First Frame" className="w-14 h-14 object-cover rounded-lg border border-cyan-500/40" />
               ) : (
-                <div className="w-12 h-12 rounded-lg bg-white/5 border border-dashed border-white/20 flex items-center justify-center text-gray-400">
-                  <ImageIcon className="w-5 h-5" />
+                <div className="w-14 h-14 rounded-lg bg-white/5 border border-dashed border-white/20 flex items-center justify-center text-gray-400">
+                  <ImageIcon className="w-6 h-6" />
                 </div>
               )}
               <div>
                 <span className="text-cyan-300 font-bold block">
-                  {referenceImage ? 'Reference Image Attached' : 'Upload Keyframe Image to Animate:'}
+                  {referenceImage ? 'First Frame (Start Scene) Loaded' : 'Upload First Frame Image:'}
                 </span>
                 <span className="text-[10px] text-gray-400">
-                  {referenceImage ? 'MotionLab will synthesize 3D dynamic camera movement over your image.' : 'PNG, JPG or WebP up to 8K resolution'}
+                  Nano Banana will animate motion starting from this exact keyframe.
                 </span>
               </div>
             </div>
@@ -371,11 +512,69 @@ export default function VideoStudio({ activeModel, isAppInstalled = false, isTit
                 <button
                   onClick={() => setReferenceImage(null)}
                   className="p-1.5 rounded-lg bg-white/5 text-gray-400 hover:text-rose-400"
-                  title="Remove reference"
+                  title="Remove image"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* First + Last Frame Dual Interpolator (for Interpolation Mode) */}
+        {generationMode === 'interpolate' && (
+          <div className="p-3.5 rounded-2xl bg-black/60 border border-amber-500/30 space-y-2 text-xs font-mono animate-fadeIn">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-amber-300 flex items-center gap-1.5">
+                <Repeat className="w-4 h-4" /> Banana End-Frame Interpolation Matrix
+              </span>
+              <span className="text-[10px] text-gray-400">
+                Seamless transition between Start & End keyframes
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* First Frame Slot */}
+              <div className="p-2.5 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2.5">
+                  {referenceImage ? (
+                    <img src={referenceImage} alt="Start Frame" className="w-12 h-12 object-cover rounded-lg border border-amber-500/40" />
+                  ) : (
+                    <div className="w-12 h-12 rounded-lg bg-white/5 border border-dashed border-white/20 flex items-center justify-center text-gray-400">
+                      <ImageIcon className="w-5 h-5" />
+                    </div>
+                  )}
+                  <div>
+                    <span className="text-white font-bold block text-[11px]">1. Start Frame</span>
+                    <span className="text-[10px] text-gray-500">{referenceImage ? 'Attached' : 'Upload initial pose'}</span>
+                  </div>
+                </div>
+                <label className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 text-[11px] cursor-pointer">
+                  <span>{referenceImage ? 'Replace' : 'Upload'}</span>
+                  <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                </label>
+              </div>
+
+              {/* End Frame Slot */}
+              <div className="p-2.5 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2.5">
+                  {endFrameImage ? (
+                    <img src={endFrameImage} alt="End Frame" className="w-12 h-12 object-cover rounded-lg border border-rose-500/40" />
+                  ) : (
+                    <div className="w-12 h-12 rounded-lg bg-white/5 border border-dashed border-white/20 flex items-center justify-center text-gray-400">
+                      <ImageIcon className="w-5 h-5" />
+                    </div>
+                  )}
+                  <div>
+                    <span className="text-white font-bold block text-[11px]">2. End Frame</span>
+                    <span className="text-[10px] text-gray-500">{endFrameImage ? 'Attached' : 'Upload final pose'}</span>
+                  </div>
+                </div>
+                <label className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 text-[11px] cursor-pointer">
+                  <span>{endFrameImage ? 'Replace' : 'Upload'}</span>
+                  <input type="file" accept="image/*" onChange={handleEndFrameUpload} className="hidden" />
+                </label>
+              </div>
             </div>
           </div>
         )}
@@ -388,7 +587,7 @@ export default function VideoStudio({ activeModel, isAppInstalled = false, isTit
               value={customPrompt}
               onChange={(e) => setCustomPrompt(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleGenerateScript()}
-              placeholder="Describe your video scene (e.g., cybernetic dragon soaring above Neo-Tokyo, running dog in meadow)..."
+              placeholder="Describe scene motion, camera action & lighting (e.g., cybernetic dragon soaring above Neo-Tokyo)..."
               className="w-full pl-9 pr-20 py-2.5 rounded-xl bg-black/60 border border-white/15 text-white text-xs placeholder-gray-500 focus:outline-none focus:border-amber-500/50 shadow-inner"
             />
             <Video className="w-4 h-4 text-amber-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -397,7 +596,7 @@ export default function VideoStudio({ activeModel, isAppInstalled = false, isTit
               onClick={handleMagicEnhancePrompt}
               disabled={isEnhancing || !customPrompt.trim()}
               className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 rounded-lg bg-white/10 hover:bg-amber-500/20 text-[10px] font-mono text-gray-300 hover:text-amber-300 flex items-center gap-1 transition-colors cursor-pointer"
-              title="Enhance with Director Optics"
+              title="Enhance with Banana Optics"
             >
               <Wand2 className="w-3 h-3 text-amber-400" />
               <span>{isEnhancing ? '...' : 'Enhance'}</span>
@@ -412,7 +611,7 @@ export default function VideoStudio({ activeModel, isAppInstalled = false, isTit
             {isGenerating ? (
               <>
                 <RefreshCw className="w-3.5 h-3.5 animate-spin text-black" />
-                <span>Synthesizing Video...</span>
+                <span>Banana Rendering...</span>
               </>
             ) : (
               <>
@@ -482,81 +681,257 @@ export default function VideoStudio({ activeModel, isAppInstalled = false, isTit
           </div>
         )}
 
-        {/* Collapsible Director Settings Drawer */}
+        {/* Collapsible 3D Camera Rig & Director Drawer */}
         {showDirectorSettings && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 pt-3 border-t border-white/10 text-xs font-mono animate-fadeIn">
-            {/* Resolution Selector */}
-            <div className="p-2 rounded-xl bg-black/40 border border-white/5 space-y-1">
-              <span className="text-[10px] text-gray-400 flex items-center gap-1"><Tv className="w-3 h-3 text-amber-400" /> Resolution</span>
-              <div className="grid grid-cols-3 gap-1">
-                {resolutions.map(r => (
+          <div className="p-4 rounded-2xl bg-black/70 border border-amber-500/30 space-y-4 text-xs font-mono animate-fadeIn">
+            <div className="flex items-center justify-between border-b border-white/10 pb-2">
+              <span className="font-bold text-amber-300 flex items-center gap-2">
+                <Camera className="w-4 h-4" /> 3D Camera Rig & Director Optics Matrix
+              </span>
+              <span className="text-[10px] text-gray-400">
+                Nano Banana 6-DOF Spatial Motion Vector Control
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {/* Left Column: Interactive 3D Camera Rig D-Pad */}
+              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/10 space-y-2 flex flex-col items-center justify-between">
+                <div className="w-full flex items-center justify-between">
+                  <span className="text-[11px] text-gray-300 font-bold flex items-center gap-1.5">
+                    <Move className="w-3.5 h-3.5 text-amber-400" /> 3D Camera Rig D-Pad
+                  </span>
+                  <span className="text-[10px] text-amber-400 truncate max-w-[120px]">{cameraMotion.split(' ')[0]}</span>
+                </div>
+
+                {/* Visual D-Pad */}
+                <div className="grid grid-cols-3 gap-1.5 w-44 my-2">
+                  <div />
                   <button
-                    key={r.id}
-                    onClick={() => setResolution(r.id)}
-                    className={`py-1 rounded text-[10px] font-bold transition-all cursor-pointer ${
-                      resolution === r.id ? 'bg-amber-500 text-black' : 'bg-white/5 text-gray-400 hover:text-white'
+                    type="button"
+                    onClick={() => setCameraMotion('Tilt Up & Pan High')}
+                    className={`p-2 rounded-lg border text-center transition-all flex flex-col items-center justify-center cursor-pointer ${
+                      cameraMotion.includes('Tilt Up') ? 'bg-amber-500 text-black font-bold border-amber-400 shadow-glow-amber' : 'bg-black/50 border-white/15 text-gray-300 hover:bg-white/10'
+                    }`}
+                    title="Tilt Up"
+                  >
+                    <ArrowUp className="w-4 h-4" />
+                  </button>
+                  <div />
+
+                  <button
+                    type="button"
+                    onClick={() => setCameraMotion('Low-Angle Hero Tracking')}
+                    className={`p-2 rounded-lg border text-center transition-all flex flex-col items-center justify-center cursor-pointer ${
+                      cameraMotion.includes('Tracking') ? 'bg-amber-500 text-black font-bold border-amber-400 shadow-glow-amber' : 'bg-black/50 border-white/15 text-gray-300 hover:bg-white/10'
+                    }`}
+                    title="Pan Left"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setCameraMotion('Orbit 360° Counter-Clockwise')}
+                    className={`p-2 rounded-lg border text-center transition-all flex flex-col items-center justify-center cursor-pointer ${
+                      cameraMotion.includes('Orbit') ? 'bg-amber-500 text-black font-bold border-amber-400 shadow-glow-amber' : 'bg-black/50 border-white/15 text-gray-300 hover:bg-white/10'
+                    }`}
+                    title="360° Orbit (Center)"
+                  >
+                    <Orbit className="w-4 h-4" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setCameraMotion('Cyberpunk Glitch Pan')}
+                    className={`p-2 rounded-lg border text-center transition-all flex flex-col items-center justify-center cursor-pointer ${
+                      cameraMotion.includes('Pan') ? 'bg-amber-500 text-black font-bold border-amber-400 shadow-glow-amber' : 'bg-black/50 border-white/15 text-gray-300 hover:bg-white/10'
+                    }`}
+                    title="Pan Right"
+                  >
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+
+                  <div />
+                  <button
+                    type="button"
+                    onClick={() => setCameraMotion('Top-Down Crane Sweep')}
+                    className={`p-2 rounded-lg border text-center transition-all flex flex-col items-center justify-center cursor-pointer ${
+                      cameraMotion.includes('Crane') ? 'bg-amber-500 text-black font-bold border-amber-400 shadow-glow-amber' : 'bg-black/50 border-white/15 text-gray-300 hover:bg-white/10'
+                    }`}
+                    title="Tilt Down / Crane"
+                  >
+                    <ArrowDown className="w-4 h-4" />
+                  </button>
+                  <div />
+                </div>
+
+                {/* Quick 3D Motion Presets */}
+                <div className="w-full flex items-center justify-center gap-1 flex-wrap pt-1 border-t border-white/5">
+                  <button
+                    type="button"
+                    onClick={() => setCameraMotion('Hyper-Dolly Zoom (Vertigo Effect)')}
+                    className={`px-2 py-0.5 rounded text-[9px] border cursor-pointer ${
+                      cameraMotion.includes('Dolly') ? 'bg-amber-500 text-black font-bold' : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'
                     }`}
                   >
-                    {r.label}
+                    🎯 Vertigo Dolly
                   </button>
-                ))}
+                  <button
+                    type="button"
+                    onClick={() => setCameraMotion('FPV Drone Dive (Speed Ramp)')}
+                    className={`px-2 py-0.5 rounded text-[9px] border cursor-pointer ${
+                      cameraMotion.includes('Drone') ? 'bg-amber-500 text-black font-bold' : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    🦅 FPV Drone
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCameraMotion('Rack Focus Macro Push-In')}
+                    className={`px-2 py-0.5 rounded text-[9px] border cursor-pointer ${
+                      cameraMotion.includes('Macro') ? 'bg-amber-500 text-black font-bold' : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    🔍 Push-In
+                  </button>
+                </div>
               </div>
-            </div>
 
-            {/* Duration Selector */}
-            <div className="p-2 rounded-xl bg-black/40 border border-white/5 space-y-1">
-              <span className="text-[10px] text-gray-400 flex items-center gap-1"><Clock className="w-3 h-3 text-emerald-400" /> Duration</span>
-              <select
-                value={duration}
-                onChange={(e) => setDuration(Number(e.target.value))}
-                className="w-full bg-black/70 text-emerald-300 font-bold p-1 rounded text-xs border border-white/10 focus:outline-none cursor-pointer"
-              >
-                {durationOptions.map(d => (
-                  <option key={d.value} value={d.value} className="bg-gray-900 text-white">{d.label}</option>
-                ))}
-              </select>
-            </div>
+              {/* Center Column: Motion Intensity & Aspect Ratio */}
+              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/10 space-y-3 flex flex-col justify-between">
+                {/* Motion Intensity Slider (1-10) */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] text-gray-300 font-bold flex items-center gap-1.5">
+                      <Flame className="w-3.5 h-3.5 text-amber-400" /> Motion Intensity
+                    </span>
+                    <span className="text-xs font-bold text-amber-400">{motionIntensity}/10</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="10"
+                    step="1"
+                    value={motionIntensity}
+                    onChange={(e) => setMotionIntensity(Number(e.target.value))}
+                    className="w-full accent-amber-400 cursor-pointer h-1.5 bg-gray-800 rounded-lg"
+                  />
+                  <div className="flex items-center justify-between text-[9px] text-gray-500">
+                    <span>1 (Serene Sub-pixel)</span>
+                    <span className="text-amber-300 font-semibold">
+                      {motionIntensity <= 3 ? 'Subtle Micro-Motion' : motionIntensity <= 7 ? 'Cinematic Horizon Tracking' : 'Kinetic Speed Ramp'}
+                    </span>
+                    <span>10 (Action Rush)</span>
+                  </div>
+                </div>
 
-            {/* FPS Selector */}
-            <div className="p-2 rounded-xl bg-black/40 border border-white/5 space-y-1">
-              <span className="text-[10px] text-gray-400 flex items-center gap-1"><SlidersHorizontal className="w-3 h-3 text-cyan-400" /> Framerate</span>
-              <select
-                value={fps}
-                onChange={(e) => setFps(e.target.value)}
-                className="w-full bg-black/70 text-cyan-300 font-bold p-1 rounded text-xs border border-white/10 focus:outline-none cursor-pointer"
-              >
-                {fpsOptions.map(f => (
-                  <option key={f.value} value={f.value} className="bg-gray-900 text-white">{f.label}</option>
-                ))}
-              </select>
-            </div>
+                {/* Aspect Ratio Framing */}
+                <div className="space-y-1.5 pt-2 border-t border-white/5">
+                  <span className="text-[11px] text-gray-300 font-bold block">Aspect Ratio Framing</span>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {aspectRatios.map(ar => (
+                      <button
+                        key={ar.value}
+                        type="button"
+                        onClick={() => setAspectRatio(ar.value)}
+                        className={`py-1.5 px-2 rounded-lg text-[10px] text-left border transition-all cursor-pointer truncate ${
+                          aspectRatio === ar.value
+                            ? 'bg-amber-500 text-black font-bold border-amber-400'
+                            : 'bg-black/40 border-white/10 text-gray-400 hover:text-white'
+                        }`}
+                      >
+                        {ar.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
 
-            {/* Camera Motion */}
-            <div className="p-2 rounded-xl bg-black/40 border border-white/5 space-y-1">
-              <span className="text-[10px] text-gray-400 flex items-center gap-1"><Camera className="w-3 h-3 text-rose-400" /> Camera Motion</span>
-              <select
-                value={cameraMotion}
-                onChange={(e) => setCameraMotion(e.target.value)}
-                className="w-full bg-black/70 text-rose-300 p-1 rounded text-xs border border-white/10 focus:outline-none cursor-pointer truncate"
-              >
-                {motions.map(m => (
-                  <option key={m.value} value={m.value} className="bg-gray-900 text-white">{m.label}</option>
-                ))}
-              </select>
-            </div>
+              {/* Right Column: Audio Foley Sync & Cinema Specs */}
+              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/10 space-y-3 flex flex-col justify-between">
+                {/* Audio Foley Sync */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] text-gray-300 font-bold flex items-center gap-1.5">
+                      <Music className="w-3.5 h-3.5 text-emerald-400" /> Foley Audio Sync
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setIncludeAudio(!includeAudio)}
+                      className={`px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer ${
+                        includeAudio ? 'bg-emerald-500 text-black' : 'bg-gray-800 text-gray-400'
+                      }`}
+                    >
+                      {includeAudio ? 'SYNC ON' : 'MUTED'}
+                    </button>
+                  </div>
+                  {includeAudio && (
+                    <select
+                      value={audioGenre}
+                      onChange={(e) => setAudioGenre(e.target.value)}
+                      className="w-full bg-black/70 text-emerald-300 p-1.5 rounded text-xs border border-white/10 focus:outline-none cursor-pointer"
+                    >
+                      {audioGenres.map(ag => (
+                        <option key={ag.id} value={ag.id} className="bg-gray-900 text-white">
+                          {ag.label}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
 
-            {/* Style Optics */}
-            <div className="p-2 rounded-xl bg-black/40 border border-white/5 space-y-1 col-span-2 sm:col-span-1">
-              <span className="text-[10px] text-gray-400 flex items-center gap-1"><Palette className="w-3 h-3 text-purple-400" /> Style Optics</span>
-              <select
-                value={cinematicStyle}
-                onChange={(e) => setCinematicStyle(e.target.value)}
-                className="w-full bg-black/70 text-purple-300 p-1 rounded text-xs border border-white/10 focus:outline-none cursor-pointer truncate"
-              >
-                {styles.map(s => (
-                  <option key={s.value} value={s.value} className="bg-gray-900 text-white">{s.label}</option>
-                ))}
-              </select>
+                {/* Resolution & FPS Grid */}
+                <div className="space-y-1.5 pt-2 border-t border-white/5">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <span className="text-[10px] text-gray-400 block mb-1">Resolution</span>
+                      <div className="grid grid-cols-3 gap-1">
+                        {resolutions.map(r => (
+                          <button
+                            key={r.id}
+                            type="button"
+                            onClick={() => setResolution(r.id)}
+                            className={`py-1 rounded text-[10px] font-bold transition-all cursor-pointer ${
+                              resolution === r.id ? 'bg-amber-500 text-black' : 'bg-white/5 text-gray-400 hover:text-white'
+                            }`}
+                          >
+                            {r.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] text-gray-400 block mb-1">Duration</span>
+                      <select
+                        value={duration}
+                        onChange={(e) => setDuration(Number(e.target.value))}
+                        className="w-full bg-black/70 text-emerald-300 font-bold p-1 rounded text-xs border border-white/10 focus:outline-none cursor-pointer"
+                      >
+                        {durationOptions.map(d => (
+                          <option key={d.value} value={d.value} className="bg-gray-900 text-white">
+                            {d.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Style Optics Preset */}
+                <div className="pt-2 border-t border-white/5">
+                  <span className="text-[10px] text-gray-400 block mb-1">Optics Style Preset</span>
+                  <select
+                    value={cinematicStyle}
+                    onChange={(e) => setCinematicStyle(e.target.value)}
+                    className="w-full bg-black/70 text-purple-300 p-1.5 rounded text-xs border border-white/10 focus:outline-none cursor-pointer truncate"
+                  >
+                    {styles.map(s => (
+                      <option key={s.value} value={s.value} className="bg-gray-900 text-white">{s.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
             </div>
           </div>
         )}

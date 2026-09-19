@@ -160,9 +160,9 @@ export default function App() {
   const [isNameModalOpen, setIsNameModalOpen] = useState(false);
   const [userName, setUserName] = useState(() => {
     try {
-      return storage.getUserName() || 'Abhinav';
+      return storage.getUserName() || 'Orbit User';
     } catch (_) {
-      return 'Abhinav';
+      return 'Orbit User';
     }
   });
   const [injectedCode, setInjectedCode] = useState(null);
@@ -258,7 +258,7 @@ export default function App() {
   // Load user name and settings on boot + strict app mode detection
   useEffect(() => {
     const isApp = storage.isAppInstalled();
-    const savedName = storage.getUserName() || 'Abhinav';
+    const savedName = storage.getUserName() || 'Orbit User';
     setUserName(savedName);
     if (!savedName && !isOfficeMode && (storage.hasSeenIntro() || isApp)) {
       setIsNameModalOpen(true);

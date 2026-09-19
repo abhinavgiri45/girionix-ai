@@ -159,16 +159,22 @@ export const storage = {
           safeSetItem(KEYS.USER_NAME, urlUser.trim());
           return urlUser.trim();
         }
-        // If in office mode or embedded inside Giri Orbit iframe, automatically recognize Abhinav
+        // If in office mode or embedded inside Giri Orbit iframe, automatically recognize Orbit User
         if (params.get('mode') === 'office' || params.get('direct') === 'chat' || params.get('embed') === 'true' || window.self !== window.top) {
-          safeSetItem(KEYS.USER_NAME, 'Abhinav');
-          return 'Abhinav';
+          safeSetItem(KEYS.USER_NAME, 'Orbit User');
+          return 'Orbit User';
         }
       }
     } catch (_) {}
 
     const saved = safeGetItem(KEYS.USER_NAME);
-    if (saved && saved.trim()) return saved.trim();
+    if (saved && saved.trim()) {
+      if (saved.trim() === 'Abhinav') {
+        safeSetItem(KEYS.USER_NAME, 'Orbit User');
+        return 'Orbit User';
+      }
+      return saved.trim();
+    }
 
     try {
       if (typeof window !== 'undefined') {
@@ -180,9 +186,9 @@ export const storage = {
       }
     } catch (_) {}
 
-    // Default to Abhinav so welcome name modal is never needed
-    safeSetItem(KEYS.USER_NAME, 'Abhinav');
-    return 'Abhinav';
+    // Default to Orbit User so welcome name modal is never needed
+    safeSetItem(KEYS.USER_NAME, 'Orbit User');
+    return 'Orbit User';
   },
   setUserName: (name) => safeSetItem(KEYS.USER_NAME, (name || '').trim()),
 

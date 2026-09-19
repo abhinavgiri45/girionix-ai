@@ -38,6 +38,7 @@ export default function StudioPanel({
             isTitanMode={isTitanMode}
             injectedCode={injectedCode}
             onClose={onClose}
+            onSelectStudio={setActiveStudioTab}
             initialMode={activeStudioTab === 'freeform' ? 'freeform' : activeStudioTab === 'structured' ? 'structured' : 'chat'}
           />
         )}

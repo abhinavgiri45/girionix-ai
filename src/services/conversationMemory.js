@@ -389,7 +389,7 @@ export const conversationMemory = {
       if (memory.userName && memory.userName !== 'Friend') {
         return `Your name is **${memory.userName}**! 😊 I have it stored in active conversation memory. How can I assist you right now?`;
       }
-      return `I don't have your name recorded yet! You can tell me your name anytime (e.g. *"My name is Abhinav"*), and I will remember it throughout our conversation.`;
+      return `I don't have your name recorded yet! You can tell me your name anytime (e.g. *"My name is Orbit User"*), and I will remember it throughout our conversation.`;
     }
 
     // 7. SUMMARY & RECAP: "Summarize our conversation" / "Recap our chat"

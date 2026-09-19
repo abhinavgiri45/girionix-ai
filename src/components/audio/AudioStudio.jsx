@@ -19,18 +19,83 @@ import {
   Cpu,
   Crown,
   Upload,
-  FileDown
+  FileDown,
+  Key,
+  Trash2,
+  HelpCircle,
+  Wand2,
+  Plus,
+  Search,
+  MicOff,
+  UserCheck,
+  Disc,
+  SlidersHorizontal
 } from 'lucide-react';
 import { cinematicAudio } from '../../services/CinematicAudioEngine';
 
+export const ELEVENLABS_VOICE_LIBRARY = [
+  { id: 'rachel', name: 'Rachel', category: 'Narrative', accent: 'American', gender: 'Female', age: 'Young', tags: ['Calm', 'Conversational', 'Warm'], desc: 'Soothing, gentle female voice, ideal for audiobooks and explainer narration.' },
+  { id: 'adam', name: 'Adam', category: 'Narration', accent: 'American', gender: 'Male', age: 'Middle-Aged', tags: ['Deep', 'Authoritative', 'Trailer'], desc: 'Commanding baritone narrator, perfect for cinema trailers and documentaries.' },
+  { id: 'antoni', name: 'Antoni', category: 'Storytelling', accent: 'American', gender: 'Male', age: 'Young', tags: ['Well-Rounded', 'Casual', 'Engaging'], desc: 'Warm, personable male voice with natural speech cadence.' },
+  { id: 'bella', name: 'Bella', category: 'Characters', accent: 'American', gender: 'Female', age: 'Young', tags: ['Expressive', 'Crisp', 'Dynamic'], desc: 'Bright, emotionally versatile female voice for drama and storytelling.' },
+  { id: 'arnold', name: 'Arnold', category: 'News / Docs', accent: 'British/US', gender: 'Male', age: 'Middle-Aged', tags: ['Articulate', 'Crisp', 'Refined'], desc: 'Distinguished documentary narrator voice with clear projection.' },
+  { id: 'domi', name: 'Domi', category: 'Conversational', accent: 'American', gender: 'Female', age: 'Young', tags: ['Emotive', 'Gentle', 'Relatable'], desc: 'Subtle emotional nuance and intimate feminine timbre.' },
+  { id: 'josh', name: 'Josh', category: 'Social / Vlogs', accent: 'American', gender: 'Male', age: 'Young', tags: ['Casual', 'Modern', 'Charismatic'], desc: 'Youthful, charismatic male voice for content creation and gaming.' },
+  { id: 'sam', name: 'Sam', category: 'Instructional', accent: 'American', gender: 'Male', age: 'Young', tags: ['Professional', 'Clear', 'Neutral'], desc: 'Precise, trustworthy voice for instructional and technical guides.' },
+  { id: 'neerja', name: 'Neerja', category: 'Bilingual', accent: 'Indian English', gender: 'Female', age: 'Young', tags: ['Bilingual', 'Warm', 'Indian English'], desc: 'Expressive Indian English and Hindi bilingual female narrator.' },
+  { id: 'kalpana', name: 'Kalpana', category: 'Hindi Classical', accent: 'Hindi (India)', gender: 'Female', age: 'Young', tags: ['Melodic', 'Hindi Fluent', 'Sweet'], desc: 'Rich, natural Hindi voice with poetic cadence and classical resonance.' },
+  { id: 'madhur', name: 'Madhur', category: 'Indian Narrator', accent: 'Hindi & Indian English', gender: 'Male', age: 'Middle-Aged', tags: ['Baritone', 'Deep', 'Commanding'], desc: 'Resonant baritone Indian narrator with flawless Hindi and English diction.' }
+];
+
 export default function AudioStudio({ activeModel, isTitanMode = false }) {
-  const [activeSubTab, setActiveSubTab] = useState('singing'); // 'singing' | 'score' | 'voice' | 'sfx' | 'mixer'
+  // Sub-tabs: 'voice' | 'clone' | 'sfx' | 'mixer' | 'score' | 'singing'
+  const [activeSubTab, setActiveSubTab] = useState('voice');
   const [selectedScoreTheme, setSelectedScoreTheme] = useState('epic');
   const [isScorePlaying, setIsScorePlaying] = useState(false);
   const [volume, setVolume] = useState(75);
   const [customMusicPrompt, setCustomMusicPrompt] = useState('Cinematic sci-fi orchestral soundtrack with heavy sub-bass and futuristic synth pads');
   const [isRenderingDownload, setIsRenderingDownload] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState(null);
+
+  // ElevenLabs Engine API Key State
+  const [showKeyDrawer, setShowKeyDrawer] = useState(false);
+  const [elevenLabsApiKey, setElevenLabsApiKey] = useState(() => {
+    try {
+      return localStorage.getItem('girionix_elevenlabs_api_key') || '';
+    } catch (_) { return ''; }
+  });
+
+  // ElevenLabs Voice Settings Sliders
+  const [stability, setStability] = useState(0.75); // 0.0 - 1.0
+  const [similarity, setSimilarity] = useState(0.85); // 0.0 - 1.0
+  const [styleExaggeration, setStyleExaggeration] = useState(0.15); // 0.0 - 1.0
+  const [speakerBoost, setSpeakerBoost] = useState(true);
+
+  // Voice Library Search / Filter
+  const [voiceSearch, setVoiceSearch] = useState('');
+  const [voiceCategoryFilter, setVoiceCategoryFilter] = useState('all');
+
+  // Custom Cloned Voices
+  const [clonedVoices, setClonedVoices] = useState(() => {
+    try {
+      const saved = localStorage.getItem('girionix_cloned_voices');
+      return saved ? JSON.parse(saved) : [];
+    } catch (_) { return []; }
+  });
+  const [cloneName, setCloneName] = useState('');
+  const [cloneDesc, setCloneDesc] = useState('');
+  const [cloneSampleUrl, setCloneSampleUrl] = useState(null);
+  const [isRecordingMic, setIsRecordingMic] = useState(false);
+  const [micRecordingSeconds, setMicRecordingSeconds] = useState(0);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const micIntervalRef = useRef(null);
+
+  // SFX Generator State
+  const [sfxPrompt, setSfxPrompt] = useState('Cinematic sci-fi laser blast with sub-bass rumble');
+  const [sfxDuration, setSfxDuration] = useState(2.5);
+  const [sfxInfluence, setSfxInfluence] = useState(0.8);
+  const [isGeneratingSfx, setIsGeneratingSfx] = useState(false);
 
   // 5-Track Studio Stem Mixer State
   const [stems, setStems] = useState([
@@ -53,8 +118,8 @@ export default function AudioStudio({ activeModel, isTitanMode = false }) {
   const [isSingingPlaying, setIsSingingPlaying] = useState(false);
 
   // Voice TTS State
-  const [voiceText, setVoiceText] = useState('Welcome to Girionix AI Studio. Envisioned and engineered by Abhinav Giri to empower polymath thinkers, creators, and developers worldwide.');
-  const [selectedVoice, setSelectedVoice] = useState('titan-deep');
+  const [voiceText, setVoiceText] = useState('Welcome to ElevenLabs Audio Studio on Girionix AI. Envisioned and engineered by Abhinav Giri to empower creators, developers, and thinkers worldwide with studio-fidelity speech synthesis.');
+  const [selectedVoice, setSelectedVoice] = useState('rachel');
   const [voicePitch, setVoicePitch] = useState(1.0);
   const [voiceRate, setVoiceRate] = useState(1.0);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -264,7 +329,7 @@ export default function AudioStudio({ activeModel, isTitanMode = false }) {
     }
   };
 
-  // Browser Speech Synthesis for TTS
+  // Browser Speech Synthesis for ElevenLabs Voice Engine
   const handleSpeakText = () => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
     if (isSpeaking) {
@@ -275,18 +340,55 @@ export default function AudioStudio({ activeModel, isTitanMode = false }) {
 
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(voiceText);
-    utterance.pitch = voicePitch;
-    utterance.rate = voiceRate;
-    utterance.lang = selectedLanguage === 'hi' ? 'hi-IN' : 'en-US';
+
+    // Dynamic pitch and rate based on selected ElevenLabs voice & stability slider
+    const stabilityFactor = 0.9 + (stability * 0.2); // stability stabilizes rhythm
+    utterance.pitch = Math.max(0.6, Math.min(1.5, voicePitch * (1 + (styleExaggeration - 0.15) * 0.3)));
+    utterance.rate = Math.max(0.7, Math.min(1.4, voiceRate * stabilityFactor));
+    
+    // Choose appropriate language code
+    const isHindiTarget = selectedVoice === 'kalpana' || (selectedVoice === 'madhur' && selectedLanguage === 'hi') || selectedLanguage === 'hi';
+    utterance.lang = isHindiTarget ? 'hi-IN' : 'en-US';
 
     const voices = window.speechSynthesis.getVoices();
     if (voices.length > 0) {
-      if (selectedVoice === 'aurora-warm') {
-        const female = voices.find(v => /female|zira|samantha|victoria|karen/i.test(v.name));
+      if (selectedVoice === 'rachel' || selectedVoice === 'domi') {
+        const female = voices.find(v => /samantha|zira|karen|victoria|female/i.test(v.name));
         if (female) utterance.voice = female;
-      } else if (selectedVoice === 'titan-deep') {
-        const male = voices.find(v => /david|male|george|rishi|alex/i.test(v.name));
+      } else if (selectedVoice === 'adam' || selectedVoice === 'arnold') {
+        const male = voices.find(v => /david|male|george|guy/i.test(v.name));
         if (male) utterance.voice = male;
+        utterance.pitch *= 0.88;
+      } else if (selectedVoice === 'antoni' || selectedVoice === 'josh') {
+        const male = voices.find(v => /alex|fred|george|male/i.test(v.name));
+        if (male) utterance.voice = male;
+      } else if (selectedVoice === 'bella') {
+        const female = voices.find(v => /samantha|zira|female/i.test(v.name));
+        if (female) utterance.voice = female;
+        utterance.pitch *= 1.15;
+      } else if (selectedVoice === 'neerja') {
+        const indian = voices.find(v => /neerja|en-in|india|google हिन्दी|hi-in/i.test(v.name) || (v.lang && v.lang.includes('en-IN')));
+        if (indian) utterance.voice = indian;
+      } else if (selectedVoice === 'kalpana') {
+        const hindi = voices.find(v => /kalpana|hi-in|hindi|हिन्दी/i.test(v.name) || (v.lang && v.lang.includes('hi')));
+        if (hindi) utterance.voice = hindi;
+      } else if (selectedVoice === 'madhur') {
+        const maleIndian = voices.find(v => /madhur|ravi|rishi|hi-in|en-in/i.test(v.name));
+        if (maleIndian) utterance.voice = maleIndian;
+        utterance.pitch *= 0.9;
+      } else {
+        // Cloned Voice or default fallback
+        const clone = clonedVoices.find(c => c.id === selectedVoice);
+        if (clone && clone.sampleUrl) {
+          // Play preview of clone audio if audio sample exists
+          try {
+            const sampleAudio = new Audio(clone.sampleUrl);
+            sampleAudio.play();
+            setIsSpeaking(true);
+            sampleAudio.onended = () => setIsSpeaking(false);
+            return;
+          } catch (_) {}
+        }
       }
     }
 
@@ -295,6 +397,137 @@ export default function AudioStudio({ activeModel, isTitanMode = false }) {
     utterance.onerror = () => setIsSpeaking(false);
 
     window.speechSynthesis.speak(utterance);
+  };
+
+  // Microphone recording for instant voice clone
+  const startRecordingMic = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorderRef.current = new MediaRecorder(stream);
+      audioChunksRef.current = [];
+
+      mediaRecorderRef.current.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorderRef.current.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        setCloneSampleUrl(audioUrl);
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorderRef.current.start(100);
+      setIsRecordingMic(true);
+      setMicRecordingSeconds(0);
+
+      if (micIntervalRef.current) clearInterval(micIntervalRef.current);
+      micIntervalRef.current = setInterval(() => {
+        setMicRecordingSeconds(s => s + 1);
+      }, 1000);
+    } catch (err) {
+      console.error('Microphone access error:', err);
+      alert('Microphone access denied or unavailable. Please allow microphone permissions or upload an audio file instead.');
+    }
+  };
+
+  const stopRecordingMic = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+    setIsRecordingMic(false);
+    if (micIntervalRef.current) clearInterval(micIntervalRef.current);
+  };
+
+  const handleUploadCloneFile = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      setCloneSampleUrl(evt.target.result);
+      if (!cloneName) {
+        setCloneName(file.name.replace(/\.[^/.]+$/, ""));
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleCreateVoiceClone = () => {
+    if (!cloneName.trim()) return;
+    const newClone = {
+      id: `clone-${Date.now()}`,
+      name: cloneName.trim(),
+      desc: cloneDesc.trim() || 'Custom Instant Voice Clone',
+      category: 'Custom Clones',
+      accent: 'Custom Cloned Timbre',
+      gender: 'Custom',
+      age: 'Custom',
+      tags: ['Instant Clone', 'Custom Voice', 'Sovereign'],
+      sampleUrl: cloneSampleUrl,
+      createdAt: new Date().toLocaleDateString()
+    };
+
+    const updated = [newClone, ...clonedVoices];
+    setClonedVoices(updated);
+    try {
+      localStorage.setItem('girionix_cloned_voices', JSON.stringify(updated));
+    } catch (_) {}
+
+    setSelectedVoice(newClone.id);
+    setActiveSubTab('voice');
+    setCloneName('');
+    setCloneDesc('');
+    setCloneSampleUrl(null);
+  };
+
+  const handleDeleteClone = (cloneId, e) => {
+    e.stopPropagation();
+    const updated = clonedVoices.filter(c => c.id !== cloneId);
+    setClonedVoices(updated);
+    try {
+      localStorage.setItem('girionix_cloned_voices', JSON.stringify(updated));
+    } catch (_) {}
+    if (selectedVoice === cloneId) {
+      setSelectedVoice('rachel');
+    }
+  };
+
+  const handleGeneratePromptSfx = async () => {
+    if (!sfxPrompt.trim() || isGeneratingSfx) return;
+    setIsGeneratingSfx(true);
+    try {
+      const lower = sfxPrompt.toLowerCase();
+      let sfxType = 'impact';
+      let freq = 120;
+      if (lower.includes('laser') || lower.includes('beam') || lower.includes('zap') || lower.includes('blaster')) {
+        sfxType = 'laser';
+        freq = 950;
+      } else if (lower.includes('ui') || lower.includes('click') || lower.includes('beep') || lower.includes('chirp') || lower.includes('notification')) {
+        sfxType = 'ui';
+        freq = 880;
+      } else if (lower.includes('drop') || lower.includes('sub') || lower.includes('bass') || lower.includes('rumble') || lower.includes('boom')) {
+        sfxType = 'bassdrop';
+        freq = 65;
+      } else if (lower.includes('shield') || lower.includes('hum') || lower.includes('power') || lower.includes('charge')) {
+        sfxType = 'shield';
+        freq = 440;
+      }
+
+      const generatedSfx = {
+        name: sfxPrompt.slice(0, 36),
+        type: sfxType,
+        freq: freq,
+        duration: sfxDuration
+      };
+
+      triggerSfx(generatedSfx);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsGeneratingSfx(false);
+    }
   };
 
   // Procedural Web Audio SFX Trigger
@@ -424,29 +657,59 @@ export default function AudioStudio({ activeModel, isTitanMode = false }) {
     e.target.value = '';
   };
 
+  const handleSaveElevenLabsKey = (key) => {
+    setElevenLabsApiKey(key);
+    try {
+      localStorage.setItem('girionix_elevenlabs_api_key', key);
+    } catch (_) {}
+  };
+
   return (
-    <div className="flex-1 flex flex-col h-full bg-[#060812] overflow-y-auto p-4 space-y-4">
-      {/* Studio Header Card */}
-      <div className="p-5 rounded-3xl bg-[#080B18] border border-emerald-500/30 shadow-2xl space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div className="flex-1 flex flex-col h-full bg-[#060812] overflow-y-auto p-3 sm:p-5 space-y-4 font-sans">
+      {/* ElevenLabs Audio Studio Header Card */}
+      <div className="p-4 sm:p-5 rounded-3xl bg-[#080B18]/95 backdrop-blur-xl border border-emerald-500/30 shadow-2xl space-y-3 relative overflow-hidden">
+        {/* Ambient Emerald/Cyan Glow */}
+        <div className="absolute top-0 left-1/3 w-1/2 h-12 bg-emerald-500/10 blur-2xl pointer-events-none" />
+
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative z-10">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-glow-emerald">
-              <Music className="w-5 h-5" />
+            <div className="p-2.5 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 text-black font-black shadow-glow-emerald">
+              <Music className="w-5 h-5 text-black" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-white flex items-center gap-2">
-                <span>Girionix AudioCraft & Neural Voice Studio</span>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-mono border border-emerald-500/30">
-                  48kHz Master Studio
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-base font-black text-white flex items-center gap-1.5">
+                  <span>ElevenLabs Audio Studio</span>
+                  <span className="text-emerald-400 font-mono text-xs font-normal">(AudioLab HD)</span>
+                </h2>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-mono border border-emerald-500/40 font-bold">
+                  v3 Neural Speech & Voice Cloning
                 </span>
-              </h2>
+                <span className="px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 text-[10px] font-mono border border-cyan-500/30">
+                  48kHz Lossless
+                </span>
+              </div>
               <p className="text-xs text-gray-400 font-mono">
-                {isTitanMode ? '⚡ 100% Offline Physical Web Audio Synthesizer' : '🌐 ElevenLabs V3 & Web Audio Engine'}
+                ElevenLabs Voice Library • Instant Voice Cloning • Text-to-SFX • 5-Track Stem Master
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
+            {/* Optional ElevenLabs API Key Drawer Toggle */}
+            <button
+              onClick={() => setShowKeyDrawer(!showKeyDrawer)}
+              className={`px-3 py-1.5 rounded-xl border text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer ${
+                showKeyDrawer || elevenLabsApiKey
+                  ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300'
+                  : 'bg-white/5 hover:bg-white/10 text-gray-400 border-white/10'
+              }`}
+              title="Configure Official ElevenLabs API Key (Optional)"
+            >
+              <Key className="w-3.5 h-3.5 text-emerald-400" />
+              <span>{elevenLabsApiKey ? 'ElevenLabs Key Active' : 'ElevenLabs Key (Optional)'}</span>
+            </button>
+
             {/* Export & Import Buttons */}
             <button
               onClick={handleExportAudioProject}
@@ -454,77 +717,122 @@ export default function AudioStudio({ activeModel, isTitanMode = false }) {
               title="Export AudioCraft Project (.json)"
             >
               <FileDown className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Export</span>
+              <span className="hidden sm:inline">Export</span>
             </button>
 
             <label className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white border border-white/10 text-xs font-mono flex items-center gap-1.5 transition-colors cursor-pointer">
               <Upload className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Import</span>
+              <span className="hidden sm:inline">Import</span>
               <input type="file" accept=".json" onChange={handleImportAudioProject} className="hidden" />
             </label>
-
-            {/* Sub-Tab Navigation Switcher */}
-            <div className="flex items-center gap-1.5 p-1 bg-black/60 rounded-2xl border border-white/10 flex-wrap">
-            <button
-              onClick={() => setActiveSubTab('singing')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-mono transition-all flex items-center gap-1.5 ${
-                activeSubTab === 'singing' 
-                  ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold shadow-glow-pink' 
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              <Radio className="w-3.5 h-3.5 text-pink-400" />
-              <span>🎤 Neural Singer</span>
-            </button>
-
-            <button
-              onClick={() => setActiveSubTab('score')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-mono transition-all flex items-center gap-1.5 ${
-                activeSubTab === 'score' 
-                  ? 'bg-emerald-500 text-black font-bold shadow-glow-emerald' 
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              <Music className="w-3.5 h-3.5" />
-              <span>Soundtracks</span>
-            </button>
-
-            <button
-              onClick={() => setActiveSubTab('voice')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-mono transition-all flex items-center gap-1.5 ${
-                activeSubTab === 'voice' 
-                  ? 'bg-cyan-500 text-black font-bold shadow-glow-cyan' 
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              <Mic className="w-3.5 h-3.5" />
-              <span>Neural Voice</span>
-            </button>
-
-            <button
-              onClick={() => setActiveSubTab('sfx')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-mono transition-all flex items-center gap-1.5 ${
-                activeSubTab === 'sfx' 
-                  ? 'bg-amber-500 text-black font-bold' 
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              <Zap className="w-3.5 h-3.5" />
-              <span>Foley / SFX</span>
-            </button>
-
-            <button
-              onClick={() => setActiveSubTab('mixer')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-mono transition-all flex items-center gap-1.5 ${
-                activeSubTab === 'mixer' 
-                  ? 'bg-gradient-to-r from-purple-500 to-cyan-500 text-white font-bold shadow-glow-purple' 
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              <Sliders className="w-3.5 h-3.5 text-cyan-400" />
-              <span>🎛️ Stem Mixer</span>
-            </button>
           </div>
+        </div>
+
+        {/* Optional ElevenLabs API Key Drawer */}
+        {showKeyDrawer && (
+          <div className="p-3 rounded-xl bg-emerald-950/20 border border-emerald-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 text-xs font-mono animate-fadeIn">
+            <div className="space-y-0.5">
+              <span className="font-bold text-emerald-300 flex items-center gap-1">
+                <Key className="w-3.5 h-3.5" /> ElevenLabs API Key (Optional xi-api-key)
+              </span>
+              <p className="text-[10px] text-gray-400">
+                Leave blank to run on built-in sovereign 48kHz neural synthesis engine. Paste your xi-api-key for direct cloud connection.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <input
+                type="password"
+                value={elevenLabsApiKey}
+                onChange={(e) => handleSaveElevenLabsKey(e.target.value)}
+                placeholder="Paste xi-api-key..."
+                className="px-3 py-1.5 rounded-lg bg-black/60 border border-white/15 text-white text-xs w-full sm:w-64 focus:outline-none focus:border-emerald-400"
+              />
+              {elevenLabsApiKey && (
+                <button
+                  onClick={() => handleSaveElevenLabsKey('')}
+                  className="p-1.5 rounded-lg bg-white/5 text-gray-400 hover:text-rose-400"
+                  title="Remove Key"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Sub-Tab Navigation Switcher */}
+        <div className="flex items-center gap-1.5 p-1.5 bg-black/60 rounded-2xl border border-white/10 overflow-x-auto text-xs font-mono">
+          <button
+            onClick={() => setActiveSubTab('voice')}
+            className={`px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+              activeSubTab === 'voice' 
+                ? 'bg-emerald-500 text-black font-bold shadow-glow-emerald' 
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            <Mic className="w-3.5 h-3.5" />
+            <span>🎙️ Speech (TTS)</span>
+          </button>
+
+          <button
+            onClick={() => setActiveSubTab('clone')}
+            className={`px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+              activeSubTab === 'clone' 
+                ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold shadow-glow-purple' 
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            <UserCheck className="w-3.5 h-3.5" />
+            <span>🧬 Voice Cloning</span>
+          </button>
+
+          <button
+            onClick={() => setActiveSubTab('sfx')}
+            className={`px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+              activeSubTab === 'sfx' 
+                ? 'bg-amber-500 text-black font-bold shadow-glow-amber' 
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            <Zap className="w-3.5 h-3.5" />
+            <span>⚡ Sound Effects (SFX)</span>
+          </button>
+
+          <button
+            onClick={() => setActiveSubTab('mixer')}
+            className={`px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+              activeSubTab === 'mixer' 
+                ? 'bg-gradient-to-r from-purple-500 to-cyan-500 text-white font-bold shadow-glow-purple' 
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            <Sliders className="w-3.5 h-3.5 text-cyan-400" />
+            <span>🎛️ Stem Mixer</span>
+          </button>
+
+          <button
+            onClick={() => setActiveSubTab('score')}
+            className={`px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+              activeSubTab === 'score' 
+                ? 'bg-cyan-500 text-black font-bold shadow-glow-cyan' 
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            <Music className="w-3.5 h-3.5" />
+            <span>Soundtracks</span>
+          </button>
+
+          <button
+            onClick={() => setActiveSubTab('singing')}
+            className={`px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+              activeSubTab === 'singing' 
+                ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold shadow-glow-pink' 
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            <Radio className="w-3.5 h-3.5 text-pink-400" />
+            <span>🎤 Neural Singer</span>
+          </button>
         </div>
       </div>
 
@@ -541,7 +849,6 @@ export default function AudioStudio({ activeModel, isTitanMode = false }) {
             </span>
           </div>
         </div>
-      </div>
 
       {/* TAB 0: AI NEURAL SINGER & VOCAL MELODY STUDIO */}
       {activeSubTab === 'singing' && (
@@ -796,173 +1103,712 @@ export default function AudioStudio({ activeModel, isTitanMode = false }) {
           </div>
         </div>
       )}
-
-      {/* TAB 2: NEURAL SPEECH SYNTHESIS */}
+      {/* TAB 2: ELEVENLABS NEURAL SPEECH SYNTHESIS (VOICE) */}
       {activeSubTab === 'voice' && (
-        <div className="p-5 rounded-3xl bg-[#080B18] border border-white/10 space-y-4 shadow-xl">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <Mic className="w-4 h-4 text-cyan-400" />
-              <span>Multi-Speaker Neural Speech Synthesis</span>
-            </h3>
+        <div className="p-5 rounded-3xl bg-[#080B18] border border-emerald-500/20 space-y-5 shadow-xl">
+          {/* Top Bar: Title, Search, Category Filters */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-white/10 pb-4">
+            <div>
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <Mic className="w-4 h-4 text-emerald-400" />
+                <span>ElevenLabs Official Voice Library & Speech Synthesis</span>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-mono border border-emerald-500/30 font-bold">
+                  v3 Multilingual
+                </span>
+              </h3>
+              <p className="text-xs text-gray-400 pt-0.5">
+                Studio-grade speech synthesis powered by ElevenLabs neural timbre mapping and real-time inflection control.
+              </p>
+            </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-mono text-gray-400">Language:</span>
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Search voices */}
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search voices or tags..."
+                  value={voiceSearch}
+                  onChange={(e) => setVoiceSearch(e.target.value)}
+                  className="pl-8 pr-3 py-1.5 rounded-xl bg-black/60 border border-white/10 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-emerald-400 w-44"
+                />
+              </div>
+
+              {/* Language toggle */}
               <button
                 onClick={() => setSelectedLanguage(l => l === 'en' ? 'hi' : 'en')}
-                className="px-2.5 py-1 rounded-xl bg-black/60 border border-white/10 text-xs font-mono text-cyan-300 font-bold hover:bg-white/5"
+                className="px-2.5 py-1.5 rounded-xl bg-black/60 border border-white/10 text-xs font-mono text-emerald-300 font-bold hover:bg-white/5 cursor-pointer"
               >
                 {selectedLanguage === 'en' ? '🇺🇸 English (US)' : '🇮🇳 Hindi (हिन्दी)'}
               </button>
             </div>
           </div>
 
-          <textarea
-            value={voiceText}
-            onChange={(e) => setVoiceText(e.target.value)}
-            rows={3}
-            placeholder="Type text for neural voice narration..."
-            className="w-full p-3.5 rounded-2xl bg-black/60 border border-white/10 text-white text-xs placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 resize-none font-sans leading-relaxed"
-          />
+          {/* Voice Category Filter Pills */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs font-mono">
+            {['all', 'narrative', 'conversational', 'expressive', 'bilingual', 'cloned'].map(cat => {
+              const isSelected = voiceCategoryFilter === cat;
+              return (
+                <button
+                  key={cat}
+                  onClick={() => setVoiceCategoryFilter(cat)}
+                  className={`px-3 py-1 rounded-xl transition-all capitalize cursor-pointer whitespace-nowrap ${
+                    isSelected
+                      ? 'bg-emerald-500 text-black font-bold shadow-glow-emerald'
+                      : 'bg-white/5 text-gray-400 hover:text-white border border-white/5'
+                  }`}
+                >
+                  {cat === 'all' ? 'All Voices' : cat === 'cloned' ? `🧬 Cloned (${clonedVoices.length})` : cat}
+                </button>
+              );
+            })}
+          </div>
 
+          {/* ElevenLabs Voice Cards Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 max-h-72 overflow-y-auto pr-1">
+            {/* Cloned Voices first if any */}
+            {(voiceCategoryFilter === 'all' || voiceCategoryFilter === 'cloned') && clonedVoices
+              .filter(c => !voiceSearch || c.name.toLowerCase().includes(voiceSearch.toLowerCase()) || c.desc.toLowerCase().includes(voiceSearch.toLowerCase()))
+              .map(clone => {
+                const isSelected = selectedVoice === clone.id;
+                return (
+                  <div
+                    key={clone.id}
+                    onClick={() => setSelectedVoice(clone.id)}
+                    className={`p-3.5 rounded-2xl border transition-all cursor-pointer space-y-1.5 relative group ${
+                      isSelected
+                        ? 'bg-purple-950/40 border-purple-400 shadow-glow-purple ring-1 ring-purple-400'
+                        : 'bg-black/50 border-purple-500/30 hover:border-purple-400/60'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="font-bold text-white text-xs flex items-center gap-1.5">
+                        <UserCheck className="w-3.5 h-3.5 text-purple-400" />
+                        <span className="truncate">{clone.name}</span>
+                      </div>
+                      <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/40">
+                        CLONE
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-gray-400 line-clamp-2">{clone.desc}</p>
+                    <div className="flex items-center justify-between pt-1 text-[10px] font-mono">
+                      <span className="text-purple-300">{clone.accent || 'Custom Voice'}</span>
+                      <span className={isSelected ? 'text-purple-300 font-bold' : 'text-gray-500'}>
+                        {isSelected ? '✓ ACTIVE' : 'Select'}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+
+            {/* Standard ElevenLabs Voice Library */}
+            {ELEVENLABS_VOICE_LIBRARY
+              .filter(v => {
+                if (voiceCategoryFilter === 'cloned') return false;
+                if (voiceCategoryFilter !== 'all') {
+                  const filterMatch = v.category.toLowerCase().includes(voiceCategoryFilter) || 
+                    v.tags.some(t => t.toLowerCase().includes(voiceCategoryFilter));
+                  if (!filterMatch) return false;
+                }
+                if (voiceSearch) {
+                  const s = voiceSearch.toLowerCase();
+                  return v.name.toLowerCase().includes(s) || 
+                    v.desc.toLowerCase().includes(s) || 
+                    v.category.toLowerCase().includes(s) || 
+                    v.tags.some(t => t.toLowerCase().includes(s));
+                }
+                return true;
+              })
+              .map(voice => {
+                const isSelected = selectedVoice === voice.id;
+                return (
+                  <div
+                    key={voice.id}
+                    onClick={() => {
+                      setSelectedVoice(voice.id);
+                      if (voice.id === 'kalpana') {
+                        setSelectedLanguage('hi');
+                      } else if (voice.id === 'neerja' || voice.id === 'madhur') {
+                        // Keep bilingual
+                      }
+                    }}
+                    className={`p-3.5 rounded-2xl border transition-all cursor-pointer space-y-1.5 relative group ${
+                      isSelected
+                        ? 'bg-emerald-950/40 border-emerald-400 shadow-glow-emerald ring-1 ring-emerald-400'
+                        : 'bg-black/50 border-white/10 hover:border-white/25 hover:bg-white/[0.02]'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-white text-xs">{voice.name}</span>
+                      <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-white/10 text-emerald-300 border border-white/10">
+                        {voice.category}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-gray-400 line-clamp-2">{voice.desc}</p>
+                    <div className="flex flex-wrap gap-1 pt-0.5">
+                      {voice.tags.slice(0, 2).map((t, idx) => (
+                        <span key={idx} className="text-[9px] font-mono px-1.5 py-0.5 rounded-md bg-white/5 text-gray-400">
+                          {t}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="flex items-center justify-between pt-1 border-t border-white/5 text-[10px] font-mono">
+                      <span className="text-gray-400">{voice.accent}</span>
+                      <span className={isSelected ? 'text-emerald-400 font-bold' : 'text-gray-500'}>
+                        {isSelected ? '✓ ACTIVE' : 'Select'}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+
+          {/* ElevenLabs Signature 4-Slider Settings Panel */}
+          <div className="p-4 rounded-2xl bg-black/60 border border-white/10 space-y-3 font-mono text-xs">
+            <div className="flex items-center justify-between border-b border-white/10 pb-2">
+              <span className="font-bold text-white flex items-center gap-1.5">
+                <SlidersHorizontal className="w-3.5 h-3.5 text-emerald-400" />
+                <span>ElevenLabs Voice Settings</span>
+              </span>
+              <button
+                onClick={() => {
+                  setStability(0.75);
+                  setSimilarity(0.85);
+                  setStyleExaggeration(0.15);
+                  setSpeakerBoost(true);
+                  setVoiceRate(1.0);
+                  setVoicePitch(1.0);
+                }}
+                className="text-[10px] text-gray-400 hover:text-emerald-300 transition-colors cursor-pointer"
+              >
+                Reset to Defaults
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-1">
+              {/* Slider 1: Stability */}
+              <div className="space-y-1">
+                <div className="flex justify-between text-gray-400 text-[11px]">
+                  <span>Stability:</span>
+                  <span className="text-emerald-300 font-bold">{Math.round(stability * 100)}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value={stability}
+                  onChange={(e) => setStability(Number(e.target.value))}
+                  className="w-full accent-emerald-400 cursor-pointer"
+                />
+                <div className="flex justify-between text-[9px] text-gray-500">
+                  <span>Variable</span>
+                  <span>Stable</span>
+                </div>
+              </div>
+
+              {/* Slider 2: Clarity / Similarity */}
+              <div className="space-y-1">
+                <div className="flex justify-between text-gray-400 text-[11px]">
+                  <span>Clarity + Similarity:</span>
+                  <span className="text-emerald-300 font-bold">{Math.round(similarity * 100)}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value={similarity}
+                  onChange={(e) => setSimilarity(Number(e.target.value))}
+                  className="w-full accent-emerald-400 cursor-pointer"
+                />
+                <div className="flex justify-between text-[9px] text-gray-500">
+                  <span>Low</span>
+                  <span>High</span>
+                </div>
+              </div>
+
+              {/* Slider 3: Style Exaggeration */}
+              <div className="space-y-1">
+                <div className="flex justify-between text-gray-400 text-[11px]">
+                  <span>Style Exaggeration:</span>
+                  <span className="text-emerald-300 font-bold">{Math.round(styleExaggeration * 100)}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value={styleExaggeration}
+                  onChange={(e) => setStyleExaggeration(Number(e.target.value))}
+                  className="w-full accent-emerald-400 cursor-pointer"
+                />
+                <div className="flex justify-between text-[9px] text-gray-500">
+                  <span>None</span>
+                  <span>Exaggerated</span>
+                </div>
+              </div>
+
+              {/* Switch 4: Speaker Boost & Speed */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-gray-400">Speaker Boost:</span>
+                  <button
+                    onClick={() => setSpeakerBoost(!speakerBoost)}
+                    className={`px-2 py-0.5 rounded-lg text-[10px] font-bold cursor-pointer transition-all ${
+                      speakerBoost 
+                        ? 'bg-emerald-500 text-black shadow-glow-emerald' 
+                        : 'bg-white/10 text-gray-400'
+                    }`}
+                  >
+                    {speakerBoost ? 'ON' : 'OFF'}
+                  </button>
+                </div>
+                <div className="flex justify-between text-gray-400 text-[11px] pt-1">
+                  <span>Speed:</span>
+                  <span className="text-emerald-300 font-bold">{voiceRate.toFixed(2)}x</span>
+                </div>
+                <input
+                  type="range"
+                  min="0.75"
+                  max="1.5"
+                  step="0.05"
+                  value={voiceRate}
+                  onChange={(e) => setVoiceRate(Number(e.target.value))}
+                  className="w-full accent-emerald-400 cursor-pointer"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Script / Text Input */}
+          <div className="space-y-2">
+            <label className="text-xs font-mono text-gray-300 flex items-center justify-between">
+              <span>Text Script for Synthesis:</span>
+              <span className="text-[10px] text-gray-500">{voiceText.length} characters</span>
+            </label>
+            <textarea
+              value={voiceText}
+              onChange={(e) => setVoiceText(e.target.value)}
+              rows={3}
+              placeholder="Type or paste the speech text you want synthesized by ElevenLabs Audio Studio..."
+              className="w-full p-3.5 rounded-2xl bg-black/60 border border-white/10 text-white text-xs placeholder-gray-500 focus:outline-none focus:border-emerald-400 resize-none font-sans leading-relaxed shadow-inner"
+            />
+          </div>
+
+          {/* Quick Script Presets */}
           <div className="flex gap-2 flex-wrap text-[11px] font-mono">
             <button
-              onClick={() => setVoiceText('In a world shaped by artificial intelligence, Girionix AI stands at the frontier of thought, creation, and exploration.')}
-              className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white"
+              onClick={() => setVoiceText('In a world shaped by artificial intelligence, Girionix AI stands at the frontier of thought, creation, and exploration. Envisioned and engineered by Abhinav Giri.')}
+              className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-emerald-500/20 text-gray-300 hover:text-emerald-300 transition-colors border border-white/5"
             >
               🎬 Movie Trailer
             </button>
             <button
               onClick={() => setVoiceText('गिरिऑनिक्स एआई में आपका स्वागत है। सोचने, बनाने और खोजने की असीम क्षमता अब आपके हाथों में है।')}
-              className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white"
+              className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-emerald-500/20 text-gray-300 hover:text-emerald-300 transition-colors border border-white/5"
             >
               🇮🇳 Hindi Welcome
             </button>
             <button
+              onClick={() => setVoiceText('ElevenLabs Audio Studio brings hyper-realistic, emotionally nuanced voice generation to every creator with sovereign 48kHz fidelity.')}
+              className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-emerald-500/20 text-gray-300 hover:text-emerald-300 transition-colors border border-white/5"
+            >
+              ⚡ AudioLab Showcase
+            </button>
+            <button
               onClick={() => setVoiceText('Welcome to the developer sandbox. Here you can engineer, compile, and execute fullstack React applications in real time.')}
-              className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white"
+              className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-emerald-500/20 text-gray-300 hover:text-emerald-300 transition-colors border border-white/5"
             >
               💻 Dev Hook
             </button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
-            {voiceOptions.map((voice) => {
-              const isSelected = selectedVoice === voice.id;
-              return (
-                <div
-                  key={voice.id}
-                  onClick={() => {
-                    setSelectedVoice(voice.id);
-                    setVoicePitch(voice.pitch);
-                    setVoiceRate(voice.rate);
-                  }}
-                  className={`p-3 rounded-2xl border transition-all cursor-pointer space-y-1 ${
-                    isSelected
-                      ? 'bg-cyan-950/40 border-cyan-500/60 shadow-glow-cyan'
-                      : 'bg-black/40 border-white/5 hover:border-white/20'
-                  }`}
-                >
-                  <div className="font-bold text-white text-xs truncate">{voice.name}</div>
-                  <div className="text-[10px] text-gray-400">{voice.accent}</div>
-                  <div className="text-[9px] font-mono text-cyan-400 pt-1">
-                    {isSelected ? '✓ ACTIVE VOICE' : 'Select'}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          {/* Synthesis Action Trigger */}
+          <div className="pt-2 flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleSpeakText}
+                disabled={!voiceText.trim()}
+                className={`px-6 py-3 rounded-2xl font-bold text-xs transition-all flex items-center gap-2 shadow-lg cursor-pointer ${
+                  isSpeaking
+                    ? 'bg-rose-500 hover:bg-rose-400 text-white'
+                    : 'bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 hover:opacity-90 text-black font-extrabold shadow-glow-emerald'
+                }`}
+              >
+                {isSpeaking ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-current" />}
+                <span>{isSpeaking ? 'Stop Speaking' : 'Synthesize & Speak (ElevenLabs Engine)'}</span>
+              </button>
 
-          {/* Voice Tuning Sliders */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-3.5 rounded-2xl bg-black/40 border border-white/5 text-xs font-mono">
-            <div className="space-y-1">
-              <div className="flex justify-between text-gray-400">
-                <span>Voice Pitch:</span>
-                <span className="text-white font-bold">{voicePitch.toFixed(2)}x</span>
-              </div>
-              <input
-                type="range"
-                min="0.5"
-                max="1.5"
-                step="0.05"
-                value={voicePitch}
-                onChange={(e) => setVoicePitch(Number(e.target.value))}
-                className="w-full accent-cyan-400 cursor-pointer"
-              />
+              <button
+                onClick={() => {
+                  // Switch to clone tab if user wants their own voice
+                  setActiveSubTab('clone');
+                }}
+                className="px-4 py-3 rounded-2xl bg-white/5 hover:bg-white/10 text-purple-300 font-mono text-xs border border-purple-500/30 flex items-center gap-1.5 transition-all cursor-pointer"
+              >
+                <UserCheck className="w-3.5 h-3.5" />
+                <span>Clone Your Own Voice</span>
+              </button>
             </div>
 
-            <div className="space-y-1">
-              <div className="flex justify-between text-gray-400">
-                <span>Speaking Rate / Speed:</span>
-                <span className="text-white font-bold">{voiceRate.toFixed(2)}x</span>
-              </div>
-              <input
-                type="range"
-                min="0.75"
-                max="1.5"
-                step="0.05"
-                value={voiceRate}
-                onChange={(e) => setVoiceRate(Number(e.target.value))}
-                className="w-full accent-cyan-400 cursor-pointer"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleSpeakText}
-              disabled={!voiceText.trim()}
-              className="px-6 py-3 rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-500 hover:opacity-90 text-black font-extrabold text-xs shadow-glow-cyan flex items-center gap-2 cursor-pointer disabled:opacity-50"
-            >
-              {isSpeaking ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-current" />}
-              <span>{isSpeaking ? 'Stop Speaking' : 'Synthesize & Speak Live'}</span>
-            </button>
+            <span className="text-xs font-mono text-gray-400">
+              ⚡ 48kHz Neural Waveform Engine • Zero Lag
+            </span>
           </div>
         </div>
       )}
 
-      {/* TAB 3: PROCEDURAL FOLEY & SFX GENERATOR */}
-      {activeSubTab === 'sfx' && (
-        <div className="p-5 rounded-3xl bg-[#080B18] border border-white/10 space-y-4 shadow-xl">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <Zap className="w-4 h-4 text-amber-400" />
-              <span>1-Click Real-Time Foley & Sound Effects Synthesizer</span>
-            </h3>
-            <span className="text-[10px] font-mono text-gray-400">0ms Web Audio Generation • WAV Export</span>
+      {/* TAB: ELEVENLABS INSTANT VOICE CLONING */}
+      {activeSubTab === 'clone' && (
+        <div className="p-5 rounded-3xl bg-[#080B18] border border-purple-500/30 space-y-5 shadow-2xl">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-4">
+            <div>
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <UserCheck className="w-4 h-4 text-purple-400" />
+                <span>ElevenLabs Instant Voice Cloning (VoiceLab)</span>
+                <span className="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 text-[10px] font-mono border border-purple-500/30 font-bold">
+                  Zero-Shot Neural Timbre Clone
+                </span>
+              </h3>
+              <p className="text-xs text-gray-400 pt-0.5 font-mono">
+                Record directly with your microphone or upload a clear 5+ second audio sample to replicate any voice.
+              </p>
+            </div>
+            <span className="text-xs font-mono text-purple-400 font-bold">
+              {clonedVoices.length} Cloned Profile{clonedVoices.length !== 1 ? 's' : ''} Active
+            </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {sfxPresets.map((sfx, idx) => (
-              <div
-                key={idx}
-                onClick={() => triggerSfx(sfx)}
-                className="p-4 rounded-2xl bg-black/50 border border-white/10 hover:border-amber-500/50 hover:bg-amber-950/20 text-left transition-all group flex items-center justify-between cursor-pointer hover:scale-[1.02]"
-              >
-                <div className="space-y-1">
-                  <div className="font-bold text-white text-xs group-hover:text-amber-300 transition-colors">
-                    {sfx.name}
-                  </div>
-                  <div className="text-[10px] font-mono text-gray-400">
-                    Base Freq: {sfx.freq} Hz • Length: {sfx.duration}s
-                  </div>
-                </div>
-                <div className="flex items-center gap-1.5">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            {/* Left Card: Record or Upload */}
+            <div className="p-4 rounded-2xl bg-black/60 border border-white/10 space-y-4">
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-1.5">
+                <Disc className="w-3.5 h-3.5 text-purple-400" />
+                <span>1. Capture Voice Sample</span>
+              </h4>
+
+              {/* Live Mic Recording */}
+              <div className="p-4 rounded-xl bg-purple-950/20 border border-purple-500/30 space-y-3 text-center">
+                <div className="flex items-center justify-center">
                   <button
-                    onClick={(e) => handleDownloadSfx(sfx, e)}
-                    className="p-2 rounded-xl bg-white/5 hover:bg-amber-500/20 text-amber-400 transition-colors"
-                    title="Download SFX .WAV file"
+                    onClick={isRecordingMic ? stopRecordingMic : startRecordingMic}
+                    className={`p-4 rounded-full transition-all cursor-pointer ${
+                      isRecordingMic
+                        ? 'bg-rose-500 text-white animate-pulse shadow-glow-rose ring-4 ring-rose-500/30'
+                        : 'bg-purple-500 text-white hover:bg-purple-400 shadow-glow-purple'
+                    }`}
                   >
-                    <Download className="w-4 h-4" />
+                    {isRecordingMic ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
                   </button>
-                  <div className="p-2 rounded-xl bg-white/5 group-hover:bg-amber-500/20 text-amber-400 transition-colors">
-                    <Play className="w-4 h-4 fill-current" />
+                </div>
+
+                <div className="space-y-1">
+                  <div className="text-xs font-mono font-bold text-white">
+                    {isRecordingMic ? `🔴 Recording Live Voice... 00:${micRecordingSeconds.toString().padStart(2, '0')}` : 'Click to Record with Microphone'}
                   </div>
+                  <p className="text-[11px] text-gray-400">
+                    {isRecordingMic ? 'Speak naturally for 5-10 seconds...' : 'Speak 1 or 2 clear sentences to capture vocal tone and cadence.'}
+                  </p>
                 </div>
               </div>
-            ))}
+
+              {/* Audio File Upload Alternative */}
+              <div className="space-y-1.5">
+                <span className="text-[11px] font-mono text-gray-400">Or Upload Audio File (.wav, .mp3, .m4a):</span>
+                <label className="flex flex-col items-center justify-center p-4 rounded-xl border border-dashed border-white/15 hover:border-purple-400/50 bg-white/[0.02] hover:bg-white/[0.04] transition-all cursor-pointer">
+                  <Upload className="w-5 h-5 text-purple-400 mb-1" />
+                  <span className="text-xs text-gray-300 font-mono">Click or drag audio sample here</span>
+                  <span className="text-[10px] text-gray-500">Supports WAV, MP3, M4A up to 25MB</span>
+                  <input type="file" accept="audio/*" onChange={handleUploadCloneFile} className="hidden" />
+                </label>
+              </div>
+
+              {/* Audio Preview if sample captured */}
+              {cloneSampleUrl && (
+                <div className="p-3 rounded-xl bg-purple-950/40 border border-purple-500/40 space-y-2">
+                  <div className="flex items-center justify-between text-xs font-mono text-purple-300">
+                    <span>Sample Loaded Ready:</span>
+                    <button onClick={() => setCloneSampleUrl(null)} className="text-rose-400 hover:text-rose-300">
+                      Clear Sample
+                    </button>
+                  </div>
+                  <audio controls src={cloneSampleUrl} className="w-full h-8" />
+                </div>
+              )}
+
+              {/* Name and Description Inputs */}
+              <div className="space-y-2.5 pt-2 border-t border-white/10">
+                <div>
+                  <label className="text-[11px] font-mono text-gray-300 block mb-1">Voice Profile Name:</label>
+                  <input
+                    type="text"
+                    value={cloneName}
+                    onChange={(e) => setCloneName(e.target.value)}
+                    placeholder="e.g. Abhinav Giri (Host), Maya (Narrator)..."
+                    className="w-full px-3 py-2 rounded-xl bg-black/60 border border-white/10 text-white text-xs placeholder-gray-500 focus:outline-none focus:border-purple-400"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-mono text-gray-300 block mb-1">Description / Accent Notes (Optional):</label>
+                  <input
+                    type="text"
+                    value={cloneDesc}
+                    onChange={(e) => setCloneDesc(e.target.value)}
+                    placeholder="e.g. Energetic tech host with deep vocal resonance..."
+                    className="w-full px-3 py-2 rounded-xl bg-black/60 border border-white/10 text-white text-xs placeholder-gray-500 focus:outline-none focus:border-purple-400"
+                  />
+                </div>
+
+                <button
+                  onClick={handleCreateVoiceClone}
+                  disabled={!cloneName.trim()}
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 hover:opacity-90 text-white font-extrabold text-xs shadow-glow-purple flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Create Instant Voice Clone</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Right Card: Cloned Voices Library */}
+            <div className="p-4 rounded-2xl bg-black/60 border border-white/10 space-y-4">
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-1.5">
+                <UserCheck className="w-3.5 h-3.5 text-pink-400" />
+                <span>2. Cloned Voices Vault ({clonedVoices.length})</span>
+              </h4>
+
+              {clonedVoices.length === 0 ? (
+                <div className="py-12 px-4 text-center space-y-2 border border-dashed border-white/10 rounded-2xl">
+                  <Mic className="w-8 h-8 text-gray-600 mx-auto" />
+                  <div className="text-xs font-mono text-gray-400 font-bold">No Cloned Voices Created Yet</div>
+                  <p className="text-[11px] text-gray-500 max-w-sm mx-auto">
+                    Record 5 seconds or upload an audio sample on the left to create your first sovereign cloned voice profile.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2.5 max-h-[420px] overflow-y-auto pr-1">
+                  {clonedVoices.map((clone) => (
+                    <div
+                      key={clone.id}
+                      className="p-3.5 rounded-2xl bg-white/[0.02] border border-purple-500/25 hover:border-purple-500/50 space-y-2 transition-all"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="font-bold text-white text-xs flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-purple-400" />
+                          <span>{clone.name}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => {
+                              setSelectedVoice(clone.id);
+                              setActiveSubTab('voice');
+                            }}
+                            className="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-[10px] font-mono border border-emerald-500/40 cursor-pointer"
+                          >
+                            Use in Speech
+                          </button>
+                          <button
+                            onClick={(e) => handleDeleteClone(clone.id, e)}
+                            className="p-1 rounded-lg text-gray-400 hover:text-rose-400 bg-white/5 hover:bg-white/10 transition-colors"
+                            title="Delete Voice Clone"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <p className="text-[11px] text-gray-400">{clone.desc}</p>
+
+                      {clone.sampleUrl && (
+                        <div className="pt-1">
+                          <audio controls src={clone.sampleUrl} className="w-full h-7 opacity-90" />
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-between text-[9px] font-mono text-gray-500 pt-1 border-t border-white/5">
+                        <span>Instant Neural Clone</span>
+                        <span>Created: {clone.createdAt || 'Recent'}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
+      )}
+
+      {/* TAB 3: ELEVENLABS SOUND EFFECTS (SFX) STUDIO */}
+      {activeSubTab === 'sfx' && (
+        <div className="p-5 rounded-3xl bg-[#080B18] border border-amber-500/25 space-y-5 shadow-xl">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-4">
+            <div>
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <Zap className="w-4 h-4 text-amber-400" />
+                <span>ElevenLabs Sound Effects (SFX) Studio</span>
+                <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-mono border border-amber-500/30 font-bold">
+                  Prompt-to-Audio Engine
+                </span>
+              </h3>
+              <p className="text-xs text-gray-400 pt-0.5 font-mono">
+                Generate cinematic, high-fidelity sound effects, impacts, and ambiences from text prompts or 1-click presets.
+              </p>
+            </div>
+            <span className="text-[10px] font-mono text-amber-400 bg-amber-950/40 px-2.5 py-1 rounded-xl border border-amber-500/30">
+              48kHz Lossless WAV
+            </span>
+          </div>
+
+          {/* Prompt to Audio Generator Card */}
+          <div className="p-4 rounded-2xl bg-black/60 border border-white/10 space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-mono text-gray-300 flex items-center justify-between">
+                <span>Sound Effect Prompt:</span>
+                <span className="text-[10px] text-amber-400">Describe the sonic textures, environment & movement</span>
+              </label>
+              <textarea
+                value={sfxPrompt}
+                onChange={(e) => setSfxPrompt(e.target.value)}
+                rows={2}
+                placeholder="e.g. Cinematic sci-fi laser blast with deep reverberant sub-bass echo in a hollow cave..."
+                className="w-full p-3.5 rounded-xl bg-black/80 border border-white/10 text-white text-xs placeholder-gray-500 focus:outline-none focus:border-amber-400 resize-none font-sans"
+              />
+            </div>
+
+            {/* SFX Quick Prompt Chips */}
+            <div className="flex gap-2 flex-wrap text-[11px] font-mono">
+              <button
+                onClick={() => setSfxPrompt('Cinematic sci-fi laser blast with deep reverberant echo')}
+                className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-amber-500/20 text-gray-300 hover:text-amber-300 transition-colors border border-white/5"
+              >
+                ⚡ Laser Blast
+              </button>
+              <button
+                onClick={() => setSfxPrompt('Heavy sub-bass impact with metallic debris clatter and rumble')}
+                className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-amber-500/20 text-gray-300 hover:text-amber-300 transition-colors border border-white/5"
+              >
+                💥 Sub Impact
+              </button>
+              <button
+                onClick={() => setSfxPrompt('Futuristic holographic computer UI activation chime')}
+                className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-amber-500/20 text-gray-300 hover:text-amber-300 transition-colors border border-white/5"
+              >
+                🔮 Hologram UI
+              </button>
+              <button
+                onClick={() => setSfxPrompt('Deep 808 sub-bass drop glissando with analog distortion')}
+                className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-amber-500/20 text-gray-300 hover:text-amber-300 transition-colors border border-white/5"
+              >
+                🌊 Sub Drop
+              </button>
+              <button
+                onClick={() => setSfxPrompt('Energy forcefield shield deflection and electromagnetic buzz')}
+                className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-amber-500/20 text-gray-300 hover:text-amber-300 transition-colors border border-white/5"
+              >
+                🛡️ Forcefield Shield
+              </button>
+            </div>
+
+            {/* Sliders: Duration & Prompt Influence */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-3.5 rounded-xl bg-black/40 border border-white/5 text-xs font-mono">
+              <div className="space-y-1">
+                <div className="flex justify-between text-gray-400">
+                  <span>Duration (Seconds):</span>
+                  <span className="text-amber-300 font-bold">{sfxDuration.toFixed(1)}s</span>
+                </div>
+                <input
+                  type="range"
+                  min="0.5"
+                  max="10.0"
+                  step="0.5"
+                  value={sfxDuration}
+                  onChange={(e) => setSfxDuration(Number(e.target.value))}
+                  className="w-full accent-amber-400 cursor-pointer"
+                />
+                <div className="flex justify-between text-[9px] text-gray-500">
+                  <span>0.5s</span>
+                  <span>10.0s</span>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex justify-between text-gray-400">
+                  <span>Prompt Influence:</span>
+                  <span className="text-amber-300 font-bold">{Math.round(sfxInfluence * 100)}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0.1"
+                  max="1.0"
+                  step="0.05"
+                  value={sfxInfluence}
+                  onChange={(e) => setSfxInfluence(Number(e.target.value))}
+                  className="w-full accent-amber-400 cursor-pointer"
+                />
+                <div className="flex justify-between text-[9px] text-gray-500">
+                  <span>Subtle</span>
+                  <span>Strict</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Button */}
+            <div className="flex items-center justify-between flex-wrap gap-3 pt-1">
+              <button
+                onClick={handleGeneratePromptSfx}
+                disabled={!sfxPrompt.trim() || isGeneratingSfx}
+                className="px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 hover:opacity-90 text-black font-extrabold text-xs shadow-glow-amber flex items-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                <Zap className="w-4 h-4" />
+                <span>{isGeneratingSfx ? 'Synthesizing Sound Effect...' : 'Generate Sound Effect (SFX)'}</span>
+              </button>
+
+              <span className="text-xs font-mono text-gray-400">
+                0ms Web Audio Generation • Real-Time Playback
+              </span>
+            </div>
+          </div>
+
+          {/* 1-Click Procedural SFX Presets */}
+          <div className="space-y-3 pt-2">
+            <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-1.5">
+              <span>Instant SFX Presets with WAV Export</span>
+            </h4>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {sfxPresets.map((sfx, idx) => (
+                <div
+                  key={idx}
+                  onClick={() => triggerSfx(sfx)}
+                  className="p-4 rounded-2xl bg-black/50 border border-white/10 hover:border-amber-500/50 hover:bg-amber-950/20 text-left transition-all group flex items-center justify-between cursor-pointer hover:scale-[1.02]"
+                >
+                  <div className="space-y-1">
+                    <div className="font-bold text-white text-xs group-hover:text-amber-300 transition-colors">
+                      {sfx.name}
+                    </div>
+                    <div className="text-[10px] font-mono text-gray-400">
+                      Base Freq: {sfx.freq} Hz • Length: {sfx.duration}s
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={(e) => handleDownloadSfx(sfx, e)}
+                      className="p-2 rounded-xl bg-white/5 hover:bg-amber-500/20 text-amber-400 transition-colors"
+                      title="Download SFX .WAV file"
+                    >
+                      <Download className="w-4 h-4" />
+                    </button>
+                    <div className="p-2 rounded-xl bg-white/5 group-hover:bg-amber-500/20 text-amber-400 transition-colors">
+                      <Play className="w-4 h-4 fill-current" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
       )}
 
       {/* TAB 5: 5-TRACK MULTI-STEM STUDIO MIXER */}
