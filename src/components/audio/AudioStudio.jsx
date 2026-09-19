@@ -1809,6 +1809,7 @@ export default function AudioStudio({ activeModel, isTitanMode = false }) {
               ))}
             </div>
           </div>
+        </div>
       )}
 
       {/* TAB 5: 5-TRACK MULTI-STEM STUDIO MIXER */}
