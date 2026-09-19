@@ -129,13 +129,6 @@ export default function ChatView({
   const [hasGeminiKey, setHasGeminiKey] = useState(() => {
     return Boolean(geminiStudioEngine.getApiKey() || storage.getApiKey());
   });
-  const [dismissedKeyBanner, setDismissedKeyBanner] = useState(() => {
-    try {
-      return sessionStorage.getItem('girionix_dismiss_key_banner') === 'true';
-    } catch (_) {
-      return false;
-    }
-  });
   const [promptHistory, setPromptHistory] = useState([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [showSlashMenu, setShowSlashMenu] = useState(false);
@@ -1135,39 +1128,6 @@ export default function ChatView({
             />
           )}
 
-          {/* Free Gemini API Callout Banner */}
-          {!hasGeminiKey && !dismissedKeyBanner && (
-            <div className="mb-2 p-2.5 px-3.5 rounded-2xl bg-gradient-to-r from-cyan-950/40 via-[#0a0f24] to-blue-950/40 border border-cyan-500/30 flex items-center justify-between gap-3 text-xs animate-fadeIn">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="p-1.5 rounded-xl bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shrink-0">
-                  <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-                </div>
-                <p className="text-gray-300 truncate text-[11px] sm:text-xs">
-                  <span className="text-white font-semibold">Unlock Full Cloud AI:</span> Connect your 100% Free Google Gemini API key (0 credit card) for Gemini 2.5 Pro & Flash.
-                </p>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setIsFreeKeyModalOpen(true)}
-                  className="px-2.5 py-1 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black text-[11px] font-bold transition-all shadow-sm active:scale-95 cursor-pointer"
-                >
-                  Connect Free Key
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setDismissedKeyBanner(true);
-                    try { sessionStorage.setItem('girionix_dismiss_key_banner', 'true'); } catch (_) {}
-                  }}
-                  className="p-1 rounded-lg text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-colors cursor-pointer"
-                  title="Dismiss notice"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-          )}
 
           {/* Main Input Textarea & Action Buttons */}
           <div className="relative rounded-2xl bg-black/60 border border-white/10 focus-within:border-cyan-500/40 transition-colors p-2 flex flex-col">
