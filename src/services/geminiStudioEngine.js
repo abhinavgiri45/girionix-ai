@@ -283,7 +283,7 @@ export const geminiStudioEngine = {
           if (signal?.aborted) break;
 
           try {
-            const supportsThinking = candidateModel.includes('2.5') || candidateModel.includes('thinking');
+            const supportsThinkingBudget = candidateModel.includes('2.5-pro') || candidateModel.includes('2.5-flash');
 
             // Generation Config
             const generationConfig = {
@@ -297,11 +297,11 @@ export const geminiStudioEngine = {
               generationConfig.responseMimeType = 'application/json';
             }
 
-            if (enableThinking && supportsThinking) {
+            if (enableThinking && supportsThinkingBudget) {
               generationConfig.thinkingConfig = {
-                thinkingBudget: typeof thinkingBudget === 'number' ? thinkingBudget : -1
+                thinkingBudget: typeof thinkingBudget === 'number' && thinkingBudget > 0 ? thinkingBudget : -1
               };
-            } else if (!enableThinking && candidateModel.includes('2.5-flash')) {
+            } else if (!enableThinking && supportsThinkingBudget) {
               generationConfig.thinkingConfig = {
                 thinkingBudget: 0
               };

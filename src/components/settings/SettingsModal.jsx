@@ -127,6 +127,11 @@ export default function SettingsModal({ isOpen, onClose, onApiKeyUpdated }) {
       } catch (_) {}
     }
 
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('girionix:key-updated'));
+      window.dispatchEvent(new Event('storage'));
+    }
+
     if (onApiKeyUpdated) onApiKeyUpdated(trimmed);
 
     if (newReplicateToken.trim()) {

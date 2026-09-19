@@ -31,6 +31,12 @@ export const openrouter = {
         'X-Title': 'Girionix AI',
       };
 
+      // Direct Gemini API verification (official Google endpoint)
+      if (config.providerId === 'google' || key?.startsWith('AIzaSy')) {
+        const { geminiStudioEngine } = await import('./geminiStudioEngine.js');
+        return await geminiStudioEngine.verifyApiKey(key);
+      }
+
       if (config.providerId === 'openrouter') {
         endpoint = 'https://openrouter.ai/api/v1/auth/key';
         if (key) headers['Authorization'] = `Bearer ${key}`;
@@ -42,9 +48,6 @@ export const openrouter = {
         if (key) headers['Authorization'] = `Bearer ${key}`;
       } else if (config.providerId === 'openai') {
         endpoint = 'https://api.openai.com/v1/models';
-        if (key) headers['Authorization'] = `Bearer ${key}`;
-      } else if (config.providerId === 'google') {
-        endpoint = `https://generativelanguage.googleapis.com/v1beta/openai/models`;
         if (key) headers['Authorization'] = `Bearer ${key}`;
       } else if (config.providerId === 'anthropic') {
         endpoint = 'https://api.anthropic.com/v1/models';
@@ -306,18 +309,14 @@ export const openrouter = {
 
       for (const key of keysToTry) {
         try {
-          const endpoint = `${config.baseUrl}/chat/completions`;
+          let endpoint = `${config.baseUrl}/chat/completions`;
           const requestHeaders = {
             'Content-Type': 'application/json',
             'HTTP-Referer': typeof window !== 'undefined' ? window.location.origin : 'https://girionix-ai.pages.dev',
             'X-Title': 'Girionix AI Polymath Workstation',
           };
 
-          if (key) {
-            requestHeaders['Authorization'] = `Bearer ${key}`;
-          }
-
-          const requestBody = {
+          let requestBody = {
             model: candidateModel,
             messages: enrichedMessages,
             temperature,
@@ -325,17 +324,40 @@ export const openrouter = {
             stream: true
           };
 
-          // Pass OpenRouter Web Search plugin if Web Search is enabled
-          if (webSearchEnabled && config.providerId === 'openrouter') {
-            requestBody.plugins = [{ id: 'web', max_results: 5 }];
-          }
-
-          // Pass reasoning parameters if Deep Reasoning is enabled (only on supported providers)
-          if (useThinking && (config.providerId === 'openrouter' || config.providerId === 'deepseek')) {
-            requestBody.reasoning = {
-              max_tokens: 2048,
-              effort: 'high'
+          if (config.providerId === 'anthropic') {
+            endpoint = 'https://api.anthropic.com/v1/messages';
+            if (key) {
+              requestHeaders['x-api-key'] = key;
+              requestHeaders['anthropic-version'] = '2023-06-01';
+              requestHeaders['dangerously-allow-browser'] = 'true';
+            }
+            requestBody = {
+              model: candidateModel,
+              max_tokens: maxTokens || 4096,
+              system: finalSystemPrompt,
+              messages: cleanDialogue.map(m => ({
+                role: m.role === 'assistant' ? 'assistant' : 'user',
+                content: m.content || ''
+              })),
+              stream: true
             };
+          } else {
+            if (key) {
+              requestHeaders['Authorization'] = `Bearer ${key}`;
+            }
+
+            // Pass OpenRouter Web Search plugin if Web Search is enabled
+            if (webSearchEnabled && config.providerId === 'openrouter') {
+              requestBody.plugins = [{ id: 'web', max_results: 5 }];
+            }
+
+            // Pass reasoning parameters if Deep Reasoning is enabled (only on supported providers)
+            if (useThinking && (config.providerId === 'openrouter' || config.providerId === 'deepseek')) {
+              requestBody.reasoning = {
+                max_tokens: 2048,
+                effort: 'high'
+              };
+            }
           }
 
           const response = await fetch(endpoint, {
@@ -347,7 +369,7 @@ export const openrouter = {
 
           if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            const errMsg = errorData.error?.message || `Status ${response.status}`;
+            const errMsg = errorData.error?.message || errorData.message || `Status ${response.status}`;
             console.warn(`Candidate model ${candidateModel} returned ${response.status} (${errMsg})`);
             if (response.status === 401 || response.status === 403) {
               continue; // Try next key
@@ -375,16 +397,20 @@ export const openrouter = {
               if (trimmed.startsWith('data: ')) {
                 try {
                   const json = JSON.parse(trimmed.slice(6));
-                  const delta = json.choices?.[0]?.delta;
+                  // Support OpenAI, OpenRouter, Groq, DeepSeek, and Anthropic SSE delta formats
+                  const delta = json.choices?.[0]?.delta || json.delta || json;
                   
-                  if (delta?.reasoning && onReasoningChunk) {
-                    fullReasoning += delta.reasoning;
-                    onReasoningChunk(delta.reasoning, fullReasoning);
+                  const textDelta = delta?.content || delta?.text || (json.type === 'content_block_delta' ? json.delta?.text : '') || '';
+                  const reasoningDelta = delta?.reasoning || delta?.reasoning_content || delta?.thinking || '';
+                  
+                  if (reasoningDelta && onReasoningChunk) {
+                    fullReasoning += reasoningDelta;
+                    onReasoningChunk(reasoningDelta, fullReasoning);
                   }
                   
-                  if (delta?.content) {
-                    fullContent += delta.content;
-                    if (onChunk) onChunk(delta.content, fullContent);
+                  if (textDelta) {
+                    fullContent += textDelta;
+                    if (onChunk) onChunk(textDelta, fullContent);
                   }
                 } catch (_) {}
               }

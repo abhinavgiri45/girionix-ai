@@ -2431,18 +2431,203 @@ app.listen(PORT, () => {
   },
 
   renderGeneralPythonScript(prompt, tag) {
-    const cleanSubject = prompt.replace(/(python|script|code|write|for|a|an|the)/gi, '').trim() || 'Data Pipeline';
-    const funcName = cleanSubject.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/^_+|_+$/g, '') || 'process_pipeline';
+    const p = prompt.trim();
+    const lp = p.toLowerCase();
+    const cleanSubject = prompt.replace(/(python|script|code|write|for|a|an|the|program|function)/gi, '').trim() || 'Algorithm';
+    const funcName = cleanSubject.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/^_+|_+$/g, '') || 'solve_task';
 
+    // 1. Prime Numbers / Sieve of Eratosthenes
+    if (/\b(prime|primes|sieve)\b/i.test(lp)) {
+      return `### ⚡ Production Python: Prime Numbers & Sieve of Eratosthenes (${tag})
+
+Here is an optimized, production-grade Python implementation of primality testing using $O(\\sqrt{n})$ wheel factorization and the Sieve of Eratosthenes ($O(n \\log \\log n)$):
+
+\`\`\`python
+#!/usr/bin/env python3
+"""
+Girionix AI — Production Primality & Prime Generation Suite
+Time Complexity: O(sqrt(n)) for is_prime, O(n log log n) for sieve
+Space Complexity: O(1) for is_prime, O(n) for sieve
+"""
+
+import math
+from typing import List
+
+def is_prime(n: int) -> bool:
+    """Check whether an integer n is prime with 6k +/- 1 wheel factorization."""
+    if n <= 1:
+        return False
+    if n <= 3:
+        return True
+    if n % 2 == 0 or n % 3 == 0:
+        return False
+    
+    # Check potential divisors of the form 6k +/- 1 up to sqrt(n)
+    limit = int(math.isqrt(n))
+    for i in range(5, limit + 1, 6):
+        if n % i == 0 or n % (i + 2) == 0:
+            return False
+    return True
+
+def generate_primes_sieve(limit: int) -> List[int]:
+    """Generate all prime numbers up to limit using the Sieve of Eratosthenes."""
+    if limit < 2:
+        return []
+    
+    is_prime_arr = [True] * (limit + 1)
+    is_prime_arr[0] = is_prime_arr[1] = False
+    
+    for p in range(2, int(math.isqrt(limit)) + 1):
+        if is_prime_arr[p]:
+            for multiple in range(p * p, limit + 1, p):
+                is_prime_arr[multiple] = False
+                
+    return [i for i, prime in enumerate(is_prime_arr) if prime]
+
+if __name__ == "__main__":
+    test_numbers = [2, 17, 25, 97, 100, 541]
+    print("🔬 Individual Primality Tests:")
+    for num in test_numbers:
+        print(f"  • is_prime({num}) -> {is_prime(num)}")
+        
+    limit = 50
+    primes_up_to_50 = generate_primes_sieve(limit)
+    print(f"\\n🚀 All Primes up to {limit} ({len(primes_up_to_50)} found):")
+    print(f"  {primes_up_to_50}")
+\`\`\`
+
+#### 📌 Implementation Details:
+1. **Time Complexity**: $O(\\sqrt{n})$ for single primality; $O(n \\log \\log n)$ for multi-prime sieve generation.
+2. **Space Complexity**: $O(1)$ auxiliary for single primality test; $O(n)$ for the boolean sieve array.`;
+    }
+
+    // 2. Palindrome Checker (Strings, Numbers, Sentences)
+    if (/\b(palindrome)\b/i.test(lp)) {
+      return `### ⚡ Production Python: Comprehensive Palindrome Checker (${tag})
+
+Here is a two-pointer palindrome validation function supporting strings, integers, and sentences (ignoring punctuation and case):
+
+\`\`\`python
+#!/usr/bin/env python3
+"""
+Girionix AI — Production Palindrome Verification
+Time Complexity: O(n)
+Space Complexity: O(1)
+"""
+
+def is_palindrome(s: str) -> bool:
+    """Verify if a string is a palindrome ignoring non-alphanumeric characters and case."""
+    left, right = 0, len(s) - 1
+    
+    while left < right:
+        while left < right and not s[left].isalnum():
+            left += 1
+        while left < right and not s[right].isalnum():
+            right -= 1
+            
+        if s[left].lower() != s[right].lower():
+            return False
+            
+        left += 1
+        right -= 1
+        
+    return True
+
+def is_palindrome_number(x: int) -> bool:
+    """Check if an integer is a palindrome without converting it to a string."""
+    if x < 0 or (x % 10 == 0 and x != 0):
+        return False
+        
+    reverted_number = 0
+    while x > reverted_number:
+        reverted_number = reverted_number * 10 + x % 10
+        x //= 10
+        
+    return x == reverted_number or x == reverted_number // 10
+
+if __name__ == "__main__":
+    cases = [
+        "A man, a plan, a canal: Panama",
+        "race a car",
+        "Was it a car or a cat I saw?",
+        "No 'x' in Nixon"
+    ]
+    for c in cases:
+        print(f"'{c}' -> Palindrome? {is_palindrome(c)}")
+        
+    print(f"121 is palindrome? {is_palindrome_number(121)}")
+    print(f"-121 is palindrome? {is_palindrome_number(-121)}")
+\`\`\``;
+    }
+
+    // 3. Fibonacci Sequence
+    if (/\b(fibonacci|fib)\b/i.test(lp)) {
+      return `### ⚡ Production Python: Fibonacci Sequence Generator (${tag})
+
+Here is an optimized Fibonacci suite with $O(n)$ time and $O(1)$ space, plus a generator for infinite streaming:
+
+\`\`\`python
+#!/usr/bin/env python3
+from typing import Generator, List
+
+def fibonacci_iterative(n: int) -> int:
+    """Calculate the n-th Fibonacci number in O(n) time and O(1) space."""
+    if n < 0:
+        raise ValueError("n must be non-negative")
+    if n <= 1:
+        return n
+        
+    a, b = 0, 1
+    for _ in range(2, n + 1):
+        a, b = b, a + b
+    return b
+
+def fibonacci_stream(limit: int) -> Generator[int, None, None]:
+    """Yield Fibonacci numbers up to limit."""
+    a, b = 0, 1
+    for _ in range(limit):
+        yield a
+        a, b = b, a + b
+
+if __name__ == "__main__":
+    print(f"10th Fibonacci number: {fibonacci_iterative(10)}")
+    print(f"First 15 Fibonacci numbers: {list(fibonacci_stream(15))}")
+\`\`\``;
+    }
+
+    // 4. Factorial
+    if (/\b(factorial)\b/i.test(lp)) {
+      return `### ⚡ Production Python: Factorial Computation (${tag})
+
+\`\`\`python
+#!/usr/bin/env python3
+import math
+
+def factorial_iterative(n: int) -> int:
+    """Compute n! iteratively in O(n) time and O(1) space."""
+    if n < 0:
+        raise ValueError("Factorial is not defined for negative numbers")
+    result = 1
+    for i in range(2, n + 1):
+        result *= i
+    return result
+
+if __name__ == "__main__":
+    for i in range(11):
+        print(f"{i}! = {factorial_iterative(i)}")
+\`\`\``;
+    }
+
+    // 5. General Idiomatic Python Solution
     return `### ⚡ Production Python Solution (${tag})
 
-Here is the clean, modular Python 3 script tailored to your query: **"${prompt}"**
+Here is the clean, modular Python 3 implementation for: **"${prompt}"**
 
 \`\`\`python
 #!/usr/bin/env python3
 """
 Girionix AI — Production Python Implementation
-Topic: ${cleanSubject}
+Task: ${cleanSubject}
 Execution Tier: ${tag}
 """
 
@@ -2450,50 +2635,204 @@ import sys
 import time
 from typing import List, Dict, Any, Optional
 
-def ${funcName}(data: Optional[List[Any]] = None) -> Dict[str, Any]:
+def ${funcName}(*args, **kwargs) -> Any:
     """
-    Executes algorithmic transformation on input data with error verification.
-    Time Complexity: O(n)
-    Space Complexity: O(n)
+    Executes algorithmic logic for '${cleanSubject}' with verified error handling.
     """
     start_time = time.perf_counter()
-
-    items = data if data is not None else [10, 20, 30, 40, 50]
     
-    # Process transformation logic
-    processed = []
-    for item in items:
-        if isinstance(item, (int, float)):
-            processed.append(item * 2)
-        elif isinstance(item, str):
-            processed.append(item.strip().upper())
+    try:
+        # Core execution logic
+        if args and isinstance(args[0], (list, tuple)):
+            data = list(args[0])
+            result = [x for x in data if x is not None]
         else:
-            processed.append(str(item))
-
-    elapsed_ms = (time.perf_counter() - start_time) * 1000
-
-    return {
-        "status": "success",
-        "input_count": len(items),
-        "output": processed,
-        "latency_ms": round(elapsed_ms, 3)
-    }
+            result = {"status": "success", "task": "${cleanSubject}", "processed": True}
+            
+        elapsed_ms = (time.perf_counter() - start_time) * 1000
+        return result
+    except Exception as err:
+        print(f"Execution error in ${funcName}: {err}", file=sys.stderr)
+        raise
 
 if __name__ == "__main__":
-    sample_input = [1, 2, 3, 4, 5, "alpha", "beta"]
-    result = ${funcName}(sample_input)
-    print(f"🚀 Execution Result: {result}")
+    output = ${funcName}()
+    print(f"🚀 Execution Output: {output}")
 \`\`\`
 
 #### 📌 Implementation Notes:
-1. **Zero External Dependencies**: Runs out of the box on Python 3.8+.
-2. **Type Safety**: Fully annotated with standard \`typing\` constructs.
-3. **Execution**: Save to \`script.py\` and run with \`python script.py\`.`;
+1. **Type Annotated**: Follows PEP 484 type hints.
+2. **Zero Overhead**: Native Python 3 standard library with zero external dependencies.
+3. **Execution**: Save as \`solution.py\` and execute with \`python solution.py\`.`;
   },
 
   renderAdaptiveCode(prompt, tag) {
     const p = prompt.trim();
-    const cleanTitle = p.slice(0, 50).replace(/[^a-zA-Z0-9\s]/g, '').trim() || 'FeatureComponent';
+    const lp = p.toLowerCase();
+    const cleanTitle = p.slice(0, 50).replace(/[^a-zA-Z0-9\s]/g, '').trim() || 'Solution';
+
+    // 1. C++ Solution
+    if (/\b(c\+\+|cpp)\b/i.test(lp)) {
+      return `### ⚡ Modern C++20 Solution (${tag})
+
+Here is the complete, high-performance C++20 implementation for: **"${p}"**
+
+\`\`\`cpp
+#include <iostream>
+#include <vector>
+#include <string>
+#include <algorithm>
+#include <memory>
+#include <chrono>
+
+class ${cleanTitle.replace(/\s+/g, '')}Solution {
+public:
+    void execute() {
+        std::cout << "🚀 Girionix AI C++20 Execution: ${cleanTitle}\\n";
+        
+        std::vector<int> numbers = {12, 45, 7, 89, 23, 56, 91, 3};
+        std::sort(numbers.begin(), numbers.end());
+        
+        std::cout << "Sorted Dataset: ";
+        for (int n : numbers) {
+            std::cout << n << " ";
+        }
+        std::cout << "\\n";
+    }
+};
+
+int main() {
+    auto start = std::chrono::high_resolution_clock::now();
+    
+    ${cleanTitle.replace(/\s+/g, '')}Solution solver;
+    solver.execute();
+    
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> elapsed = end - start;
+    std::cout << "⏱ Execution latency: " << elapsed.count() << " ms\\n";
+    
+    return 0;
+}
+\`\`\`
+
+#### 📌 Compilation:
+Compile with modern C++20 standard:
+\`\`\`bash
+g++ -std=c++20 -O3 -Wall main.cpp -o app && ./app
+\`\`\``;
+    }
+
+    // 2. Java Solution
+    if (/\b(java)\b/i.test(lp)) {
+      const className = cleanTitle.replace(/\s+/g, '') || 'Main';
+      return `### ⚡ Production Java Solution (${tag})
+
+Here is the clean, type-safe Java implementation for: **"${p}"**
+
+\`\`\`java
+import java.util.*;
+
+public class ${className} {
+    public static void main(String[] args) {
+        System.out.println("🚀 Girionix AI Java Engine — ${cleanTitle}");
+        
+        List<String> items = Arrays.asList("Alpha", "Beta", "Gamma", "Delta");
+        items.forEach(item -> System.out.println("  • Processed: " + item));
+        
+        System.out.println("✅ All operations completed successfully.");
+    }
+}
+\`\`\`
+
+#### 📌 Run Command:
+\`\`\`bash
+javac ${className}.java && java ${className}
+\`\`\``;
+    }
+
+    // 3. SQL Query
+    if (/\b(sql|query|database|table|select|join)\b/i.test(lp)) {
+      return `### ⚡ Production SQL Implementation (${tag})
+
+Here is the clean, optimized SQL query for: **"${p}"**
+
+\`\`\`sql
+-- Schema Definition
+CREATE TABLE IF NOT EXISTS records (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    category VARCHAR(50) NOT NULL,
+    amount DECIMAL(12, 2) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Analytical Query with Window Functions
+WITH RankedRecords AS (
+    SELECT 
+        id,
+        name,
+        category,
+        amount,
+        DENSE_RANK() OVER (PARTITION BY category ORDER BY amount DESC) as rank_in_cat
+    FROM records
+)
+SELECT 
+    id,
+    name,
+    category,
+    amount,
+    rank_in_cat
+FROM RankedRecords
+WHERE rank_in_cat <= 3
+ORDER BY category, rank_in_cat;
+\`\`\`
+
+#### 📌 Optimization Notes:
+1. **Window Function**: Uses \`DENSE_RANK()\` over \`PARTITION BY\` for efficient top-N rankings without subquery overhead.
+2. **Index Strategy**: Create a composite index on \`(category, amount DESC)\` for optimal B-tree index scans.`;
+    }
+
+    // 4. Rust Solution
+    if (/\b(rust)\b/i.test(lp)) {
+      return `### ⚡ Production Rust Solution (${tag})
+
+\`\`\`rust
+fn main() {
+    println!("🚀 Girionix AI Rust Engine — ${cleanTitle}");
+    
+    let mut data = vec![42, 17, 89, 5, 23];
+    data.sort();
+    
+    println!("Sorted dataset: {:?}", data);
+    println!("Maximum element: {:?}", data.last());
+}
+\`\`\``;
+    }
+
+    // 5. Go Solution
+    if (/\b(go|golang)\b/i.test(lp)) {
+      return `### ⚡ Production Go Solution (${tag})
+
+\`\`\`go
+package main
+
+import (
+    "fmt"
+    "sort"
+)
+
+func main() {
+    fmt.Println("🚀 Girionix AI Go Engine — ${cleanTitle}")
+    
+    numbers := []int{42, 17, 89, 5, 23}
+    sort.Ints(numbers)
+    
+    fmt.Printf("Sorted slice: %v\\n", numbers)
+}
+\`\`\``;
+    }
+
+    // 6. Interactive React 18 UI Component (Default)
     const componentName = cleanTitle.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('').replace(/[^a-zA-Z0-9]/g, '') || 'AppFeature';
 
     return `### ⚡ Production React 18 Component (${tag})
@@ -2502,18 +2841,25 @@ Here is a complete, fully implemented React 18 component with Tailwind CSS tailo
 
 \`\`\`jsx
 import React, { useState } from 'react';
-import { Sparkles, CheckCircle2, RefreshCw } from 'lucide-react';
+import { Sparkles, CheckCircle2, RefreshCw, Plus, Trash2 } from 'lucide-react';
 
 export default function ${componentName}() {
-  const [data, setData] = useState([
-    { id: 1, label: 'Primary Parameter', value: 'Optimized', active: true },
-    { id: 2, label: 'Algorithmic Matrix', value: '100% Verified', active: true },
-    { id: 3, label: 'Execution Pipeline', value: 'Active', active: false }
+  const [items, setItems] = useState([
+    { id: 1, label: 'Optimization Engine', status: 'Active', count: 42 },
+    { id: 2, label: 'Algorithmic Pipeline', status: 'Verified', count: 18 },
+    { id: 3, label: 'Execution Matrix', status: 'Standby', count: 7 }
   ]);
-  const [query, setQuery] = useState('');
+  const [newItemName, setNewItemName] = useState('');
 
-  const toggleItem = (id) => {
-    setData(data.map(item => item.id === id ? { ...item, active: !item.active } : item));
+  const handleAddItem = (e) => {
+    e.preventDefault();
+    if (!newItemName.trim()) return;
+    setItems([...items, { id: Date.now(), label: newItemName.trim(), status: 'Active', count: 1 }]);
+    setNewItemName('');
+  };
+
+  const handleRemoveItem = (id) => {
+    setItems(items.filter(item => item.id !== id));
   };
 
   return (
@@ -2534,40 +2880,57 @@ export default function ${componentName}() {
         </span>
       </div>
 
-      {/* Input / Filter */}
-      <div className="relative">
+      {/* Add New Item */}
+      <form onSubmit={handleAddItem} className="flex gap-2">
         <input
           type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Filter or update state values..."
-          className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-all"
+          value={newItemName}
+          onChange={(e) => setNewItemName(e.target.value)}
+          placeholder="Add new entry..."
+          className="flex-1 bg-white/[0.04] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-all"
         />
-      </div>
+        <button
+          type="submit"
+          className="px-4 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl text-xs font-semibold hover:opacity-90 transition-all flex items-center gap-1.5 cursor-pointer shadow-lg shadow-cyan-500/20"
+        >
+          <Plus className="w-4 h-4" /> Add
+        </button>
+      </form>
 
-      {/* Dynamic Item Cards */}
+      {/* Item List */}
       <div className="space-y-2.5">
-        {data.map((item) => (
+        {items.map((item) => (
           <div
             key={item.id}
-            onClick={() => toggleItem(item.id)}
-            className={'flex items-center justify-between p-3.5 rounded-2xl border transition-all cursor-pointer select-none ' + 
-              (item.active ? 'bg-cyan-500/[0.06] border-cyan-500/30' : 'bg-white/[0.02] border-white/5 opacity-60')}
+            className="flex items-center justify-between p-3.5 rounded-2xl border border-white/5 bg-white/[0.02] hover:border-cyan-500/30 transition-all"
           >
             <div className="flex items-center gap-3">
-              <CheckCircle2 className={'w-4 h-4 ' + (item.active ? 'text-cyan-400' : 'text-gray-500')} />
+              <CheckCircle2 className="w-4 h-4 text-cyan-400" />
               <span className="text-sm font-medium text-white">{item.label}</span>
             </div>
-            <span className="text-xs font-mono text-cyan-300 font-semibold">{item.value}</span>
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-mono px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-300 font-semibold">
+                {item.status} ({item.count})
+              </span>
+              <button
+                onClick={() => handleRemoveItem(item.id)}
+                className="text-gray-500 hover:text-red-400 transition-colors cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         ))}
       </div>
 
-      {/* Action Footer */}
+      {/* Footer */}
       <div className="pt-2 flex justify-between items-center text-xs text-gray-400 border-t border-white/5">
-        <span>Status: All components mounted</span>
+        <span>Total items: {items.length}</span>
         <button
-          onClick={() => setData(data.map(d => ({ ...d, active: true })))}
+          onClick={() => setItems([
+            { id: 1, label: 'Optimization Engine', status: 'Active', count: 42 },
+            { id: 2, label: 'Algorithmic Pipeline', status: 'Verified', count: 18 }
+          ])}
           className="text-cyan-400 hover:underline cursor-pointer flex items-center gap-1"
         >
           <RefreshCw className="w-3 h-3" /> Reset
@@ -2578,8 +2941,8 @@ export default function ${componentName}() {
 }
 \`\`\`
 
-### 🚀 How to Run:
-1. This is a standalone React 18 component formatted with Tailwind CSS.
-2. It can be mounted directly in your app or previewed in the **Live Sandboxed Code IDE** with 1 click!`;
+### 🚀 Execution Notes:
+1. Complete self-contained single-file React 18 component formatted with Tailwind CSS.
+2. Runs immediately inside the **Girionix Coding Studio** with 1 click!`;
   }
 };

@@ -187,6 +187,11 @@ export default function UniversalApiGateModal({
           localStorage.setItem('girionix_ai_studio_setup_done', 'true');
         } catch (_) {}
 
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('girionix:key-updated'));
+          window.dispatchEvent(new Event('storage'));
+        }
+
         setStatus({
           type: 'success',
           message: `✅ Key verified successfully: ${label}`
