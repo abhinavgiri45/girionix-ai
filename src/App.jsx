@@ -16,6 +16,7 @@ import LocalNeuralModal from './components/common/LocalNeuralModal';
 import TitanWorkstationModal from './components/common/TitanWorkstationModal';
 import TitanWorkstationView from './components/titan/TitanWorkstationView';
 import ChatView from './components/chat/ChatView';
+import OrbitWorkstationView from './components/orbit/OrbitWorkstationView';
 import MobileBottomNav from './components/layout/MobileBottomNav';
 import SettingsModal from './components/settings/SettingsModal';
 
@@ -23,19 +24,16 @@ import { AI_MODELS, TITAN_AI_MODELS } from './services/modelCatalog';
 import { CODE_STUDIO_TEMPLATES } from './data/codeStudioTemplates';
 import { storage } from './services/storage';
 import { updateService } from './services/updateService';
+import { giriOrbitBridge } from './services/giriOrbitBridge';
 
 export default function App() {
+  const [isOrbitWorkstationActive, setIsOrbitWorkstationActive] = useState(() => {
+    return giriOrbitBridge.isOrbitMode();
+  });
+
   const isOfficeMode = React.useMemo(() => {
-    try {
-      if (typeof window === 'undefined') return false;
-      const params = new URLSearchParams(window.location.search);
-      const isParam = params.get('mode') === 'office' || params.get('embed') === 'true' || params.get('embed') === 'office' || params.has('office');
-      const isIframe = window.self !== window.top;
-      return Boolean(isParam || isIframe);
-    } catch (_) {
-      return false;
-    }
-  }, []);
+    return isOrbitWorkstationActive;
+  }, [isOrbitWorkstationActive]);
 
   const [isAppInstalled, setIsAppInstalled] = useState(() => storage.isAppInstalled());
   const [isTitanMode, setIsTitanMode] = useState(() => {
@@ -367,6 +365,10 @@ export default function App() {
     const handlePopState = () => {
       const path = window.location.pathname.toLowerCase().replace(/\/+$/, '');
       const params = new URLSearchParams(window.location.search);
+      if (path === '/orbit' || params.get('mode') === 'orbit' || params.get('portal') === 'orbit') {
+        setIsOrbitWorkstationActive(true);
+        return;
+      }
       const studioParam = params.get('studio');
       if (studioParam) {
         setIsAboutOpen(false);
@@ -479,6 +481,23 @@ export default function App() {
     }
   };
 
+  if (isOrbitWorkstationActive) {
+    return (
+      <OrbitWorkstationView
+        onExitOrbitMode={() => {
+          setIsOrbitWorkstationActive(false);
+          const url = new URL(window.location.href);
+          url.searchParams.delete('mode');
+          url.searchParams.delete('source');
+          url.searchParams.delete('portal');
+          url.searchParams.delete('embed');
+          const targetPath = url.pathname === '/orbit' ? '/chat' : url.pathname;
+          window.history.pushState({}, '', targetPath + (url.search ? url.search : ''));
+        }}
+      />
+    );
+  }
+
   if (isTitanMode) {
     return (
       <TitanWorkstationView
@@ -510,6 +529,7 @@ export default function App() {
         onOpenProStatus={() => setIsProStatusOpen(true)}
         isAppInstalled={isAppInstalled}
         isOfficeMode={isOfficeMode}
+        onLaunchOrbitStation={() => setIsOrbitWorkstationActive(true)}
       />
 
       {/* Main Workspace Area */}
@@ -665,6 +685,7 @@ export default function App() {
           storage.savePinnedItems(updated);
         }}
         onOpenLocalEngine={() => setIsLocalModalOpen(true)}
+        onLaunchOrbitStation={() => setIsOrbitWorkstationActive(true)}
       />
 
       {/* Official OpenAI-Style Introducing Girionix AI Landing & Announcement Page */}

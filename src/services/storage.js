@@ -4,7 +4,9 @@ const KEYS = {
   REPLICATE_TOKEN: 'girionix_replicate_token',
   SETTINGS: 'girionix_user_settings',
   SESSIONS: 'girionix_chat_sessions',
+  ORBIT_SESSIONS: 'girionix_orbit_chat_sessions',
   ACTIVE_SESSION_ID: 'girionix_active_session_id',
+  ORBIT_ACTIVE_SESSION_ID: 'girionix_orbit_active_session_id',
   PINNED_ITEMS: 'girionix_pinned_items',
   THEME: 'girionix_theme',
   CODE_PROJECT: 'girionix_code_project',
@@ -379,6 +381,33 @@ export const storage = {
   },
   setActiveSessionId: (id) => {
     safeSetItem(KEYS.ACTIVE_SESSION_ID, id);
+  },
+
+  getOrbitSessions: () => {
+    try {
+      const saved = safeGetItem(KEYS.ORBIT_SESSIONS);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (_) {}
+    return [
+      {
+        id: 'orbit-session-default',
+        title: 'Giri Orbit Executive Workspace',
+        createdAt: Date.now(),
+        messages: []
+      }
+    ];
+  },
+  saveOrbitSessions: (sessions) => {
+    safeSetItem(KEYS.ORBIT_SESSIONS, JSON.stringify(sessions));
+  },
+  getOrbitActiveSessionId: () => {
+    return safeGetItem(KEYS.ORBIT_ACTIVE_SESSION_ID) || 'orbit-session-default';
+  },
+  setOrbitActiveSessionId: (id) => {
+    safeSetItem(KEYS.ORBIT_ACTIVE_SESSION_ID, id);
   },
 
   getPinnedItems: () => {

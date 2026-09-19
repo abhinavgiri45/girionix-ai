@@ -67,7 +67,8 @@ export default function ToolsModal({
   onSelectPersona,
   pinnedItems = [],
   onRemovePinned,
-  onOpenLocalEngine
+  onOpenLocalEngine,
+  onLaunchOrbitStation
 }) {
   const [activeTab, setActiveTab] = useState('studios'); // 'studios' | 'updates' | 'download' | 'personas' | 'themes' | 'focus' | 'backup' | 'pinned' | 'certificate'
   const [backupStatus, setBackupStatus] = useState(null);
@@ -561,6 +562,33 @@ export default function ToolsModal({
                   </p>
                   <div className="pt-1 flex items-center gap-1 text-[11px] text-teal-400 font-mono">
                     <span>Configure Local Core</span>
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </div>
+
+                {/* 7. Giri Orbit Dedicated AI Co-Pilot */}
+                <div
+                  onClick={() => { 
+                    if (onLaunchOrbitStation) onLaunchOrbitStation(); 
+                    onClose(); 
+                  }}
+                  className="p-5 rounded-2xl bg-gradient-to-br from-blue-950/40 via-cyan-950/30 to-[#0B0D19] border border-cyan-500/30 hover:border-cyan-400 cursor-pointer transition-all hover:scale-[1.02] shadow-xl group space-y-2.5"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="p-2.5 rounded-xl bg-cyan-500/20 text-cyan-400">
+                      <Layers className="w-6 h-6" />
+                    </div>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300">Official Office Station</span>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-white group-hover:text-cyan-300">Giri Orbit Dedicated AI Co-Pilot</h3>
+                    <div className="text-[10px] font-mono text-cyan-400 font-bold">🌐 Drift • Axis • Kinetic • Aegis</div>
+                  </div>
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    Isolated, dedicated workstation for Giri Orbit docs, financial spreadsheet models, keynote decks, and compliance auditing.
+                  </p>
+                  <div className="pt-1 flex items-center gap-1 text-[11px] text-cyan-400 font-mono">
+                    <span>Launch Orbit Station</span>
                     <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                   </div>
                 </div>

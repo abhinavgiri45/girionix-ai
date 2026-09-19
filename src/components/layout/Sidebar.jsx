@@ -32,7 +32,8 @@ export default function Sidebar({
   onOpenProStatus,
   isAppInstalled,
   onOpenWhySwitch,
-  isOfficeMode = false
+  isOfficeMode = false,
+  onLaunchOrbitStation
 }) {
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -101,6 +102,16 @@ export default function Sidebar({
                   title="Introducing Girionix AI & Creator Abhinav Giri"
                 >
                   <Award className="w-5 h-5" />
+                </button>
+              )}
+
+              {onLaunchOrbitStation && (
+                <button
+                  onClick={onLaunchOrbitStation}
+                  className="p-2.5 rounded-xl text-cyan-400 hover:text-white hover:bg-cyan-500/20 transition-colors"
+                  title="Giri Orbit Dedicated AI Station"
+                >
+                  <span className="text-sm">🌐</span>
                 </button>
               )}
             </>
@@ -294,6 +305,23 @@ export default function Sidebar({
                   <div className="flex flex-col">
                     <span className="text-xs font-medium text-gray-200 group-hover:text-cyan-300">About Girionix AI</span>
                     <span className="text-[10px] font-mono text-gray-500">Creator: Abhinav Giri</span>
+                  </div>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 text-gray-500 group-hover:text-cyan-300 transition-transform" />
+              </button>
+            )}
+
+            {onLaunchOrbitStation && (
+              <button
+                onClick={onLaunchOrbitStation}
+                className="w-full p-2 rounded-xl bg-gradient-to-r from-blue-950/20 to-cyan-950/20 hover:from-blue-950/40 hover:to-cyan-950/40 border border-cyan-500/20 hover:border-cyan-500/40 flex items-center justify-between text-left transition-all group cursor-pointer"
+                title="Open Dedicated Giri Orbit AI Office Station"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">🌐</span>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-white group-hover:text-cyan-300">Giri Orbit Co-Pilot</span>
+                    <span className="text-[10px] font-mono text-cyan-400/80">Drift • Axis • Kinetic • Aegis</span>
                   </div>
                 </div>
                 <ChevronRight className="w-3.5 h-3.5 text-gray-500 group-hover:text-cyan-300 transition-transform" />
