@@ -273,8 +273,12 @@ export const geminiStudioEngine = {
         }
 
         // System Instruction configuration
-        const systemPart = systemInstruction ? {
-          parts: [{ text: systemInstruction }]
+        const memoryDirective = conversationMemory.buildMemoryDirective(history);
+        const combinedSystem = systemInstruction 
+          ? (systemInstruction.includes('[COMPREHENSIVE SESSION MEMORY') ? systemInstruction : `${systemInstruction}\n\n${memoryDirective}`)
+          : memoryDirective;
+        const systemPart = combinedSystem ? {
+          parts: [{ text: combinedSystem }]
         } : undefined;
 
         let lastError = null;

@@ -826,16 +826,19 @@ export default function ChatView({
         ? `\n\nSUPERHUMAN CODING DIRECTIVE: The user is requesting code. Provide a complete, fully functional, production-ready React 18 component formatted with Tailwind CSS in a standard \`\`\`jsx ... \`\`\` code block. Ensure default export or named App so it runs immediately in the Live Sandboxed IDE with 1 click.`
         : '';
 
+      const memoryDirective = conversationMemory.buildMemoryDirective(updatedMessages, userName);
+
       const systemPromptWithPersona = settings.systemPrompt + 
         `\n\nUSER'S NAME: The user is ${userName}. Address them warmly when appropriate.` + 
         `\n\nVISUAL DIRECTIVE: If the user asks for visual descriptions, paintings, animals, scenery, or graphics, ALWAYS include a live high-res markdown image at the end formatted strictly as: ![Description](https://image.pollinations.ai/prompt/ENCODED_PROMPT?width=1024&height=1024&model=flux-realism&nologo=true&enhance=true)` +
         codeDirective +
         (personaObj ? `\n\nACTIVE ROLE INSTRUCTION: ${personaObj.promptSuffix}` : '') +
-        (webSearchEnabled ? '\n\nWEB GROUNDING: Cite real-world sources and current technical documentation.' : '');
+        (webSearchEnabled ? '\n\nWEB GROUNDING: Cite real-world sources and current technical documentation.' : '') +
+        memoryDirective;
 
       const validDialogue = conversationMemory.formatMessagesForApi(
         updatedMessages.filter(m => m.id !== assistantId),
-        24
+        80
       );
 
       const apiMessages = [

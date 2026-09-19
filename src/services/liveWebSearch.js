@@ -30,7 +30,8 @@ export const liveWebSearch = {
     if (/\b(how\s+are\s+(you|u|ya)|how\s+r\s+u|how's\s+it\s+going|how\s+do\s+you\s+do|what's\s+up|wassup|how\s+have\s+you\s+been)\b/i.test(clean)) return true;
     // 3. Identity questions
     if (/\b(who\s+are\s+you|what\s+is\s+your\s+name|who\s+created\s+you|who\s+made\s+you|what\s+can\s+you\s+do|introduce\s+yourself|about\s+girionix|abhinav\s+giri|giri\s+corporation)\b/i.test(clean)) return true;
-    // 4. Politeness, affirmations & farewells
+    // 4. Politeness, affirmations, reactions & farewells (e.g. "nice", "cool", "great", "ok")
+    if (/^(nice|cool|great|awesome|good|superb|excellent|amazing|ok|okay|k|alright|fine|perfect|got\s+it|understood|i\s+see|makes\s+sense|yes|yep|yeah|no|nope|sure|wow|sweet|neat|right|correct|true|done|yup|nah|definitely|certainly|sounds\s+good|very\s+nice|so\s+good|good\s+one)[!.]*$/i.test(clean)) return true;
     if (/\b(thank\s+you|thanks|thank\s+u|appreciate\s+it|bye|goodbye|see\s+you|see\s+ya|good\s+night|take\s+care)\b/i.test(clean)) return true;
     // 5. Jokes & humor
     if (/\b(tell\s+me\s+a\s+joke|make\s+me\s+laugh|say\s+something\s+funny|crack\s+a\s+joke|joke)\b/i.test(clean)) return true;
@@ -41,7 +42,7 @@ export const liveWebSearch = {
     // 8. Simple arithmetic/math expressions
     if (/^[\d\s\+\-\*\/\^\(\)\.%=]+$/.test(clean) && clean.length < 40) return true;
     // 9. Conversational memory recall & recap
-    if (/\b(what\s+did\s+i\s+(ask|say|tell)|my\s+previous\s+(question|message|prompt)|what\s+was\s+my\s+last|what\s+did\s+you\s+(just\s+)?say|recap\s+(our\s+)?(chat|conversation)|summarize\s+(our\s+)?(chat|conversation)|do\s+you\s+remember\s+(my\s+name|what\s+i|what\s+we))\b/i.test(clean)) return true;
+    if (/\b(what\s+did\s+i\s+(ask|say|tell)|my\s+previous\s+(question|message|prompt)|what\s+was\s+my\s+(first|second|last|previous)|what\s+did\s+you\s+(just\s+)?say|recap\s+(our\s+)?(chat|conversation)|summarize\s+(our\s+)?(chat|conversation)|do\s+you\s+remember\s+(my\s+name|what\s+i|what\s+we)|at\s+the\s+beginning|from\s+the\s+start|in\s+this\s+chat|in\s+this\s+conversation)\b/i.test(clean)) return true;
     return false;
   },
 

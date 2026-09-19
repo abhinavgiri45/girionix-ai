@@ -175,12 +175,13 @@ export const openrouter = {
     // 2. Clean and format dialogue messages (filtering out transient errors and windowing)
     const cleanDialogue = conversationMemory.formatMessagesForApi(
       messages.filter(m => m.role !== 'system'),
-      24
+      80
     );
 
     // 3. Ensure system prompt always carries the full master polymath prompt & active directives
     const baseSystem = messages.find(m => m.role === 'system')?.content || '';
-    const finalSystemPrompt = `${GIRIONIX_SYSTEM_PROMPT}\n\n${baseSystem}${featureDirectives}${memoryDirective}`;
+    const needsMemory = !baseSystem.includes('[COMPREHENSIVE SESSION MEMORY');
+    const finalSystemPrompt = `${GIRIONIX_SYSTEM_PROMPT}\n\n${baseSystem}${featureDirectives}${needsMemory ? memoryDirective : ''}`;
 
     const enrichedMessages = [
       { role: 'system', content: finalSystemPrompt },

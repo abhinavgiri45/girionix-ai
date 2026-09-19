@@ -644,8 +644,34 @@ class LocalNeuralEngine {
    * (e.g. "explain it in detail", "give me more examples", "write tests for it", "why?")
    */
   synthesizeContextualFollowup(prompt, followup, tag) {
-    const { targetSubject, isCodeFollowup, isTranslationFollowup } = followup;
+    const { targetSubject, isCodeFollowup, isTranslationFollowup, isAcknowledgment } = followup;
     const p = prompt.trim().toLowerCase();
+
+    // 0. Conversational Affirmations & Reactions ("nice", "cool", "great", "awesome", "ok", etc.)
+    if (isAcknowledgment) {
+      const lastUserLower = (followup.lastUserPrompt || '').toLowerCase();
+      // If the preceding interaction was a check-in or greeting (e.g. "how are you")
+      if (/\b(how\s+are\s+you|how\s+r\s+u|how's\s+it\s+going|what's\s+up|wassup)\b/i.test(lastUserLower)) {
+        const ackWellbeing = [
+          `Glad to hear! 😊 What would you like to build or explore today? We can write clean code, solve math problems, or explore any concept!`,
+          `Awesome! All systems are ready. What project or topic are we diving into today?`,
+          `Great! I'm primed and ready. What would you like to work on right now?`
+        ];
+        return this.pickDiverse(ackWellbeing, 'ack_wellbeing');
+      }
+
+      // If tied to an active discussion subject / code / explanation
+      const subject = followup.targetSubject && followup.targetSubject !== 'the previously discussed topic' 
+        ? followup.targetSubject 
+        : 'our discussion';
+
+      const ackSubject = [
+        `Glad you found that helpful! 😊 Where would you like to take **${subject}** next? We can add more features, write automated tests, optimize performance, or explore another angle.`,
+        `Awesome! If you'd like to expand on **${subject}** or dive into code implementations, just let me know. What's our next step?`,
+        `Great to hear! I have the full context of **${subject}** retained in working memory. Feel free to ask a follow-up or introduce another topic whenever you're ready.`
+      ];
+      return this.pickDiverse(ackSubject, 'ack_subject');
+    }
 
     // 1. Translation follow-up ("translate to Hindi", etc.)
     if (isTranslationFollowup || p.includes('hindi')) {
@@ -771,6 +797,16 @@ class LocalNeuralEngine {
         `Doing great! It's always inspiring when new ideas and challenges come through. What's on your mind right now?`
       ];
       return this.pickDiverse(replies, 'wellbeing');
+    }
+
+    // 1B-2. Conversational Affirmations & Reactions ("nice", "cool", "great", "awesome", "ok", etc.)
+    if (/^(nice|cool|great|awesome|good|superb|excellent|amazing|ok|okay|k|alright|fine|perfect|got\s+it|understood|i\s+see|makes\s+sense|yes|yep|yeah|sure|wow|sweet|neat|right|sounds\s+good|very\s+nice|so\s+good|good\s+one)[!.]*$/i.test(lp)) {
+      const casualAcks = [
+        `Glad to hear! 😊 What would you like to work on or explore today? Whether you need code, mathematical problem-solving, or creative ideas, I'm ready.`,
+        `Awesome! I'm ready whenever you are. What's on your agenda?`,
+        `Great! Feel free to ask a question, share some code, or propose a topic to explore.`
+      ];
+      return this.pickDiverse(casualAcks, 'standalone_ack');
     }
 
     // 1C. Creator, Identity, Founder & Giri Corporation
