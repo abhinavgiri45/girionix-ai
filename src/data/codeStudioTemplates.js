@@ -1,9 +1,11 @@
+import { ADVANCED_SKILLS_CATALOG } from '../services/advancedCodingSkills';
+
 /**
  * GIRIONIX AI — CODING STUDIO SHOWCASE TEMPLATES
  * Curated for high-impact office demonstrations and instant interactive prototyping.
  */
 
-export const CODE_STUDIO_TEMPLATES = [
+const BASE_TEMPLATES = [
   {
     id: 'cyber-snake',
     name: 'Cyber Snake Arcade Game',
@@ -887,3 +889,9 @@ export default function App() {
 }`
   }
 ];
+
+export const CODE_STUDIO_TEMPLATES = [
+  ...ADVANCED_SKILLS_CATALOG,
+  ...BASE_TEMPLATES
+];
+
