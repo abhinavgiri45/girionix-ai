@@ -16,14 +16,17 @@ export const localCodeSynthesizer = {
     if (/\b(brain\s+function|cognitive\s+function|function\s+of\s+(the\s+)?(cell|heart|liver|kidney|brain|organ|dna|rna|protein|mitochondria|government|state|bank)|executive\s+function)\b/i.test(p)) {
       return false;
     }
-    return /\b(code|codes|coding|program|programs|programmer|programming|script|scripts|scripting|build\s+an?\s+app|create\s+an?\s+app|react\s+component|build\s+a\s+website|create\s+a\s+website|make\s+a\s+game|snake\s+game|tic\s+tac\s+toe|calculator\s+app|dashboard\s+ui|todo\s*list|todo\s*app|navbar|navigation\s*bar|counter\s*app|stopwatch|modal\s*dialog|data\s*table|carousel|slider|accordion|product\s*card|login\s*form|signup\s*form|auth\s*form|weather\s*app|fastapi|flask|express\s*server|sql\s*query|two\s*sum|binary\s*search|quicksort|mergesort|linked\s*list|lru\s*cache|debounce|throttle|html\s*page|css\s*style|javascript\s*code|typescript\s*code|python\s*code|c\+\+\s*code|rust\s*code|golang\s*code|dockerfile|unit\s*test|regex|pytest|jest|portfolio\s*website|landing\s*page|rest\s*api)\b/i.test(p) ||
-      /\b(write|create|build|generate|make|show|give|implement|develop|debug|refactor)\b.*\b(code|script|app|website|webpage|component|function|api|program|algorithm|query|sql|dockerfile|unit\s*test)\b/i.test(p) ||
+    return /\b(code|codes|coding|program|programs|programmer|programming|script|scripts|scripting|build\s+an?\s+app|create\s+an?\s+app|react\s+component|build\s+a\s+website|create\s+a\s+website|make\s+a\s+game|snake\s+game|snake|tic\s+tac\s+toe|calculator\s+app|calculator|dashboard\s+ui|todo\s*list|todo\s*app|todo|navbar|navigation\s*bar|counter\s*app|counter|stopwatch|modal\s*dialog|data\s*table|carousel|slider|accordion|product\s*card|login\s*form|signup\s*form|auth\s*form|weather\s*app|weather|fastapi|flask|express\s*server|sql\s*query|two\s*sum|binary\s*search|quicksort|mergesort|linked\s*list|lru\s*cache|debounce|throttle|html\s*page|css\s*style|javascript\s*code|typescript\s*code|python\s*code|c\+\+\s*code|rust\s*code|golang\s*code|dockerfile|unit\s*test|regex|pytest|jest|portfolio\s*website|landing\s*page|rest\s*api|basic\s*code|starter\s*code|sample\s*code|hello\s*world|simple\s*code|draw|drawing|canvas|paint)\b/i.test(p) ||
+      /\b(write|create|build|generate|make|show|give|implement|develop|debug|refactor)\b.*\b(code|script|app|website|webpage|component|function|api|program|algorithm|query|sql|dockerfile|unit\s*test|game|calc|todo|drawing|paint)\b/i.test(p) ||
       p.includes('write code') ||
       p.includes('code for') ||
       p.includes('show me code') ||
       p.includes('give me code') ||
       p.includes('generate code') ||
       p.includes('how to code') ||
+      p.includes('basic code') ||
+      p.includes('sample code') ||
+      p.includes('starter code') ||
       p.includes('code in python') ||
       p.includes('code in react') ||
       p.includes('code in javascript') ||
@@ -38,6 +41,16 @@ export const localCodeSynthesizer = {
   synthesizeCode(prompt, tag = '⚡ Sovereign Neural Engine') {
     const p = prompt.trim();
     const lp = p.toLowerCase();
+
+    // 0. BASIC STARTER CODE / HELLO WORLD
+    if (/\b(basic\s*code|starter\s*code|sample\s*code|simple\s*code|hello\s*world|starter\s*app|basic\s*app|blank|basic)\b/i.test(lp)) {
+      return this.renderBasicStarterCode(p, tag);
+    }
+
+    // 0B. DRAWING CANVAS / PAINT APP
+    if (/\b(draw|drawing|paint|painting|canvas|sketch|sketchpad)\b/i.test(lp)) {
+      return this.renderDrawingCanvas(p, tag);
+    }
 
     // 1. TODO LIST / TASK MANAGER
     if (/\b(todo|to-do|task\s*list|task\s*manager|todo\s*app|tasks)\b/i.test(lp)) {
@@ -2944,5 +2957,295 @@ export default function ${componentName}() {
 ### 🚀 Execution Notes:
 1. Complete self-contained single-file React 18 component formatted with Tailwind CSS.
 2. Runs immediately inside the **Girionix Coding Studio** with 1 click!`;
+  },
+
+  renderBasicStarterCode(prompt, tag) {
+    return `### ⚡ Girionix Basic Starter App (${tag})
+
+Here is a clean, interactive starter React 18 application with state counters, accent themes, and responsive Tailwind styling.
+
+\`\`\`jsx
+import React, { useState } from 'react';
+import { Sparkles, Code2, RotateCcw, Heart, Layers, Terminal } from 'lucide-react';
+
+export default function StarterApp() {
+  const [count, setCount] = useState(0);
+  const [isLiked, setIsLiked] = useState(false);
+  const [theme, setTheme] = useState('cyan');
+
+  const themes = {
+    cyan: { bg: 'from-cyan-500 to-blue-600', text: 'text-cyan-400', border: 'border-cyan-500/30' },
+    purple: { bg: 'from-purple-500 to-pink-600', text: 'text-purple-400', border: 'border-purple-500/30' },
+    emerald: { bg: 'from-emerald-500 to-teal-600', text: 'text-emerald-400', border: 'border-emerald-500/30' }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#070913] text-white p-6 font-sans flex flex-col items-center justify-center">
+      <div className="max-w-md w-full p-6 rounded-3xl bg-[#0C1020] border border-white/10 shadow-2xl space-y-6">
+        <div className="flex items-center justify-between border-b border-white/10 pb-4">
+          <div className="flex items-center gap-3">
+            <div className={"p-3 rounded-2xl bg-white/5 border " + themes[theme].border}>
+              <Code2 className={"w-6 h-6 " + themes[theme].text} />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-white">Girionix Basic Starter</h2>
+              <p className="text-xs text-gray-400 font-mono">React 18 • Tailwind CSS</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setIsLiked(!isLiked)}
+            className={"p-2 rounded-xl transition-all " + (isLiked ? 'text-rose-400 bg-rose-500/10' : 'text-gray-500 hover:text-white')}
+          >
+            <Heart className={"w-5 h-5 " + (isLiked ? 'fill-current' : '')} />
+          </button>
+        </div>
+
+        <div className="p-5 rounded-2xl bg-black/40 border border-white/5 text-center space-y-3">
+          <span className="text-xs font-mono text-gray-400 uppercase tracking-wider">Interactive State Counter</span>
+          <div className="text-4xl font-extrabold text-white font-mono">{count}</div>
+          <div className="flex items-center justify-center gap-3 pt-2">
+            <button
+              onClick={() => setCount(c => c - 1)}
+              className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold text-sm border border-white/10 transition-all cursor-pointer active:scale-95"
+            >
+              -1
+            </button>
+            <button
+              onClick={() => setCount(0)}
+              className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-all cursor-pointer"
+              title="Reset"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setCount(c => c + 1)}
+              className={"px-4 py-2 rounded-xl bg-gradient-to-r " + themes[theme].bg + " text-black font-extrabold text-sm shadow-lg transition-all cursor-pointer active:scale-95"}
+            >
+              +1 Increment
+            </button>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <span className="text-xs font-mono text-gray-400">Color Accent Theme:</span>
+          <div className="grid grid-cols-3 gap-2">
+            {['cyan', 'purple', 'emerald'].map(t => (
+              <button
+                key={t}
+                onClick={() => setTheme(t)}
+                className={"py-2 rounded-xl text-xs font-mono font-bold capitalize transition-all border " + (
+                  theme === t ? 'bg-white/10 border-white text-white' : 'bg-black/30 border-white/5 text-gray-400 hover:text-white'
+                )}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 text-center text-xs text-gray-500 font-mono">
+          Ready to customize. Type any instruction into the AI dock below!
+        </div>
+      </div>
+    </div>
+  );
+}
+\`\`\``;
+  },
+
+  renderDrawingCanvas(prompt, tag) {
+    return `### 🎨 Creative Drawing Canvas (${tag})
+
+\`\`\`jsx
+import React, { useState, useRef, useEffect } from 'react';
+import { Paintbrush, Eraser, Trash2, Download } from 'lucide-react';
+
+export default function DrawingCanvas() {
+  const canvasRef = useRef(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [color, setColor] = useState('#00F0FF');
+  const [brushSize, setBrushSize] = useState(4);
+  const [tool, setTool] = useState('brush');
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    canvas.width = canvas.parentElement?.clientWidth || 500;
+    canvas.height = 360;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#0B0F19';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }, []);
+
+  const startDrawing = (e) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const ctx = canvas.getContext('2d');
+    ctx.beginPath();
+    ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    setIsDrawing(true);
+  };
+
+  const draw = (e) => {
+    if (!isDrawing) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const ctx = canvas.getContext('2d');
+    ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+    ctx.strokeStyle = tool === 'eraser' ? '#0B0F19' : color;
+    ctx.lineWidth = brushSize;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+  };
+
+  const stopDrawing = () => {
+    setIsDrawing(false);
+  };
+
+  const clearCanvas = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#0B0F19';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  };
+
+  const downloadImage = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const a = document.createElement('a');
+    a.download = 'Girionix_Sketch.png';
+    a.href = canvas.toDataURL();
+    a.click();
+  };
+
+  return (
+    <div className="w-full max-w-xl mx-auto p-5 bg-[#070913] text-white rounded-3xl border border-cyan-500/20 shadow-2xl space-y-4 font-sans">
+      <div className="flex items-center justify-between border-b border-white/10 pb-3">
+        <div className="flex items-center gap-2">
+          <div className="p-2 rounded-xl bg-cyan-500/20 text-cyan-400">
+            <Paintbrush className="w-5 h-5" />
+          </div>
+          <div>
+            <h3 className="font-bold text-sm text-white">Creative Drawing Canvas</h3>
+            <p className="text-[10px] text-gray-400 font-mono">Vector Sketch & Paint Studio</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button onClick={clearCanvas} className="p-2 rounded-xl bg-white/5 hover:bg-rose-500/20 text-gray-400 hover:text-rose-300 transition-colors" title="Clear Canvas">
+            <Trash2 className="w-4 h-4" />
+          </button>
+          <button onClick={downloadImage} className="px-3 py-1.5 rounded-xl bg-cyan-500 text-black font-bold text-xs flex items-center gap-1 cursor-pointer">
+            <Download className="w-3.5 h-3.5" /> Save PNG
+          </button>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between gap-3 p-3 bg-black/40 rounded-2xl border border-white/5 flex-wrap text-xs font-mono">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setTool('brush')}
+            className={"px-3 py-1 rounded-xl transition-all cursor-pointer " + (tool === 'brush' ? 'bg-cyan-500 text-black font-bold' : 'bg-white/5 text-gray-400')}
+          >
+            Brush
+          </button>
+          <button
+            onClick={() => setTool('eraser')}
+            className={"px-3 py-1 rounded-xl transition-all cursor-pointer " + (tool === 'eraser' ? 'bg-rose-500 text-white font-bold' : 'bg-white/5 text-gray-400')}
+          >
+            Eraser
+          </button>
+        </div>
+
+        <div className="flex items-center gap-1.5">
+          {['#00F0FF', '#EC4899', '#10B981', '#F59E0B', '#8B5CF6', '#FFFFFF'].map(c => (
+            <button
+              key={c}
+              onClick={() => { setColor(c); setTool('brush'); }}
+              className={"w-6 h-6 rounded-full border-2 transition-transform cursor-pointer " + (color === c && tool === 'brush' ? 'scale-125 border-white shadow-md' : 'border-transparent')}
+              style={{ backgroundColor: c }}
+            />
+          ))}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-gray-400 text-[10px]">Size:</span>
+          <input
+            type="range"
+            min="1"
+            max="30"
+            value={brushSize}
+            onChange={(e) => setBrushSize(Number(e.target.value))}
+            className="w-16 accent-cyan-400 cursor-pointer"
+          />
+        </div>
+      </div>
+
+      <div className="rounded-2xl overflow-hidden border border-white/10 shadow-inner bg-[#0B0F19]">
+        <canvas
+          ref={canvasRef}
+          onMouseDown={startDrawing}
+          onMouseMove={draw}
+          onMouseUp={stopDrawing}
+          onMouseLeave={stopDrawing}
+          className="w-full block cursor-crosshair"
+        />
+      </div>
+    </div>
+  );
+}
+\`\`\``;
+  },
+
+  /**
+   * Extracts pure, valid executable code from any string that may contain
+   * markdown headings, commentary, code fences (\`\`\`jsx ... \`\`\`), or notes.
+   */
+  extractPureCode(text) {
+    if (!text || typeof text !== 'string') return '';
+    let raw = text.trim();
+
+    // 1. If contains markdown code fences, extract the best matching code block
+    const fenceMatches = [...raw.matchAll(/```(?:[a-zA-Z0-9_\-]+)?\s*\n?([\s\S]*?)(?:```|$)/g)];
+    if (fenceMatches.length > 0) {
+      // Find the code block with JSX/React or largest block
+      const best = fenceMatches.find(m => {
+        const code = m[1];
+        return /import\s+React|export\s+default|function\s+[A-Z]|const\s+[A-Z]|return\s+\(|<[A-Za-z]/i.test(code);
+      }) || fenceMatches[0];
+
+      if (best && best[1] && best[1].trim()) {
+        return best[1].trim();
+      }
+    }
+
+    // 2. If no fences, strip leading markdown headers (###, ##, #) and commentary
+    const lines = raw.split('\n');
+    let startIdx = 0;
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (/^(import\s|export\s|const\s|let\s|var\s|function\s|class\s|<!DOCTYPE|<html|<div|\/\*|\/\/)/i.test(line)) {
+        startIdx = i;
+        break;
+      }
+      if (line.startsWith('#') || line.startsWith('**') || line.startsWith('>') || line.startsWith('```') || line.startsWith('Here is') || line.startsWith('Sure') || line.startsWith('Below is')) {
+        continue;
+      }
+    }
+
+    let result = lines.slice(startIdx).join('\n');
+    result = result.replace(/```\s*$/g, '').trim();
+    return result;
+  },
+
+  /**
+   * Synthesize code and immediately extract pure, runnable executable code
+   */
+  synthesizePureCode(prompt, tag = '⚡ Sovereign Neural Engine') {
+    const raw = this.synthesizeCode(prompt, tag);
+    return this.extractPureCode(raw);
   }
 };
