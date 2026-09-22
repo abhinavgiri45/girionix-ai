@@ -15,7 +15,10 @@ import {
   Radio,
   ExternalLink,
   Layers,
-  ArrowUpRight
+  ArrowUpRight,
+  User,
+  Heart,
+  Calendar
 } from 'lucide-react';
 import { storage } from '../../services/storage';
 import { openrouter } from '../../services/openrouter';
@@ -29,6 +32,7 @@ export default function SettingsModal({ isOpen, onClose, onApiKeyUpdated }) {
   const [apiKeyInput, setApiKeyInput] = useState(providerConfig.apiKey);
   const [autoUpgradeEnabled, setAutoUpgradeEnabled] = useState(providerConfig.autoUpgradeEnabled);
 
+  const [userProfile, setUserProfile] = useState(() => storage.getUserProfile());
   const [newReplicateToken, setNewReplicateToken] = useState('');
   const [settings, setSettings] = useState(storage.getSettings());
   const [verificationStatus, setVerificationStatus] = useState(null);
@@ -50,6 +54,7 @@ export default function SettingsModal({ isOpen, onClose, onApiKeyUpdated }) {
       setAutoUpgradeEnabled(cfg.autoUpgradeEnabled);
       setNewReplicateToken('');
       setSettings(storage.getSettings());
+      setUserProfile(storage.getUserProfile());
       setVerificationStatus(null);
       setSyncStatus(null);
       setDynamicRegistry(universalApiEngine.getDynamicRegistry());
@@ -142,6 +147,14 @@ export default function SettingsModal({ isOpen, onClose, onApiKeyUpdated }) {
       localStorage.setItem('girionix_always_direct_chat', alwaysDirectChat ? 'true' : 'false');
     } catch (_) {}
 
+    if (userProfile && userProfile.name && userProfile.name.trim()) {
+      storage.setUserProfile({
+        name: userProfile.name.trim(),
+        gender: userProfile.gender || 'prefer_not_to_say',
+        age: userProfile.age || ''
+      });
+    }
+
     storage.saveSettings(settings);
     setSavedSuccess(true);
     setTimeout(() => {
@@ -182,6 +195,79 @@ export default function SettingsModal({ isOpen, onClose, onApiKeyUpdated }) {
 
         {/* Modal Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
+
+          {/* 0. USER IDENTITY & PERSONALIZATION */}
+          <div className="p-5 rounded-2xl bg-gradient-to-b from-[#111425] to-black/60 border border-purple-500/30 space-y-4 shadow-xl">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <div className="flex items-center gap-2">
+                <User className="w-4 h-4 text-purple-400" />
+                <span className="text-sm font-bold text-white">User Identity & Personalization</span>
+              </div>
+              <span className="text-[10px] font-mono text-cyan-300 bg-cyan-500/10 px-2 py-0.5 rounded-full border border-cyan-500/20">
+                Custom Tailored
+              </span>
+            </div>
+
+            <p className="text-xs text-gray-300 font-sans leading-relaxed">
+              Personalize how Girionix AI addresses you. Optional gender and age help customize explanations, tone, analogies, and coding style to your exact experience level.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {/* Name */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-mono text-gray-300 flex items-center gap-1 font-bold">
+                  <User className="w-3 h-3 text-cyan-400" />
+                  <span>Name</span>
+                </label>
+                <input
+                  type="text"
+                  value={userProfile.name || ''}
+                  onChange={(e) => setUserProfile(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Your Name"
+                  className="w-full px-3 py-2 rounded-xl bg-[#090B14] border border-white/15 focus:border-cyan-400 text-white placeholder-gray-500 text-xs focus:outline-none"
+                />
+              </div>
+
+              {/* Gender */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-mono text-gray-300 flex items-center gap-1 font-bold">
+                  <Heart className="w-3 h-3 text-purple-400" />
+                  <span>Gender</span>
+                </label>
+                <select
+                  value={userProfile.gender || 'prefer_not_to_say'}
+                  onChange={(e) => setUserProfile(prev => ({ ...prev, gender: e.target.value }))}
+                  className="w-full px-3 py-2 rounded-xl bg-[#090B14] border border-white/15 focus:border-purple-400 text-white text-xs focus:outline-none cursor-pointer"
+                >
+                  <option value="prefer_not_to_say" className="bg-[#0b0d19] text-gray-300">Prefer not to say</option>
+                  <option value="male" className="bg-[#0b0d19] text-gray-300">Male</option>
+                  <option value="female" className="bg-[#0b0d19] text-gray-300">Female</option>
+                  <option value="non_binary" className="bg-[#0b0d19] text-gray-300">Non-binary</option>
+                  <option value="other" className="bg-[#0b0d19] text-gray-300">Other</option>
+                </select>
+              </div>
+
+              {/* Age */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-mono text-gray-300 flex items-center gap-1 font-bold">
+                  <Calendar className="w-3 h-3 text-cyan-400" />
+                  <span>Age Range</span>
+                </label>
+                <select
+                  value={userProfile.age || ''}
+                  onChange={(e) => setUserProfile(prev => ({ ...prev, age: e.target.value }))}
+                  className="w-full px-3 py-2 rounded-xl bg-[#090B14] border border-white/15 focus:border-cyan-400 text-white text-xs focus:outline-none cursor-pointer"
+                >
+                  <option value="" className="bg-[#0b0d19] text-gray-300">Select (Optional)</option>
+                  <option value="under_18" className="bg-[#0b0d19] text-gray-300">Under 18</option>
+                  <option value="18-24" className="bg-[#0b0d19] text-gray-300">18 - 24</option>
+                  <option value="25-34" className="bg-[#0b0d19] text-gray-300">25 - 34</option>
+                  <option value="35-49" className="bg-[#0b0d19] text-gray-300">35 - 49</option>
+                  <option value="50+" className="bg-[#0b0d19] text-gray-300">50+</option>
+                </select>
+              </div>
+            </div>
+          </div>
 
           {/* 1. UNIVERSAL API & AUTO-UPGRADE CONTROLS */}
           <div className="p-5 rounded-2xl bg-gradient-to-b from-cyan-950/30 to-black/60 border border-cyan-500/30 space-y-4 shadow-xl">

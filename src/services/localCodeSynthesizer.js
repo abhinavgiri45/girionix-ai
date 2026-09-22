@@ -3265,5 +3265,67 @@ export default function DrawingCanvas() {
   synthesizePureCode(prompt, tag = '⚡ Sovereign Neural Engine') {
     const raw = this.synthesizeCode(prompt, tag);
     return this.extractPureCode(raw);
+  },
+
+  /**
+   * Intelligently applies incremental code changes to existing code components
+   */
+  modifyCode(existingCode, instruction) {
+    if (!existingCode || typeof existingCode !== 'string') return '';
+    if (!instruction || typeof instruction !== 'string') return existingCode;
+
+    let code = this.extractPureCode(existingCode);
+    const inst = instruction.toLowerCase().trim();
+
+    // 1. Color theme changes
+    const colorMap = {
+      blue: { bg: 'bg-blue-600', text: 'text-blue-400', border: 'border-blue-500' },
+      green: { bg: 'bg-emerald-600', text: 'text-emerald-400', border: 'border-emerald-500' },
+      red: { bg: 'bg-rose-600', text: 'text-rose-400', border: 'border-rose-500' },
+      purple: { bg: 'bg-purple-600', text: 'text-purple-400', border: 'border-purple-500' },
+      yellow: { bg: 'bg-amber-500', text: 'text-amber-400', border: 'border-amber-500' },
+      dark: { bg: 'bg-gray-950', text: 'text-gray-100', border: 'border-gray-800' },
+      light: { bg: 'bg-gray-100', text: 'text-gray-900', border: 'border-gray-300' },
+      cyan: { bg: 'bg-cyan-500', text: 'text-cyan-400', border: 'border-cyan-500' }
+    };
+
+    for (const [colorName, styles] of Object.entries(colorMap)) {
+      if (inst.includes(`to ${colorName}`) || inst.includes(`make it ${colorName}`) || inst.includes(`${colorName} theme`)) {
+        if (inst.includes('background') || inst.includes('bg')) {
+          code = code.replace(/bg-(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-\d+/g, styles.bg);
+        } else {
+          code = code.replace(/from-(?:cyan|blue|purple|emerald|teal|indigo)-[0-9]+/g, `from-${colorName}-500`);
+          code = code.replace(/to-(?:cyan|blue|purple|emerald|teal|indigo)-[0-9]+/g, `to-${colorName}-600`);
+          code = code.replace(/text-(?:cyan|blue|purple|emerald|teal|indigo)-[0-9]+/g, styles.text);
+        }
+      }
+    }
+
+    // 2. Change title / heading
+    const titleMatch = instruction.match(/(?:change|rename|set|update)\s+(?:the\s+)?(?:title|heading|name|header)\s+(?:to|as)\s+["']?([^"'\n]+?)["']?$/i);
+    if (titleMatch && titleMatch[1]) {
+      const newTitle = titleMatch[1].trim();
+      code = code.replace(/(<h1[^>]*>)(.*?)(<\/h1>)/i, `$1${newTitle}$3`);
+      code = code.replace(/(<h2[^>]*>)(.*?)(<\/h2>)/i, `$1${newTitle}$3`);
+    }
+
+    // 3. Add reset button if requested and counter / state exists
+    if ((inst.includes('reset button') || inst.includes('add reset')) && !code.includes('handleReset') && !code.includes('reset')) {
+      // Find where buttons are rendered
+      const buttonMatch = code.match(/(<button[^>]*onClick=\{[^}]*\}[^>]*>[\s\S]*?<\/button>)/i);
+      if (buttonMatch) {
+        const resetButtonCode = `\n          <button onClick={() => window.location.reload()} className="px-4 py-2 rounded-xl bg-gray-700/60 hover:bg-gray-700 text-gray-200 text-sm font-semibold transition-all">Reset</button>`;
+        code = code.replace(buttonMatch[0], `${buttonMatch[0]}${resetButtonCode}`);
+      }
+    }
+
+    // 4. Dark mode toggle
+    if (inst.includes('dark mode') && !code.includes('isDarkMode')) {
+      code = code.replace(/export default function\s+([A-Za-z0-9_]+)\s*\(\)\s*\{/i, (m) => {
+        return `${m}\n  const [isDarkMode, setIsDarkMode] = React.useState(true);`;
+      });
+    }
+
+    return code;
   }
 };

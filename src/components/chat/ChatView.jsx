@@ -58,7 +58,7 @@ import { openrouter } from '../../services/openrouter';
 import { imageGenerator } from '../../services/imageGenerator';
 import { speech } from '../../services/speech';
 import { storage, PERSONAS } from '../../services/storage';
-import { AI_MODELS, TITAN_AI_MODELS } from '../../services/modelCatalog';
+import { AI_MODELS, getModelDisplayName } from '../../services/modelCatalog';
 import { localNeuralEngine } from '../../services/localNeuralEngine';
 import { universalApiEngine } from '../../services/universalApiEngine';
 import { conversationMemory } from '../../services/conversationMemory';
@@ -813,57 +813,23 @@ export default function ChatView({
       return;
     }
 
-    // 5.5 Check for 100% On-Device Offline Sovereign Execution (Titan / Local Mode / Network Disconnected)
-    const isOfflineOrTitan = isTitanMode || 
-      effectiveModel?.isTitan || 
-      effectiveModel?.isLocal || 
-      effectiveModel?.id?.startsWith('girionix-titan') || 
-      effectiveModel?.id === 'girionix-local-core' || 
-      (typeof navigator !== 'undefined' && !navigator.onLine);
-
-    if (isOfflineOrTitan) {
-      try {
-        await localNeuralEngine.streamLocalResponse({
-          prompt: promptToSend,
-          history: updatedMessages,
-          model: effectiveModel?.id || 'girionix-titan-70b',
-          isTitanLite: effectiveModel?.id === 'girionix-titan-lite' || effectiveModel?.category === 'titan-lite',
-          webSearchEnabled: webSearchEnabled,
-          useThinking: useThinking,
-          onReasoning: (reasoningText) => {
-            setSessions(prev => prev.map(s => s.id === activeSessionId ? {
-              ...s,
-              messages: s.messages.map(m => m.id === assistantId ? { ...m, reasoning: reasoningText, isThinking: true } : m)
-            } : s));
-          },
-          onToken: (fullContent, token) => {
-            setSessions(prev => prev.map(s => s.id === activeSessionId ? {
-              ...s,
-              messages: s.messages.map(m => m.id === assistantId ? { ...m, content: fullContent, isThinking: false } : m)
-            } : s));
-          }
-        });
-      } catch (localErr) {
-        console.error('Local neural engine execution error:', localErr);
-      } finally {
-        setIsStreaming(false);
-        setSessions(prev => prev.map(s => s.id === activeSessionId ? {
-          ...s,
-          messages: s.messages.map(m => m.id === assistantId ? { ...m, isStreaming: false, isThinking: false } : m)
-        } : s));
-      }
-      return;
-    }
-
-    // 6. Standard Streaming Chat (Cloud-Hybrid Models)
+    // 6. Streaming Chat & Precision Code Modification Handling
     try {
       const settings = storage.getSettings();
       const personaObj = PERSONAS.find(p => p.id === activePersona);
-      const isCodeIntent = isCodeRequest(promptToSend);
 
-      const codeDirective = isCodeIntent
-        ? `\n\nSUPERHUMAN CODING DIRECTIVE: The user is requesting code. Provide a complete, fully functional, production-ready React 18 component formatted with Tailwind CSS in a standard \`\`\`jsx ... \`\`\` code block. Ensure default export or named App so it runs immediately in the Live Sandboxed IDE with 1 click.`
-        : '';
+      // Check for code modification intent and prior code context in this session
+      const priorHistory = updatedMessages.filter(m => m.id !== assistantId);
+      const lastCodeObj = conversationMemory.getLastGeneratedCode(priorHistory);
+      const isCodeMod = conversationMemory.isCodeModificationRequest(promptToSend, lastCodeObj);
+      const isCodeIntent = isCodeRequest(promptToSend) || isCodeMod;
+
+      let codeDirective = '';
+      if (isCodeMod && lastCodeObj) {
+        codeDirective = conversationMemory.buildCodeModificationDirective(lastCodeObj, promptToSend);
+      } else if (isCodeIntent) {
+        codeDirective = `\n\nSUPERHUMAN CODING DIRECTIVE: The user is requesting code. Provide a complete, fully functional, production-ready React 18 component formatted with Tailwind CSS in a standard \`\`\`jsx ... \`\`\` code block. Ensure default export or named App so it runs immediately in the Live Sandboxed IDE with 1 click.`;
+      }
 
       const memoryDirective = conversationMemory.buildMemoryDirective(updatedMessages, userName);
 
@@ -1271,122 +1237,120 @@ export default function ChatView({
             <div className="flex items-center gap-1.5 sm:gap-2.5 flex-wrap shrink-0">
               {/* Engine Selector */}
               <div className="relative" ref={engineDropdownRef}>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsEngineDropdownOpen(prev => !prev);
-                  }}
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-gray-300 hover:text-white border transition-all cursor-pointer select-none ${
-                    isTitanMode
-                      ? 'bg-emerald-950/30 border-emerald-500/40 text-emerald-300 shadow-glow-emerald'
-                      : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/10 active:scale-95'
-                  }`}
-                >
-                  <Sparkles className={`w-3.5 h-3.5 ${isTitanMode ? 'text-emerald-400' : 'text-cyan-400'}`} />
-                  <span className="font-bold">{activeModel.name}</span>
-                  <ChevronDown className={`w-3 h-3 transition-transform ${isEngineDropdownOpen ? 'rotate-180' : ''}`} />
-                </button>
+                {(() => {
+                  const isOrbit = typeof window !== 'undefined' && (
+                    window.location.search.includes('orbit') ||
+                    (document.referrer && document.referrer.includes('giri-orbit.pages.dev'))
+                  );
+                  const currentContext = isOrbit ? 'orbit' : (layoutMode === 'studio' ? 'studio' : 'chat');
+                  const currentDisplayName = getModelDisplayName(activeModel, currentContext);
 
-                {isEngineDropdownOpen && (
-                  <div className="absolute bottom-full left-0 mb-2 w-[calc(100vw-2rem)] sm:w-84 max-w-sm rounded-2xl bg-[#070913] border border-white/15 p-2 shadow-2xl z-50 space-y-1 backdrop-blur-xl max-h-[75vh] flex flex-col animate-fadeIn">
-                      <div className="px-2.5 py-1 text-[10px] font-mono text-gray-400 uppercase border-b border-white/10 flex justify-between items-center shrink-0">
-                        <span>{isTitanMode ? '⚡ Titan 100% Offline Models' : '🌐 Standard AI Models'}</span>
-                        {isTitanMode ? (
-                          <span className="text-emerald-400 font-bold">100% Air-Gapped</span>
-                        ) : (
-                          <span className="text-cyan-400 font-bold flex items-center gap-1">
-                            <Zap className="w-3 h-3" />
-                            <span>Auto-Upgrade ON</span>
-                          </span>
-                        )}
-                      </div>
+                  return (
+                    <>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsEngineDropdownOpen(prev => !prev);
+                        }}
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-gray-300 hover:text-white border transition-all cursor-pointer select-none bg-white/[0.04] hover:bg-white/[0.08] border-white/10 active:scale-95"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                        <span className="font-bold">{currentDisplayName}</span>
+                        <ChevronDown className={`w-3 h-3 transition-transform ${isEngineDropdownOpen ? 'rotate-180' : ''}`} />
+                      </button>
 
-                      <div className="overflow-y-auto space-y-1 flex-1 pr-0.5 max-h-72">
-                        {(isTitanMode ? TITAN_AI_MODELS : AI_MODELS).map((m) => {
-                          return (
+                      {isEngineDropdownOpen && (
+                        <div className="absolute bottom-full left-0 mb-2 w-[calc(100vw-2rem)] sm:w-84 max-w-sm rounded-2xl bg-[#070913] border border-white/15 p-2 shadow-2xl z-50 space-y-1 backdrop-blur-xl max-h-[75vh] flex flex-col animate-fadeIn">
+                          <div className="px-2.5 py-1 text-[10px] font-mono text-gray-400 uppercase border-b border-white/10 flex justify-between items-center shrink-0">
+                            <span>Frontier AI Models</span>
+                            <span className="text-cyan-400 font-bold flex items-center gap-1">
+                              <Zap className="w-3 h-3" />
+                              <span>Auto-Upgrade ON</span>
+                            </span>
+                          </div>
+
+                          <div className="overflow-y-auto space-y-1 flex-1 pr-0.5 max-h-72">
+                            {AI_MODELS.map((m) => {
+                              const displayName = getModelDisplayName(m, currentContext);
+                              const isSelected = activeModel.id === m.id;
+                              return (
+                                <button
+                                  type="button"
+                                  key={m.id}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveModel(m);
+                                    storage.setActiveModelId(m.id);
+                                    setIsEngineDropdownOpen(false);
+                                    setModelToast(`⚡ Active Engine: ${displayName}`);
+                                    setTimeout(() => setModelToast(null), 2500);
+                                  }}
+                                  className={`w-full text-left p-2.5 rounded-xl flex items-center justify-between text-xs transition-all cursor-pointer ${
+                                    isSelected
+                                      ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' 
+                                      : 'text-gray-300 hover:bg-white/5 border border-transparent'
+                                  }`}
+                                >
+                                  <div className="flex flex-col space-y-0.5 min-w-0 pr-2">
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                      <span className="font-bold text-white text-xs">{displayName}</span>
+                                      {m.isAutoUpgrade && (
+                                        <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-gradient-to-r from-cyan-500/30 to-purple-500/30 text-cyan-200 border border-cyan-400/40 font-extrabold flex items-center gap-0.5">
+                                          <Zap className="w-2.5 h-2.5 text-cyan-300 animate-pulse" />
+                                          <span>AUTO</span>
+                                        </span>
+                                      )}
+                                      {m.isPro && (
+                                        <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-0.5">
+                                          <Crown className="w-2.5 h-2.5" />
+                                          <span>PRO</span>
+                                        </span>
+                                      )}
+                                    </div>
+                                    <span className="text-[10px] text-gray-400 truncate">
+                                      {m.tag || m.description}
+                                    </span>
+                                  </div>
+                                  {isSelected && (
+                                    <Check className="w-3.5 h-3.5 shrink-0 text-cyan-400" />
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          {/* Quick Sync Button */}
+                          <div className="pt-1.5 border-t border-white/10 shrink-0">
                             <button
                               type="button"
-                              key={m.id}
-                              onClick={(e) => {
+                              onClick={async (e) => {
                                 e.stopPropagation();
-                                setActiveModel(m);
-                                storage.setActiveModelId(m.id);
-                                setIsEngineDropdownOpen(false);
-                                setModelToast(`⚡ Active Engine: ${m.name}`);
-                                setTimeout(() => setModelToast(null), 2500);
-                              }}
-                              className={`w-full text-left p-2.5 rounded-xl flex items-center justify-between text-xs transition-all cursor-pointer ${
-                                activeModel.id === m.id 
-                                  ? isTitanMode 
-                                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-glow-emerald' 
-                                    : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' 
-                                  : 'text-gray-300 hover:bg-white/5 border border-transparent'
-                              }`}
-                            >
-                              <div className="flex flex-col space-y-0.5 min-w-0 pr-2">
-                                <div className="flex items-center gap-1.5 flex-wrap">
-                                  <span className="font-bold text-white text-xs">{m.name}</span>
-                                  {m.isAutoUpgrade && (
-                                    <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-gradient-to-r from-cyan-500/30 to-purple-500/30 text-cyan-200 border border-cyan-400/40 font-extrabold flex items-center gap-0.5">
-                                      <Zap className="w-2.5 h-2.5 text-cyan-300 animate-pulse" />
-                                      <span>AUTO-UPGRADED</span>
-                                    </span>
-                                  )}
-                                  {m.isTitan && (
-                                    <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold">
-                                      TITAN
-                                    </span>
-                                  )}
-                                  {m.isPro && !m.isTitan && (
-                                    <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-0.5">
-                                      <Crown className="w-2.5 h-2.5" />
-                                      <span>PRO</span>
-                                    </span>
-                                  )}
-                                </div>
-                                <span className="text-[10px] text-gray-400 truncate">
-                                  {m.tag || m.description}
-                                </span>
-                              </div>
-                              {activeModel.id === m.id && (
-                                <Check className={`w-3.5 h-3.5 shrink-0 ${isTitanMode ? 'text-emerald-400' : 'text-cyan-400'}`} />
-                              )}
-                            </button>
-                          );
-                        })}
-                      </div>
-
-                      {/* Quick Sync Button for Cloud / Standard Mode */}
-                      {!isTitanMode && (
-                        <div className="pt-1.5 border-t border-white/10 shrink-0">
-                          <button
-                            type="button"
-                            onClick={async (e) => {
-                              e.stopPropagation();
-                              setIsSyncingModels(true);
-                              setSyncFeedback(null);
-                              const res = await universalApiEngine.syncLatestModels();
-                              setIsSyncingModels(false);
-                              const count = res.totalModelsAvailable || 12;
-                              const prov = res.provider || 'Google & OpenRouter';
-                              setSyncFeedback(`✅ Synced (${count} models)`);
-                              setModelToast(`✅ Models Synced: ${count} engines available (${prov})`);
-                              setTimeout(() => {
+                                setIsSyncingModels(true);
                                 setSyncFeedback(null);
-                                setModelToast(null);
-                              }, 3500);
-                            }}
-                            disabled={isSyncingModels}
-                            className="w-full py-1.5 px-2 rounded-xl bg-white/[0.03] hover:bg-cyan-500/10 text-cyan-300 hover:text-cyan-200 text-[11px] font-mono border border-cyan-500/20 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
-                          >
-                            <RefreshCw className={`w-3 h-3 ${isSyncingModels ? 'animate-spin' : ''}`} />
-                            <span>{isSyncingModels ? 'Checking Registries...' : (syncFeedback || '⚡ Sync & Check for Model Upgrades')}</span>
-                          </button>
+                                const res = await universalApiEngine.syncLatestModels();
+                                setIsSyncingModels(false);
+                                const count = res.totalModelsAvailable || 12;
+                                const prov = res.provider || 'Google & OpenRouter';
+                                setSyncFeedback(`✅ Synced (${count} models)`);
+                                setModelToast(`✅ Models Synced: ${count} engines available (${prov})`);
+                                setTimeout(() => {
+                                  setSyncFeedback(null);
+                                  setModelToast(null);
+                                }, 3500);
+                              }}
+                              disabled={isSyncingModels}
+                              className="w-full py-1.5 px-2 rounded-xl bg-white/[0.03] hover:bg-cyan-500/10 text-cyan-300 hover:text-cyan-200 text-[11px] font-mono border border-cyan-500/20 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                            >
+                              <RefreshCw className={`w-3 h-3 ${isSyncingModels ? 'animate-spin' : ''}`} />
+                              <span>{isSyncingModels ? 'Checking Registries...' : (syncFeedback || '⚡ Sync & Check for Model Upgrades')}</span>
+                            </button>
+                          </div>
                         </div>
                       )}
-                    </div>
-                )}
+                    </>
+                  );
+                })()}
               </div>
 
               {/* Web Grounding Toggle with Sliding On/Off Switch */}

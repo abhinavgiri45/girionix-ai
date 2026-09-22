@@ -1,91 +1,10 @@
-export const TITAN_AI_MODELS = [
-  {
-    id: "girionix-titan-70b",
-    name: "⚡ Titan 70B Heavy Core (100% Offline Heavy Hardware)",
-    provider: "Physical Machine Hardware (16GB+ RAM / 8+ Cores)",
-    category: "titan-heavy",
-    tag: "100% Air-Gapped Heavy Hardware Engine",
-    badgeColor: "emerald",
-    description: "Military-grade 100% offline physical execution. Pins 8–32 CPU threads and offloads 100% weights to GPU VRAM with zero internet packets.",
-    contextWindow: 128000,
-    speed: "⚡ ~90-140 tok/s (Local RAM/VRAM)",
-    pricing: "100% Sovereign Offline",
-    isTitan: true,
-    isLocal: true,
-    supportsReasoning: true,
-    supportsVision: true,
-    recommendedFor: ["Air-Gapped Sovereign Intelligence", "Heavy Coding & Math", "Zero Cloud Latency", "High-End PCs"]
-  },
-  {
-    id: "girionix-titan-lite",
-    name: "🌱 Titan Lite (100% Offline Low-End Hardware Engine)",
-    provider: "Physical Machine (2GB–8GB RAM / Dual-Core)",
-    category: "titan-lite",
-    tag: "Ultra-Lightweight 100% Offline • Low-End Devices",
-    badgeColor: "teal",
-    description: "Quantized ultra-efficient offline engine designed for low-end laptops, older PCs, and budget devices (2GB–8GB RAM, Dual/Quad-Core CPUs). Instant responses with zero internet.",
-    contextWindow: 32000,
-    speed: "🌱 ~25-45 tok/s (Low-End CPU Engine)",
-    pricing: "100% Free Offline",
-    isTitan: true,
-    isTitanLite: true,
-    isLocal: true,
-    supportsReasoning: true,
-    supportsVision: true,
-    recommendedFor: ["Low-End PCs & Laptops", "Older Systems (2GB-8GB RAM)", "Battery-Saving Offline Tasks", "Zero Network Traffic"]
-  },
-  {
-    id: "girionix-titan-coder",
-    name: "⚡ Titan Matrix Coder 33B (Zero-Latency Local Compilation)",
-    provider: "Physical Machine Hardware (Multi-Core CPU)",
-    category: "titan-coding",
-    tag: "Superhuman Offline Code Compilation",
-    badgeColor: "cyan",
-    description: "Compiles fullstack React, Python, C++, Rust, and CUDA code on-device with zero network latency and deep AST parsing.",
-    contextWindow: 128000,
-    speed: "Instantaneous Local",
-    pricing: "100% Sovereign Offline",
-    isTitan: true,
-    isLocal: true,
-    supportsReasoning: true,
-    supportsVision: false,
-    recommendedFor: ["Superhuman Offline Coding", "Kernel / CUDA Dev", "Fullstack Sandbox"]
-  },
-  {
-    id: "girionix-titan-math",
-    name: "⚡ Titan Olympiad Quantum Matrix (Symbolic Offline Solver)",
-    provider: "Physical Machine Hardware (Tensor Shaders)",
-    category: "titan-math",
-    tag: "Quantum Tensor & Olympiad Proofs",
-    badgeColor: "purple",
-    description: "Heavy numerical analysis, tensor calculus, Riemannian manifolds, and IMO Gold Medal formal proofs running locally.",
-    contextWindow: 128000,
-    speed: "Real-time Symbolic",
-    pricing: "100% Sovereign Offline",
-    isTitan: true,
-    isLocal: true,
-    supportsReasoning: true,
-    supportsVision: false,
-    recommendedFor: ["Olympiad Math Proofs", "Tensor Physics", "Differential Equations"]
-  },
-  {
-    id: "girionix-titan-vision",
-    name: "⚡ Titan 8K Neural Vision (Metal 3 / Vulkan Shaders)",
-    provider: "Physical Machine Hardware (GPU Shaders)",
-    category: "titan-vision",
-    tag: "DirectX 12 / Metal 3 8K Visual Engine",
-    badgeColor: "rose",
-    description: "Runs native GPU shaders for sub-second 8K photorealistic visual synthesis and 60 FPS motion trajectory rendering.",
-    contextWindow: 64000,
-    speed: "Hardware Accelerated",
-    pricing: "100% Sovereign Offline",
-    isTitan: true,
-    isLocal: true,
-    supportsReasoning: false,
-    supportsVision: true,
-    recommendedFor: ["8K Photorealism", "60 FPS Video Synthesis", "Local Computer Vision"]
-  }
-];
+/**
+ * GIRIONIX AI — FRONTIER MODEL CATALOG & STUDIO ENGINES
+ * Unified registry of frontier AI models with context-aware naming for AI Studios and Giri Orbit.
+ */
+
+// Deprecated Titan models array kept empty for backward compatibility
+export const TITAN_AI_MODELS = [];
 
 export const AI_MODELS = [
   {
@@ -122,29 +41,13 @@ export const AI_MODELS = [
     recommendedFor: ["Rapid Conversational Q&A", "Real-Time Streaming", "Code Debugging", "High-Volume Tasks"]
   },
   {
-    id: "gemini-2.0-flash-thinking-exp",
-    name: "⚡ Gemini 2.0 Flash Thinking",
-    provider: "Google DeepMind Reasoning",
-    category: "reasoning",
-    tag: "Transparent Chain-of-Thought",
-    badgeColor: "purple",
-    description: "Exposes raw internal thinking process before generating final answers. Ideal for solving competitive programming and complex STEM proofs.",
-    contextWindow: 1000000,
-    speed: "Deep Reasoning",
-    pricing: "Reasoning",
-    supportsReasoning: true,
-    supportsVision: true,
-    isPro: true,
-    recommendedFor: ["Math Olympiad Proofs", "Algorithmic Logic", "Transparent Reasoning"]
-  },
-  {
     id: "girionix-pro",
     name: "⚡ Girionix Pro",
     provider: "Girionix Dynamic Neural Core",
     category: "reasoning",
     tag: "⚡ Flagship Frontier Intelligence",
     badgeColor: "cyan",
-    description: "Flagship intelligence engine. Autonomous multi-model router combining deep chain-of-thought reasoning, Olympiad mathematics, and superhuman code architecture.",
+    description: "Flagship intelligence engine combining deep chain-of-thought reasoning, Olympiad mathematics, and superhuman code architecture.",
     contextWindow: 2000000,
     speed: "⚡ Dynamic Peak Velocity",
     pricing: "Universal Flagship",
@@ -153,6 +56,36 @@ export const AI_MODELS = [
     isPro: true,
     isAutoUpgrade: true,
     recommendedFor: ["Superhuman Reasoning", "Complex Coding & Architecture", "Math Olympiad Proofs", "Always-Latest Frontier Intelligence"]
+  },
+  {
+    id: "qwen/qwen-2.5-coder-32b-instruct",
+    name: "⚡ Qwen 2.5 Coder 32B",
+    provider: "Qwen / Alibaba Cloud",
+    category: "coding",
+    tag: "SOTA Open Coding Benchmark Leader",
+    badgeColor: "cyan",
+    description: "World-class coding engine specializing in code generation, code modification, debugging, and multi-file fullstack implementation.",
+    contextWindow: 131072,
+    speed: "⚡ Ultra-Fast Tok/s",
+    pricing: "Standard",
+    supportsReasoning: true,
+    supportsVision: false,
+    recommendedFor: ["Precision Code Modification", "Refactoring", "React & Python Fullstack", "AST Debugging"]
+  },
+  {
+    id: "deepseek/deepseek-chat",
+    name: "⚡ DeepSeek V3",
+    provider: "DeepSeek / Open Weights",
+    category: "reasoning",
+    tag: "671B MoE Frontier Reasoning",
+    badgeColor: "purple",
+    description: "State-of-the-art 671B parameter Mixture-of-Experts frontier model with supreme reasoning, coding fluency, and mathematics.",
+    contextWindow: 128000,
+    speed: "Fast",
+    pricing: "Low",
+    supportsReasoning: true,
+    supportsVision: false,
+    recommendedFor: ["Advanced Coding", "Mathematical Logic", "Complex Systems Analysis"]
   },
   {
     id: "anthropic/claude-3.7-sonnet",
@@ -236,7 +169,7 @@ export const AI_MODELS = [
     category: "fast",
     tag: "Sub-Second Ultra-Fast & Grounded Knowledge",
     badgeColor: "cyan",
-    description: "Ultra-fast high-accuracy intelligence engine with zero hallucination, web search grounding, and sub-second instant responses.",
+    description: "Ultra-fast high-accuracy intelligence engine with web search grounding and sub-second instant responses.",
     contextWindow: 1000000,
     speed: "⚡ Sub-Second Instant",
     pricing: "Free / Fast",
@@ -246,6 +179,31 @@ export const AI_MODELS = [
     recommendedFor: ["Instant Real-World Q&A", "Factual Inquiries", "High-Speed Chat", "Accurate Real-Time Answers"]
   }
 ];
+
+/**
+ * Context-aware model display name helper:
+ * - 'studio': "Studio Architect Pro" / "Studio QuickFlow"
+ * - 'orbit': "Orbit Executive Core" / "Orbit Dispatch Core"
+ * - 'chat': "Girionix Pro" / "Girionix Lite"
+ */
+export function getModelDisplayName(modelOrId, context = 'chat') {
+  const id = typeof modelOrId === 'string' ? modelOrId : modelOrId?.id;
+  if (!id) return 'Girionix AI';
+
+  if (id === 'girionix-pro') {
+    if (context === 'studio' || context === 'code') return '⚡ Studio Architect Pro';
+    if (context === 'orbit') return '⚡ Orbit Executive Core';
+    return '⚡ Girionix Pro';
+  }
+  if (id === 'girionix-lite') {
+    if (context === 'studio' || context === 'code') return '🌱 Studio QuickFlow';
+    if (context === 'orbit') return '🌱 Orbit Dispatch Core';
+    return '🌱 Girionix Lite';
+  }
+
+  const found = findModelById(id);
+  return found?.name || id;
+}
 
 export const STUDIO_MODES = [
   {
@@ -313,10 +271,9 @@ const AI_STUDIO_MODEL_DEF = {
   workDomain: "AI Studio Developer Environment",
   badgeColor: "cyan",
   tag: "Gemini 2.5 Pro Multi-Modal Reasoning Engine",
-  speed: "⚡ 85-120 tok/s (TPU v5e)",
+  speed: "⚡ 85-120 tok/s",
   contextWindow: 1048576,
   openRouterModel: "google/gemini-2.5-pro",
-  titanModelId: "girionix-titan-70b",
   languages: ["Python 3.12", "TypeScript", "JSON Schema", "KaTeX Math", "cURL", "Swift", "Kotlin"],
   capabilities: [
     "Collapsible Thinking Process & Chain-of-Thought",
@@ -331,36 +288,34 @@ export const STUDIO_DEDICATED_MODELS = {
   'ai-studio': AI_STUDIO_MODEL_DEF,
   'google-studio': AI_STUDIO_MODEL_DEF,
   code: {
-    id: "girionix-codemaster-ultra",
-    name: "Girionix CodeMaster Ultra (70B Coder)",
-    provider: "Girionix Neural Compilation Core",
-    workDomain: "Fullstack Coding & Sandbox Execution",
+    id: "qwen/qwen-2.5-coder-32b-instruct",
+    name: "Studio Architect Pro (Qwen 2.5 Coder 32B)",
+    provider: "Qwen / Girionix Studio Core",
+    workDomain: "Fullstack Coding & Live Sandbox Execution",
     badgeColor: "cyan",
-    tag: "Superhuman Fullstack Coder & AST Debugger",
-    speed: "⚡ 140 tok/s (Real-Time AST Engine)",
-    contextWindow: 200000,
-    openRouterModel: "anthropic/claude-3.7-sonnet",
-    titanModelId: "girionix-titan-coder",
+    tag: "Superhuman Fullstack Coder & AST Modification Engine",
+    speed: "⚡ 140 tok/s",
+    contextWindow: 131072,
+    openRouterModel: "qwen/qwen-2.5-coder-32b-instruct",
     languages: ["React 18", "Next.js 15", "Tailwind CSS", "TypeScript", "Python 3.12", "Rust", "C++", "WebGL"],
     capabilities: [
       "Live Component Sandbox Execution",
-      "Sub-Millisecond AST Linting & Auto-Fix",
+      "Sub-Millisecond AST Linting & Precise Code Modifications",
       "Fullstack Architecture & Micro-Benchmarks",
       "WebGL Shader & 3D Canvas Synthesis"
     ],
-    benchmark: "98.4% HumanEval • 0-Defect Sandbox"
+    benchmark: "98.4% HumanEval • Accurate Multi-Turn Code Edits"
   },
   math: {
-    id: "girionix-mathx-olympiad",
-    name: "Girionix Math-X Olympiad (Deep Logic 72B)",
-    provider: "Girionix Quantum Symbolic Engine",
+    id: "deepseek/deepseek-r1",
+    name: "DeepSeek R1 Olympiad (Deep Logic)",
+    provider: "DeepSeek Quantum Symbolic Engine",
     workDomain: "Olympiad Math & Quantum Physics Lab",
     badgeColor: "purple",
     tag: "Formal Coq/Lean Logic & KaTeX Derivations",
-    speed: "⚡ 125 tok/s (Symbolic Core)",
+    speed: "⚡ 125 tok/s",
     contextWindow: 128000,
-    openRouterModel: "openai/o3-mini",
-    titanModelId: "girionix-titan-math",
+    openRouterModel: "deepseek/deepseek-r1",
     languages: ["KaTeX LaTeX", "Symbolic Math", "Tensor Calculus", "Differential Equations", "Riemann Zeta"],
     capabilities: [
       "IMO Gold Medal Step-by-Step Proofs",
@@ -372,7 +327,7 @@ export const STUDIO_DEDICATED_MODELS = {
   },
   image: {
     id: "girionix-visionforge-8k",
-    name: "Girionix VisionForge 8K Pro (Cinema Optics)",
+    name: "VisionForge 8K Pro (Cinema Optics)",
     provider: "FLUX.1 Cinema Ultra Engine",
     workDomain: "8K Photorealism & Multi-Style Image Synthesis",
     badgeColor: "rose",
@@ -380,7 +335,6 @@ export const STUDIO_DEDICATED_MODELS = {
     speed: "⚡ 0.4s Ultra-Speed Pipeline",
     contextWindow: 64000,
     replicateModel: "black-forest-labs/flux-schnell",
-    titanModelId: "girionix-titan-vision",
     languages: ["8K Photorealism", "Unreal Engine 5.4", "Studio Ghibli Anime", "Cyberpunk Neon", "Oil Painting"],
     capabilities: [
       "True 8K Master Resolution (7680x4320)",
@@ -393,14 +347,13 @@ export const STUDIO_DEDICATED_MODELS = {
   video: {
     id: "nano-banana-video-cinema",
     name: "Nano Banana Video (MotionLab 4K/8K)",
-    provider: "Nano Banana Turbo / Runway Gen-3 Cinema Engine",
+    provider: "Nano Banana Turbo Cinema Engine",
     workDomain: "Cinematic Multi-Shot 60FPS Video Generation",
     badgeColor: "amber",
-    tag: "Nano Banana First/Last Frame Interpolation & 3D Camera Rig",
+    tag: "First/Last Frame Interpolation & 3D Camera Rig",
     speed: "⚡ 60 FPS Real-Time Canvas Motion",
     contextWindow: 128000,
     openRouterModel: "openai/gpt-4o",
-    titanModelId: "girionix-titan-vision",
     languages: ["4-Shot Storyboard", "24/60/120 FPS", "2.39:1 Anamorphic", "4K UHD 2160p", "8K IMAX"],
     capabilities: [
       "First & Last Frame Interpolation Continuity",
@@ -409,19 +362,18 @@ export const STUDIO_DEDICATED_MODELS = {
       "Web Audio API Dynamic Orchestral Score & Foley SFX Sync",
       "Lossless MP4 / 60FPS GIF Video Master Exporter"
     ],
-    benchmark: "Nano Banana 8K Cinema Grade • 100% Temporal Continuity"
+    benchmark: "8K Cinema Grade • 100% Temporal Continuity"
   },
   script: {
-    id: "girionix-scriptmaster-cinema",
-    name: "Girionix ScriptMaster Cinema (Screenplay & Story)",
-    provider: "Hollywood Screenplay & Beat Engine",
+    id: "claude-3.7-scriptmaster",
+    name: "Claude 3.7 ScriptMaster Cinema (Screenplay & Story)",
+    provider: "Anthropic / Screenplay & Beat Engine",
     workDomain: "Cinema Screenplays, YouTube Scripts & Story Architecture",
     badgeColor: "indigo",
     tag: "Industry Standard Fountain & Final Draft (.fdx) Formatting",
     speed: "⚡ Real-Time Scene Flow & Table-Read Audio",
-    contextWindow: 128000,
+    contextWindow: 200000,
     openRouterModel: "anthropic/claude-3.7-sonnet",
-    titanModelId: "girionix-titan-70b",
     languages: ["Hollywood Screenplay", "YouTube Video Script", "TV Pilot & Episodic", "Theater Drama", "Podcast Narrative"],
     capabilities: [
       "Auto-Formatting for Scene Headings, Action, Dialogue & Transitions",
@@ -441,7 +393,6 @@ export const STUDIO_DEDICATED_MODELS = {
     speed: "⚡ Sub-50ms Real-Time Synthesis",
     contextWindow: 64000,
     openRouterModel: "openai/gpt-4o-mini",
-    titanModelId: "girionix-titan-70b",
     languages: ["ElevenLabs Voice Library", "Instant Voice Cloning", "Multilingual", "Polyphonic Foley", "48kHz Studio WAV"],
     capabilities: [
       "ElevenLabs Voice Library (Rachel, Adam, Antoni, Bella, Arnold, Neerja)",
@@ -454,18 +405,8 @@ export const STUDIO_DEDICATED_MODELS = {
   }
 };
 
-export function getDedicatedStudioModel(tabId, isTitan = false) {
+export function getDedicatedStudioModel(tabId) {
   const domain = STUDIO_DEDICATED_MODELS[tabId] || STUDIO_DEDICATED_MODELS.code;
-  if (isTitan) {
-    const titanModel = TITAN_AI_MODELS.find(m => m.id === domain.titanModelId) || TITAN_AI_MODELS[0];
-    return {
-      ...domain,
-      activeEngineName: titanModel.name,
-      isTitanMode: true,
-      executionSpeed: titanModel.speed,
-      hardwareProvider: titanModel.provider
-    };
-  }
   return {
     ...domain,
     activeEngineName: domain.name,
@@ -477,7 +418,5 @@ export function getDedicatedStudioModel(tabId, isTitan = false) {
 
 export function findModelById(id) {
   if (!id) return AI_MODELS[0];
-  const all = [...TITAN_AI_MODELS, ...AI_MODELS];
-  return all.find(m => m.id === id) || AI_MODELS[0];
+  return AI_MODELS.find(m => m.id === id) || AI_MODELS[0];
 }
-

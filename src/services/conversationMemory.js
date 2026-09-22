@@ -158,16 +158,142 @@ export const conversationMemory = {
   },
 
   /**
+   * Scans previous messages backwards to extract the most recent code block
+   */
+  getLastGeneratedCode(messages = []) {
+    if (!Array.isArray(messages) || messages.length === 0) return null;
+    
+    // Scan backwards from newest to oldest
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const msg = messages[i];
+      if (!msg || !msg.content || typeof msg.content !== 'string') continue;
+
+      // Look for code blocks inside assistant messages
+      if (msg.role === 'assistant' || msg.role === 'model') {
+        const codeBlockMatch = msg.content.match(/```(?:jsx|tsx|javascript|js|html|css|python|rust|cpp|c\+\+|ts)?\s*([\s\S]+?)```/i);
+        if (codeBlockMatch && codeBlockMatch[1] && codeBlockMatch[1].trim().length > 20) {
+          const rawCode = codeBlockMatch[1].trim();
+          // Detect language
+          let lang = 'jsx';
+          const firstLine = msg.content.substring(msg.content.indexOf('```') + 3).split('\n')[0].trim().toLowerCase();
+          if (firstLine) lang = firstLine;
+          return {
+            code: rawCode,
+            language: lang,
+            messageId: msg.id
+          };
+        }
+      }
+    }
+    return null;
+  },
+
+  /**
+   * Determines if the user's prompt is an instruction to modify, change, fix, or update existing code
+   */
+  isCodeModificationRequest(prompt, lastCode = null) {
+    if (!prompt || typeof prompt !== 'string') return false;
+    const p = prompt.trim().toLowerCase();
+
+    // Key action verbs for code modifications
+    const modificationVerbs = /\b(change|modify|update|edit|replace|add|remove|delete|fix|repair|improve|enhance|tweak|adjust|refactor|re-write|rewrite|convert|style|theme|switch|turn|make\s+it|make\s+the|put|give\s+it|use)\b/i;
+    
+    // Code specific components / traits
+    const codeElements = /\b(code|function|component|button|color|background|text|font|state|hook|props|api|layout|margin|padding|width|height|animation|logic|timer|speed|score|counter|list|table|modal|header|footer|navbar|route|endpoint|error|bug|variable)\b/i;
+
+    const hasModVerb = modificationVerbs.test(p);
+    const hasCodeElement = codeElements.test(p);
+
+    // Direct change statements
+    if (hasModVerb && (hasCodeElement || lastCode)) {
+      return true;
+    }
+
+    // Follow-up adjustment phrases when previous code exists
+    if (lastCode) {
+      if (
+        p.startsWith('make ') ||
+        p.startsWith('can you ') ||
+        p.startsWith('now ') ||
+        p.startsWith('also ') ||
+        p.startsWith('instead of ') ||
+        p.startsWith('why is ') ||
+        p.startsWith('how to ') ||
+        p.includes('in this code') ||
+        p.includes('in the code') ||
+        p.includes('in that component') ||
+        p.includes('to red') ||
+        p.includes('to blue') ||
+        p.includes('to green') ||
+        p.includes('to dark') ||
+        p.includes('to light') ||
+        p.includes('rounded') ||
+        p.includes('responsive')
+      ) {
+        return true;
+      }
+    }
+
+    return false;
+  },
+
+  /**
+   * Constructs the explicit Active Code Refinement Directive
+   */
+  buildCodeModificationDirective(lastCodeObj, prompt) {
+    if (!lastCodeObj || !lastCodeObj.code) return '';
+
+    return `\n\n[ACTIVE CODE CONTINUITY & REFINEMENT PROTOCOL]:
+The user wants to make a specific modification to the code created previously in this session:
+- CURRENT ACTIVE CODE BASELINE:
+\`\`\`${lastCodeObj.language || 'jsx'}
+${lastCodeObj.code}
+\`\`\`
+
+- USER MODIFICATION REQUEST: "${prompt}"
+
+- MANDATORY REFINEMENT RULES:
+1. PRESERVE THE EXISTING CODE ARCHITECTURE: Keep all working imports, state hooks, helper functions, and styling that are not directly targeted by the modification. Do NOT drop features unless the user asked to remove them.
+2. APPLY THE REQUESTED CHANGE ACCURATELY: Seamlessly incorporate the requested modification into the component.
+3. ALWAYS RETURN THE FULL, 100% COMPLETE RUNNABLE CODE inside a standard \`\`\`${lastCodeObj.language || 'jsx'} ... \`\`\` block. Never use lazy placeholders, ellipsis, or comments like "// ... rest of code remains the same".
+4. Briefly explain what changed right before or after the code block.`;
+  },
+
+  /**
    * Builds an explicit memory directive to inject into system prompt for cloud LLMs
    */
   buildMemoryDirective(messages = [], userName = '') {
     const memory = this.extractSessionMemory(messages, userName);
+    const profile = storage.getUserProfile();
+
+    let profileGuidance = '';
+    if (profile.gender && profile.gender !== 'prefer_not_to_say') {
+      profileGuidance += `\n- User Gender Identity: ${profile.gender}`;
+    }
+    if (profile.age) {
+      profileGuidance += `\n- User Age / Experience Tier: ${profile.age}`;
+      if (profile.age === 'under_18') {
+        profileGuidance += `\n  * Tone & Pedagogical Adaptation: User is a young learner / student. Use intuitive analogies, clear step-by-step logic, encouraging tone, and clear visual examples.`;
+      } else if (profile.age === '18-24') {
+        profileGuidance += `\n  * Tone & Pedagogical Adaptation: User is in college or early career. Focus on cutting-edge industry practices, modern frameworks, clean developer ergonomics, and depth.`;
+      } else if (profile.age === '25-34') {
+        profileGuidance += `\n  * Tone & Pedagogical Adaptation: User is an active software / technical professional. Deliver crisp, production-grade, highly efficient solutions without unnecessary padding.`;
+      } else if (profile.age === '35-49') {
+        profileGuidance += `\n  * Tone & Pedagogical Adaptation: User is a senior developer or lead architect. Emphasize scalability, system design, architectural patterns, and maintainability.`;
+      } else if (profile.age === '50+') {
+        profileGuidance += `\n  * Tone & Pedagogical Adaptation: User is an experienced veteran / executive. Provide comprehensive, well-structured, clear fundamentals and respectful, dignified collaboration.`;
+      }
+    }
+
     if (memory.turnCount <= 1 && memory.totalUserQuestions <= 1) {
-      return `\n\n[CONVERSATION CONTINUITY]: User name is ${memory.userName}. Remember everything the user states in this session and maintain perfect continuity.`;
+      return `\n\n[CONVERSATION CONTINUITY]: User name is ${memory.userName}.${profileGuidance}\nRemember everything the user states in this session and maintain perfect continuity.`;
     }
 
     let directive = `\n\n[COMPREHENSIVE SESSION MEMORY & CONVERSATIONAL CONTINUITY MANIFEST]:`;
     directive += `\n- User Name: ${memory.userName}`;
+    if (profileGuidance) {
+      directive += profileGuidance;
+    }
     directive += `\n- Total Dialogue Turns: ${memory.turnCount}`;
     directive += `\n- Total User Inquiries: ${memory.totalUserQuestions}`;
     if (memory.firstUserPrompt) {

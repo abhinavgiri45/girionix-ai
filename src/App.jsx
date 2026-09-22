@@ -13,14 +13,12 @@ import DownloadAppsModal from './components/common/DownloadAppsModal';
 import ProAppStatusModal from './components/common/ProAppStatusModal';
 import UpdateModal from './components/common/UpdateModal';
 import LocalNeuralModal from './components/common/LocalNeuralModal';
-import TitanWorkstationModal from './components/common/TitanWorkstationModal';
-import TitanWorkstationView from './components/titan/TitanWorkstationView';
 import ChatView from './components/chat/ChatView';
 import OrbitWorkstationView from './components/orbit/OrbitWorkstationView';
 import MobileBottomNav from './components/layout/MobileBottomNav';
 import SettingsModal from './components/settings/SettingsModal';
 
-import { AI_MODELS, TITAN_AI_MODELS } from './services/modelCatalog';
+import { AI_MODELS } from './services/modelCatalog';
 import { CODE_STUDIO_TEMPLATES } from './data/codeStudioTemplates';
 import { storage } from './services/storage';
 import { updateService } from './services/updateService';
@@ -36,16 +34,9 @@ export default function App() {
   }, [isOrbitWorkstationActive]);
 
   const [isAppInstalled, setIsAppInstalled] = useState(() => storage.isAppInstalled());
-  const [isTitanMode, setIsTitanMode] = useState(() => {
-    try {
-      return localStorage.getItem('girionix_titan_mode') === 'true' || (typeof window !== 'undefined' && window.location.search.includes('titan=true'));
-    } catch (_) { return false; }
-  });
+  const [isTitanMode, setIsTitanMode] = useState(false);
   const [isTitanWorkstationOpen, setIsTitanWorkstationOpen] = useState(false);
   const [activeModel, setActiveModel] = useState(() => {
-    const isTitan = typeof window !== 'undefined' && (localStorage.getItem('girionix_titan_mode') === 'true' || window.location.search.includes('titan=true'));
-    const isLite = typeof window !== 'undefined' && window.location.search.includes('profile=lite');
-    if (isTitan) return isLite ? TITAN_AI_MODELS[1] : TITAN_AI_MODELS[0];
     const savedModelId = storage.getActiveModelId();
     const found = AI_MODELS.find(m => m.id === savedModelId);
     return found || AI_MODELS[0];
@@ -64,8 +55,7 @@ export default function App() {
     const handleModelSync = (e) => {
       const modelId = e.detail?.modelId;
       if (modelId && (!activeModel || activeModel.id !== modelId)) {
-        const pool = isTitanMode ? TITAN_AI_MODELS : AI_MODELS;
-        const matched = pool.find(m => m.id === modelId) || AI_MODELS.find(m => m.id === modelId);
+        const matched = AI_MODELS.find(m => m.id === modelId);
         if (matched) {
           setActiveModel(matched);
         }
@@ -164,14 +154,27 @@ export default function App() {
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isVoiceModeOpen, setIsVoiceModeOpen] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
-  const [isNameModalOpen, setIsNameModalOpen] = useState(false);
+  const [isNameModalOpen, setIsNameModalOpen] = useState(() => !storage.isProfileConfigured());
   const [userName, setUserName] = useState(() => {
     try {
-      return storage.getUserName() || 'Abhinav';
+      return storage.getUserName() || '';
     } catch (_) {
-      return 'Abhinav';
+      return '';
     }
   });
+
+  useEffect(() => {
+    const handleProfileUpdate = () => {
+      const name = storage.getUserName();
+      setUserName(name || '');
+    };
+    window.addEventListener('girionix:profile-updated', handleProfileUpdate);
+    window.addEventListener('storage', handleProfileUpdate);
+    return () => {
+      window.removeEventListener('girionix:profile-updated', handleProfileUpdate);
+      window.removeEventListener('storage', handleProfileUpdate);
+    };
+  }, []);
   const [injectedCode, setInjectedCode] = useState(null);
   const [sessions, setSessions] = useState(() => storage.getSessions());
   const [activeSessionId, setActiveSessionId] = useState(() => storage.getActiveSessionId());
@@ -475,8 +478,7 @@ export default function App() {
   const handleCloseIntro = () => {
     setIsAboutOpen(false);
     storage.setSeenIntro(true);
-    const savedName = storage.getUserName();
-    if (!savedName) {
+    if (!storage.isProfileConfigured()) {
       setIsNameModalOpen(true);
     }
   };
@@ -494,15 +496,6 @@ export default function App() {
           const targetPath = url.pathname === '/orbit' ? '/chat' : url.pathname;
           window.history.pushState({}, '', targetPath + (url.search ? url.search : ''));
         }}
-      />
-    );
-  }
-
-  if (isTitanMode) {
-    return (
-      <TitanWorkstationView
-        onExitTitanMode={() => handleToggleTitanMode(false)}
-        userName={userName}
       />
     );
   }
@@ -741,15 +734,6 @@ export default function App() {
         onActivateLocalModel={() => {
           const localModel = AI_MODELS.find(m => m.id === 'girionix-local-core') || AI_MODELS[0];
           setActiveModel(localModel);
-        }}
-      />
-
-      {/* Dedicated Titan Heavy Hardware Workstation & Stress Benchmark Modal */}
-      <TitanWorkstationModal
-        isOpen={isTitanWorkstationOpen}
-        onClose={() => setIsTitanWorkstationOpen(false)}
-        onActivateTitanModel={(targetModelId) => {
-          handleToggleTitanMode(true, targetModelId);
         }}
       />
 

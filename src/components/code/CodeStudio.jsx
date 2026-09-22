@@ -43,31 +43,40 @@ import { CODE_STUDIO_TEMPLATES } from '../../data/codeStudioTemplates';
 import { ADVANCED_SKILLS_CATALOG } from '../../services/advancedCodingSkills';
 import { localNeuralEngine } from '../../services/localNeuralEngine';
 import { localCodeSynthesizer } from '../../services/localCodeSynthesizer';
+import { openrouter } from '../../services/openrouter';
 
 export const GIRIONIX_CODING_MODELS = [
   {
-    id: 'girionix-titan-coder',
-    name: '⚡ Titan Matrix Coder 33B',
-    shortName: 'Titan Coder 33B',
+    id: 'girionix-pro',
+    name: '⚡ Studio Architect Pro (Flagship)',
+    shortName: 'Studio Architect Pro',
     tag: 'Fullstack & Live AST',
-    badge: 'FLAGSHIP CODER',
-    description: 'Superhuman React 18, Python, Tailwind, Unit Tests, and AST Compilation.'
+    badge: 'FLAGSHIP ARCHITECT',
+    description: 'Superhuman React 18, Tailwind, algorithmic precision, and live AST compilation.'
   },
   {
-    id: 'girionix-titan-70b',
-    name: '⚡ Titan 70B Heavy Core',
-    shortName: 'Titan 70B Heavy',
-    tag: 'Complex Systems',
-    badge: 'HEAVY SYSTEMS',
-    description: 'Deep algorithmic derivations, state machines, and distributed architecture.'
+    id: 'qwen/qwen-2.5-coder-32b-instruct',
+    name: '⚡ Qwen 2.5 Coder 32B',
+    shortName: 'Qwen 2.5 Coder',
+    tag: 'SOTA Code Synthesis',
+    badge: 'CODE MASTER',
+    description: 'Specialized 32B coder model with state-of-the-art benchmark performance on code modification.'
   },
   {
-    id: 'girionix-titan-lite',
-    name: '🌱 Titan Lite Quantized',
-    shortName: 'Titan Lite',
-    tag: 'Instant Prototypes',
+    id: 'anthropic/claude-3.7-sonnet',
+    name: '⚡ Claude 3.7 Sonnet',
+    shortName: 'Claude 3.7 Sonnet',
+    tag: 'Hybrid Thinking',
+    badge: 'REASONING CODER',
+    description: 'Deep architectural refactoring, fullstack state management, and edge-case handling.'
+  },
+  {
+    id: 'gemini-2.5-flash',
+    name: '⚡ Studio Flash Coder',
+    shortName: 'Studio Flash Coder',
+    tag: 'Sub-Second Speed',
     badge: 'ULTRA-FAST',
-    description: 'Ultra-fast sub-second code generation with minimal memory overhead.'
+    description: 'Sub-second real-time streaming code generation and live auto-fix.'
   }
 ];
 
@@ -88,7 +97,7 @@ export default function CodeStudio({ activeModel, injectedCode, isTitanMode = fa
   const [skillTier, setSkillTier] = useState('principal'); // 'junior' | 'senior' | 'principal'
 
   // Selected Girionix Flagship Model (Zero API key required)
-  const [selectedGirionixModel, setSelectedGirionixModel] = useState('girionix-titan-coder');
+  const [selectedGirionixModel, setSelectedGirionixModel] = useState('girionix-pro');
 
   // Micro-Benchmark Execution state
   const [benchmarkResult, setBenchmarkResult] = useState(null);
@@ -601,22 +610,49 @@ export default function CodeStudio({ activeModel, injectedCode, isTitanMode = fa
       const pastMemorySummary = conversationTurns.slice(-4).map((t, idx) => `Turn ${idx + 1}: "${t.prompt}"`).join(' -> ');
       let fullCode = '';
 
-      await localNeuralEngine.generateStream({
-        messages: [
-          {
-            role: 'system',
-            content: 'You are Girionix AI Code Architect operating at ' + skillTier.toUpperCase() + ' ENGINEER LEVEL. Return ONLY the complete, updated, valid React 18 component code. Do NOT output markdown headers (no ###), do NOT output commentary or introductory text. Output only pure, executable JSX code.' + (skillTier === 'principal' ? ' Apply competitive-programming and distributed-systems algorithms with zero-dependency elegance.' : '')
-          },
-          {
-            role: 'user',
-            content: `Instruction: "${instruction}"\n${pastMemorySummary ? `Session History & Context:\n${pastMemorySummary}\n` : ''}\nCurrent Code:\n${activeFile.content}`
+      const systemPrompt = `You are Girionix AI Code Architect operating at ${skillTier.toUpperCase()} ENGINEER LEVEL.
+CRITICAL CODE MODIFICATION MANDATE:
+1. You are modifying the user's active React 18 component.
+2. PRESERVE the existing architecture, imports, working states, and styling that are not targeted by the modification.
+3. ACCURATELY APPLY the user's requested modification.
+4. Output the FULL, COMPLETE, RUNNABLE React 18 component code in a standard \`\`\`jsx ... \`\`\` block. Never use placeholders or truncation comments.`;
+
+      const userPrompt = `MODIFICATION INSTRUCTION: "${instruction}"
+${pastMemorySummary ? `Prior Session Memory:\n${pastMemorySummary}\n` : ''}
+ACTIVE CODE TO MODIFY:
+\`\`\`jsx
+${activeFile.content}
+\`\`\``;
+
+      let modelId = selectedGirionixModel;
+      if (modelId === 'girionix-pro' || modelId?.startsWith('girionix-titan')) {
+        modelId = 'qwen/qwen-2.5-coder-32b-instruct';
+      }
+
+      try {
+        await openrouter.streamChat({
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt }
+          ],
+          model: modelId,
+          onChunk: (chunk, acc) => {
+            fullCode = acc;
           }
-        ],
-        model: selectedGirionixModel,
-        onChunk: (chunk, acc) => {
-          fullCode = acc;
-        }
-      });
+        });
+      } catch (streamErr) {
+        console.warn('Cloud coder stream fallback to local synthesis:', streamErr);
+        await localNeuralEngine.generateStream({
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt }
+          ],
+          model: selectedGirionixModel,
+          onChunk: (chunk, acc) => {
+            fullCode = acc;
+          }
+        });
+      }
 
       const cleanCode = localCodeSynthesizer.extractPureCode(fullCode);
       if (cleanCode) {

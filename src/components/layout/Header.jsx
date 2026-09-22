@@ -107,36 +107,6 @@ export default function Header({
           </div>
         </div>
 
-        {/* Edition Mode Segmented Switcher (Standard vs Titan) - Hidden in Office Mode */}
-        {!isOfficeMode && (
-          <div className="hidden xs:flex items-center p-0.5 rounded-xl bg-black/60 border border-white/10 text-xs font-mono ml-1 sm:ml-2">
-            <button
-              onClick={() => onToggleTitanMode && onToggleTitanMode(false)}
-              className={`px-2 sm:px-2.5 py-1 rounded-lg transition-all flex items-center gap-1 ${
-                !isTitanMode
-                  ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40 shadow-sm'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-              title="Standard Universal Edition"
-            >
-              <Globe className="w-3.5 h-3.5 text-cyan-400" />
-              <span className="hidden md:inline">Standard</span>
-            </button>
-
-            <button
-              onClick={() => onToggleTitanMode && onToggleTitanMode(true)}
-              className={`px-2 sm:px-2.5 py-1 rounded-lg transition-all flex items-center gap-1 ${
-                isTitanMode
-                  ? 'bg-gradient-to-r from-emerald-400 to-teal-400 text-black font-extrabold shadow-glow-emerald'
-                  : 'text-emerald-400/80 hover:text-emerald-300'
-              }`}
-              title="Titan 100% On-Device Hardware Edition"
-            >
-              <Cpu className="w-3.5 h-3.5" />
-              <span className="hidden md:inline">Titan</span>
-            </button>
-          </div>
-        )}
       </div>
 
       {/* Center: Clean Layout & Studio Mode Switcher OR Dedicated Office Copilot Header */}
@@ -527,16 +497,14 @@ export default function Header({
         </div>
 
         {/* User Profile Pill */}
-        {userName && (
-          <button
-            onClick={onChangeName}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs font-mono transition-colors"
-            title="Click to edit your name"
-          >
-            <User className="w-3.5 h-3.5" />
-            <span className="max-w-[70px] sm:max-w-[90px] truncate">{userName}</span>
-          </button>
-        )}
+        <button
+          onClick={onChangeName}
+          className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs font-mono transition-colors cursor-pointer"
+          title="Click to view or edit your profile & personalization"
+        >
+          <User className="w-3.5 h-3.5" />
+          <span className="max-w-[70px] sm:max-w-[90px] truncate">{userName || 'Profile'}</span>
+        </button>
       </div>
     </header>
   );
