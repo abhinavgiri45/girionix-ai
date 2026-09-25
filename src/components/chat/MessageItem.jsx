@@ -1149,29 +1149,6 @@ export default function MessageItem({
 
         {/* Action Toolbar */}
         <div className="flex items-center gap-1.5 px-1 text-[11px] text-gray-500 relative">
-          {!isUser && (
-            <button
-              onClick={() => handleImportToWorkplace()}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-semibold transition-all border shadow-sm ${
-                imported
-                  ? 'bg-emerald-500/25 text-emerald-300 border-emerald-500/50 shadow-glow-emerald'
-                  : 'bg-gradient-to-r from-emerald-500/15 to-teal-500/15 hover:from-emerald-500/25 hover:to-teal-500/25 text-emerald-300 hover:text-emerald-200 border-emerald-500/40 hover:scale-105 cursor-pointer'
-              }`}
-              title="Import this AI response directly into your active Giri Orbit workplace (Drift, Axis, Kinetic, PDF)"
-            >
-              {imported ? (
-                <>
-                  <Check className="w-3.5 h-3.5 text-emerald-400" />
-                  <span className="text-[11px] text-emerald-300 font-bold">Imported!</span>
-                </>
-              ) : (
-                <>
-                  <span className="text-[12px]">📥</span>
-                  <span className="text-[11px] font-bold">Import to Workplace</span>
-                </>
-              )}
-            </button>
-          )}
 
           <button
             onClick={handleCopy}

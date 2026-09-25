@@ -107,10 +107,11 @@ export default function App() {
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isVoiceModeOpen, setIsVoiceModeOpen] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
-  const [isNameModalOpen, setIsNameModalOpen] = useState(() => !storage.isProfileConfigured());
+  const [isNameModalOpen, setIsNameModalOpen] = useState(() => !giriOrbitBridge.isOrbitMode() && !storage.isProfileConfigured());
   const [userName, setUserName] = useState(() => {
     try {
-      return storage.getUserName() || '';
+      const n = storage.getUserName();
+      return (n && n !== 'Orbit User') ? n : '';
     } catch (_) {
       return '';
     }
@@ -177,9 +178,9 @@ export default function App() {
   // Load user name and settings on boot + strict app mode detection
   useEffect(() => {
     const isApp = storage.isAppInstalled();
-    const savedName = storage.getUserName() || 'Orbit User';
-    setUserName(savedName);
-    if (!savedName && !isOfficeMode && (storage.hasSeenIntro() || isApp)) {
+    const savedName = storage.getUserName();
+    setUserName(savedName || '');
+    if (!storage.isProfileConfigured() && !isOfficeMode) {
       setIsNameModalOpen(true);
     }
 

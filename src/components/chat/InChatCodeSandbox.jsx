@@ -517,16 +517,6 @@ export default function InChatCodeSandbox({
         </div>
 
         <div className="flex items-center gap-2">
-          {onImportToWorkplace && (
-            <button
-              onClick={() => onImportToWorkplace(code)}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 text-[11px] font-bold transition-all cursor-pointer hover:scale-105"
-              title="Import into active Giri Orbit workplace"
-            >
-              <span>📥 Import to Orbit</span>
-            </button>
-          )}
-
           <span className="text-[10px] text-gray-500">Girionix In-Chat Studio</span>
         </div>
       </div>

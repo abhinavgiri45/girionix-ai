@@ -265,28 +265,34 @@ ${lastCodeObj.code}
   buildMemoryDirective(messages = [], userName = '') {
     const memory = this.extractSessionMemory(messages, userName);
     const profile = storage.getUserProfile();
+    const activeName = (profile.name && profile.name !== 'Orbit User') ? profile.name : (userName && userName !== 'Orbit User' ? userName : (memory.userName !== 'Orbit User' ? memory.userName : 'Friend'));
 
-    let profileGuidance = '';
-    if (profile.gender && profile.gender !== 'prefer_not_to_say') {
-      profileGuidance += `\n- User Gender Identity: ${profile.gender}`;
-    }
+    let profileGuidance = `\n[AUTHENTICATED USER IDENTITY & BIO]:
+- Full Name: ${activeName}
+- Age: ${profile.age ? profile.age : 'Not specified by user'}
+- Date of Birth (DOB): ${profile.dob ? profile.dob : 'Not specified by user'}
+- Gender: ${profile.gender && profile.gender !== 'prefer_not_to_say' ? profile.gender : 'Not specified'}
+
+CRITICAL MANDATORY INSTRUCTIONS ON USER RECOGNITION:
+You possess complete, persistent knowledge of the user you are currently talking to.
+1. If the user asks for their name (e.g. "what is my name?", "who am I?"): State clearly and warmly that their name is "${activeName}".
+2. If the user asks for their age (e.g. "what is my age?", "how old am I?"): ${profile.age ? `State clearly that their age is ${profile.age}.` : `Tell them their age is not set in their profile yet, but they can update it anytime in their profile.`}
+3. If the user asks for their date of birth / DOB (e.g. "what is my dob?", "when was I born?", "what is my date of birth?"): ${profile.dob ? `State clearly that their date of birth is ${profile.dob}.` : `Tell them their date of birth (DOB) is not set in their profile yet, but they can update it in their profile.`}
+4. If the user asks for their gender (e.g. "what is my gender?"): ${profile.gender && profile.gender !== 'prefer_not_to_say' ? `State clearly that their gender is ${profile.gender}.` : `Tell them their gender is set to prefer not to say / not specified in their profile.`}
+5. If the user asks for all their details or their profile info (e.g. "tell me my details", "what info do you have about me?"): Summarize their Full Name: ${activeName}, Age: ${profile.age || 'Not specified'}, DOB: ${profile.dob || 'Not specified'}, Gender: ${profile.gender || 'Not specified'}.`;
+
     if (profile.age) {
-      profileGuidance += `\n- User Age / Experience Tier: ${profile.age}`;
-      if (profile.age === 'under_18') {
-        profileGuidance += `\n  * Tone & Pedagogical Adaptation: User is a young learner / student. Use intuitive analogies, clear step-by-step logic, encouraging tone, and clear visual examples.`;
-      } else if (profile.age === '18-24') {
-        profileGuidance += `\n  * Tone & Pedagogical Adaptation: User is in college or early career. Focus on cutting-edge industry practices, modern frameworks, clean developer ergonomics, and depth.`;
-      } else if (profile.age === '25-34') {
-        profileGuidance += `\n  * Tone & Pedagogical Adaptation: User is an active software / technical professional. Deliver crisp, production-grade, highly efficient solutions without unnecessary padding.`;
-      } else if (profile.age === '35-49') {
-        profileGuidance += `\n  * Tone & Pedagogical Adaptation: User is a senior developer or lead architect. Emphasize scalability, system design, architectural patterns, and maintainability.`;
-      } else if (profile.age === '50+') {
-        profileGuidance += `\n  * Tone & Pedagogical Adaptation: User is an experienced veteran / executive. Provide comprehensive, well-structured, clear fundamentals and respectful, dignified collaboration.`;
+      if (profile.age === 'under_18' || Number(profile.age) < 18) {
+        profileGuidance += `\n- Pedagogical Adaptation: User is a young learner / student. Use intuitive analogies, clear step-by-step logic, and encouraging tone.`;
+      } else if (profile.age === '18-24' || (Number(profile.age) >= 18 && Number(profile.age) <= 24)) {
+        profileGuidance += `\n- Pedagogical Adaptation: User is in college / early career. Focus on modern industry practices and clean developer ergonomics.`;
+      } else {
+        profileGuidance += `\n- Pedagogical Adaptation: User is a professional. Deliver crisp, production-grade solutions without unnecessary padding.`;
       }
     }
 
     if (memory.turnCount <= 1 && memory.totalUserQuestions <= 1) {
-      return `\n\n[CONVERSATION CONTINUITY]: User name is ${memory.userName}.${profileGuidance}\nRemember everything the user states in this session and maintain perfect continuity.`;
+      return `\n\n${profileGuidance}\n\n[CONVERSATION CONTINUITY]: User name is ${activeName}.\nRemember everything the user states in this session and maintain perfect continuity.`;
     }
 
     let directive = `\n\n[COMPREHENSIVE SESSION MEMORY & CONVERSATIONAL CONTINUITY MANIFEST]:`;
@@ -432,6 +438,56 @@ ${lastCodeObj.code}
   resolveMemoryQuery(prompt, messages = [], defaultUserName = '') {
     if (!prompt) return null;
     const p = prompt.trim().toLowerCase();
+    const profile = storage.getUserProfile();
+    const activeName = (profile.name && profile.name !== 'Orbit User') ? profile.name : (defaultUserName && defaultUserName !== 'Orbit User' ? defaultUserName : '');
+
+    // 0. IMMEDIATE USER IDENTITY & BIO RECOGNITION (Resolves immediately on any turn!)
+    // A. Name Query
+    if (/\b(what\s+is\s+my\s+name|do\s+you\s+(remember|know)\s+my\s+name|who\s+am\s+i|tell\s+me\s+my\s+name|my\s+name\s*\?)\b/i.test(p)) {
+      if (activeName) {
+        return `Your name is **${activeName}**! 😊 I have it stored in your active profile. How can I assist you right now?`;
+      }
+      return `I don't have your name configured in your profile yet! You can click your avatar at the top right to set your Name, Age, Date of Birth, and Gender.`;
+    }
+
+    // B. Age Query
+    if (/\b(what\s+is\s+my\s+age|how\s+old\s+am\s+i|tell\s+me\s+my\s+age|my\s+age\s*\?)\b/i.test(p)) {
+      if (profile.age) {
+        return `According to your profile, you are **${profile.age}** years old! 🎂`;
+      }
+      return `Your age is not configured in your profile yet! You can add your age and date of birth by clicking on your profile avatar in the top bar.`;
+    }
+
+    // C. Date of Birth (DOB) Query
+    if (/\b(what\s+is\s+my\s+(?:dob|date\s+of\s+birth|birthday)|when\s+was\s+i\s+born|tell\s+me\s+my\s+(?:dob|date\s+of\s+birth)|my\s+dob\s*\?)\b/i.test(p)) {
+      if (profile.dob) {
+        return `According to your profile, your date of birth is **${profile.dob}**! 📅`;
+      }
+      return `Your date of birth (DOB) is not configured in your profile yet! You can set it by clicking your profile avatar in the top bar.`;
+    }
+
+    // D. Gender Query
+    if (/\b(what\s+is\s+my\s+gender|tell\s+me\s+my\s+gender|my\s+gender\s*\?)\b/i.test(p)) {
+      if (profile.gender && profile.gender !== 'prefer_not_to_say') {
+        return `According to your profile, your gender is **${profile.gender}**.`;
+      }
+      return `Your gender is currently set to *not specified / prefer not to say* in your profile. You can update it anytime in your profile settings!`;
+    }
+
+    // E. Profile Details Summary Query
+    if (/\b(tell\s+me\s+my\s+details|what\s+is\s+my\s+profile|show\s+my\s+profile|what\s+are\s+my\s+details|what\s+do\s+you\s+know\s+about\s+me|my\s+details\s*\?)\b/i.test(p)) {
+      if (activeName) {
+        let details = `### 👤 Your Profile Details:\n\n`;
+        details += `- **Full Name**: ${activeName}\n`;
+        details += `- **Age**: ${profile.age || 'Not specified'}\n`;
+        details += `- **Date of Birth (DOB)**: ${profile.dob || 'Not specified'}\n`;
+        details += `- **Gender**: ${profile.gender && profile.gender !== 'prefer_not_to_say' ? profile.gender : 'Not specified'}\n\n`;
+        details += `*You can update any of these details anytime by clicking your profile avatar at the top right.*`;
+        return details;
+      }
+      return `You haven't configured your profile details yet! Click on your profile avatar in the header to set your Name, Age, Date of Birth, and Gender.`;
+    }
+
     const turns = this.getValidTurns(messages);
 
     // Filter to turns preceding the current prompt
@@ -507,15 +563,6 @@ ${lastCodeObj.code}
       const last = priorAssistantTurns[priorAssistantTurns.length - 1];
       const preview = last.content.length > 500 ? last.content.slice(0, 500) + '...' : last.content;
       return `In my previous response, I stated:\n\n${preview}\n\nWould you like me to explain any specific part in deeper detail?`;
-    }
-
-    // 6. IDENTITY & NAME RECALL: "What is my name?" / "Do you remember my name?"
-    if (/\b(what\s+is\s+my\s+name|do\s+you\s+(remember|know)\s+my\s+name|who\s+am\s+i)\b/i.test(p)) {
-      const memory = this.extractSessionMemory(priorTurns, defaultUserName);
-      if (memory.userName && memory.userName !== 'Friend') {
-        return `Your name is **${memory.userName}**! 😊 I have it stored in active conversation memory. How can I assist you right now?`;
-      }
-      return `I don't have your name recorded yet! You can tell me your name anytime (e.g. *"My name is Orbit User"*), and I will remember it throughout our conversation.`;
     }
 
     // 7. SUMMARY & RECAP: "Summarize our conversation" / "Recap our chat"

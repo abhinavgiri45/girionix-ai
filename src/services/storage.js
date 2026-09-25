@@ -159,39 +159,49 @@ export const storage = {
       if (raw) {
         const parsed = JSON.parse(raw);
         if (parsed && typeof parsed === 'object') {
-          return {
-            name: parsed.name || '',
-            gender: parsed.gender || '',
-            age: parsed.age || '',
-            isConfigured: Boolean(parsed.name && parsed.name.trim())
-          };
+          const name = (parsed.name || '').trim();
+          if (name && name !== 'Orbit User') {
+            return {
+              name,
+              gender: parsed.gender || 'prefer_not_to_say',
+              age: parsed.age ? String(parsed.age) : '',
+              dob: parsed.dob ? String(parsed.dob) : '',
+              isConfigured: true
+            };
+          }
         }
       }
     } catch (_) {}
 
     const legacyName = safeGetItem(KEYS.USER_NAME) || safeGetItem('girionix_registered_name') || '';
-    const cleanLegacy = legacyName === 'Orbit User' ? '' : legacyName.trim();
+    const cleanLegacy = (legacyName === 'Orbit User') ? '' : legacyName.trim();
     return {
       name: cleanLegacy,
-      gender: '',
+      gender: 'prefer_not_to_say',
       age: '',
-      isConfigured: Boolean(cleanLegacy)
+      dob: '',
+      isConfigured: Boolean(cleanLegacy && cleanLegacy !== 'Orbit User')
     };
   },
 
-  setUserProfile: ({ name, gender = '', age = '' }) => {
+  setUserProfile: ({ name, gender = 'prefer_not_to_say', age = '', dob = '' }) => {
     const cleanName = (name || '').trim();
+    const isValidName = Boolean(cleanName && cleanName !== 'Orbit User');
     const profile = {
-      name: cleanName,
-      gender: (gender || '').trim(),
-      age: (age || '').trim(),
-      isConfigured: Boolean(cleanName),
+      name: isValidName ? cleanName : '',
+      gender: (gender || 'prefer_not_to_say').trim(),
+      age: String(age || '').trim(),
+      dob: String(dob || '').trim(),
+      isConfigured: isValidName,
       updatedAt: Date.now()
     };
     safeSetItem(KEYS.USER_PROFILE, JSON.stringify(profile));
-    if (cleanName) {
+    if (isValidName) {
       safeSetItem(KEYS.USER_NAME, cleanName);
       safeSetItem('girionix_registered_name', cleanName);
+    } else {
+      safeRemoveItem(KEYS.USER_NAME);
+      safeRemoveItem('girionix_registered_name');
     }
     if (typeof window !== 'undefined') {
       try {
@@ -203,7 +213,7 @@ export const storage = {
 
   isProfileConfigured: () => {
     const profile = storage.getUserProfile();
-    return Boolean(profile.isConfigured && profile.name.trim().length > 0);
+    return Boolean(profile.isConfigured && profile.name.trim().length > 0 && profile.name.trim() !== 'Orbit User');
   },
 
   getUserName: () => {
@@ -212,26 +222,13 @@ export const storage = {
       if (typeof window !== 'undefined') {
         const params = new URLSearchParams(window.location.search);
         const urlUser = params.get('user') || params.get('name');
-        if (urlUser && typeof urlUser === 'string' && urlUser.trim()) {
+        if (urlUser && typeof urlUser === 'string' && urlUser.trim() && urlUser.trim() !== 'Orbit User') {
           const clean = urlUser.trim();
           storage.setUserName(clean);
           return clean;
         }
       }
     } catch (_) {}
-
-    // Check if the user is truly accessing through https://giri-orbit.pages.dev
-    const isFromOrbit = () => {
-      try {
-        if (typeof window === 'undefined') return false;
-        const params = new URLSearchParams(window.location.search);
-        if (params.get('source') === 'orbit' || params.get('ref') === 'orbit' || params.get('origin') === 'orbit' || params.get('mode') === 'orbit') return true;
-        if (typeof document !== 'undefined' && document.referrer && document.referrer.includes('giri-orbit.pages.dev')) return true;
-        return false;
-      } catch (_) {
-        return false;
-      }
-    };
 
     // 2. Check profile
     const profile = storage.getUserProfile();
@@ -251,33 +248,14 @@ export const storage = {
       return saved.trim();
     }
 
-    // 4. Check native app bridge
-    try {
-      if (typeof window !== 'undefined') {
-        const bridgeName = window.GirionixBridge?.getOperatorName?.() || window.GirionixAndroid?.getOperatorName?.();
-        if (bridgeName && typeof bridgeName === 'string' && bridgeName.trim()) {
-          const clean = bridgeName.trim();
-          storage.setUserName(clean);
-          return clean;
-        }
-      }
-    } catch (_) {}
-
-    // 5. If truly coming from giri-orbit.pages.dev, default to Orbit User
-    if (isFromOrbit()) {
-      return 'Orbit User';
-    }
-
-    // 6. Return empty string if not configured (so first-time welcome modal appears)
+    // 4. Return empty string if not configured (so login/profile modal appears)
     return '';
   },
   setUserName: (name) => {
     const clean = (name || '').trim();
-    if (clean) {
-      safeSetItem(KEYS.USER_NAME, clean);
-      safeSetItem('girionix_registered_name', clean);
+    if (clean && clean !== 'Orbit User') {
       const existing = storage.getUserProfile();
-      safeSetItem(KEYS.USER_PROFILE, JSON.stringify({ ...existing, name: clean, isConfigured: true }));
+      storage.setUserProfile({ ...existing, name: clean });
     }
   },
 
