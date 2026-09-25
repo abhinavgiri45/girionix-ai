@@ -64,7 +64,7 @@ Got it. The sovereign weights are ours.
 
 Suddenly -- 
 
-RED WARNING STROBES pierce the darkness. A deep hydraulic THUD echoes from the titanium blast doors.
+RED WARNING STROBES pierce the darkness. A deep hydraulic THUD echoes from the heavy reinforced blast doors.
 
 AUTOMATED DEFENSE AI (V.O.)
 Security breach detected in Sector 4. Lethal countermeasures engaged.
@@ -104,7 +104,7 @@ const SCRIPT_TEMPLATES = [
   }
 ];
 
-export default function ScriptStudio({ activeModel, isTitanMode = false }) {
+export default function ScriptStudio({ activeModel, isLocalMode = false }) {
   const [scriptContent, setScriptContent] = useState(DEMO_SCREENPLAY);
   const [copied, setCopied] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('');
@@ -193,13 +193,13 @@ Format all output in pure, industry-standard Fountain / Hollywood Screenplay for
 Output ONLY the screenplay scene text without markdown backticks or conversational preamble.`;
 
     try {
-      if (isTitanMode || activeModel?.isTitan || activeModel?.isLocal || !navigator.onLine) {
+      if (isLocalMode || activeModel?.isLocal || !navigator.onLine) {
         await localNeuralEngine.generateStream({
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: `Instruction: "${instruction}"\n\nCurrent Script Context:\n${scriptContent.slice(-1200)}` }
           ],
-          model: 'girionix-titan-70b',
+          model: 'girionix-pro',
           onChunk: (chunk, acc) => { generatedScript = acc; }
         });
       } else {

@@ -61,8 +61,8 @@ import KatexMath from './KatexMath';
 import { 
   detectUserOS, 
   PLATFORM_INFO, 
-  TITAN_PLATFORM_INFO, 
-  TITAN_LITE_PLATFORM_INFO, 
+  PRO_PLATFORM_INFO, 
+  LITE_PLATFORM_INFO, 
   HIGH_END_SYSTEM_SPECS, 
   LOW_END_SYSTEM_SPECS,
   PLATFORM_DETAILED_SPECS,
@@ -95,7 +95,7 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
   const [activeTab, setActiveTab] = useState(initialTab || 'overview'); // 'overview' | 'requirements' | 'comparison' | 'creator'
   const [selectedPlatform, setSelectedPlatform] = useState(() => detectUserOS());
   const [comparisonFilter, setComparisonFilter] = useState('all'); // 'all' | 'coding' | 'math' | 'visual' | 'privacy'
-  const [selectedEdition, setSelectedEdition] = useState('standard'); // 'standard' | 'titan' | 'titan-lite'
+  const [selectedEdition, setSelectedEdition] = useState('standard'); // 'standard' | 'pro' | 'lite'
   const [hardwareAuditReport, setHardwareAuditReport] = useState(null);
   const [isAuditingHardware, setIsAuditingHardware] = useState(false);
   const [downloadActionMessage, setDownloadActionMessage] = useState(null);
@@ -239,9 +239,9 @@ export default function IntroducingGirionixPage({ isOpen, onClose, onLaunchApp, 
 
   if (!isOpen) return null;
 
-  const activePlatformMap = selectedEdition === 'titan' 
-    ? TITAN_PLATFORM_INFO 
-    : (selectedEdition === 'titan-lite' ? TITAN_LITE_PLATFORM_INFO : PLATFORM_INFO);
+  const activePlatformMap = selectedEdition === 'pro' 
+    ? PRO_PLATFORM_INFO 
+    : (selectedEdition === 'lite' ? LITE_PLATFORM_INFO : PLATFORM_INFO);
   const currentPlatform = activePlatformMap[selectedPlatform] || activePlatformMap.windows;
 
   const detailedPlatformSpecs = getPlatformDetailedSpecs(selectedPlatform, selectedEdition);
@@ -1180,14 +1180,14 @@ export default function NeuralPulseSphere() {
                 <div className="text-[10px] font-mono text-cyan-400">✅ 90-Day Encrypted Storage</div>
               </div>
 
-              {/* Pillar 3: 100% Offline Titan Architecture */}
+              {/* Pillar 3: 100% Offline Sovereign Architecture */}
               <div className="p-6 rounded-3xl bg-gradient-to-b from-white/[0.04] to-transparent border border-white/10 space-y-3 hover:border-teal-500/50 transition-all">
                 <div className="w-10 h-10 rounded-xl bg-teal-500/20 text-teal-400 flex items-center justify-center">
                   <Cpu className="w-5 h-5" />
                 </div>
-                <h3 className="text-base font-bold text-white">100% Offline Titan Mode</h3>
+                <h3 className="text-base font-bold text-white">100% Offline Sovereign Mode</h3>
                 <p className="text-xs text-gray-400 leading-relaxed font-sans">
-                  Need air-gapped security? Titan Edition executes directly on your machine's physical CPU cores, RAM, and GPU shaders with zero internet network traffic.
+                  Need air-gapped security? Girionix Pro executes directly on your machine's physical CPU cores, RAM, and GPU shaders with zero internet network traffic.
                 </p>
                 <div className="text-[10px] font-mono text-teal-400">✅ 0 KB Cloud Network Traffic</div>
               </div>
@@ -1355,7 +1355,7 @@ export default function NeuralPulseSphere() {
 
               <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/10 space-y-3 flex flex-col justify-between">
                 <p className="text-xs text-gray-300 leading-relaxed font-sans italic">
-                  "The 100% offline Titan mode running directly on my RTX laptop without internet is a massive breakthrough for sensitive client projects."
+                  "The 100% offline sovereign mode running directly on my RTX laptop without internet is a massive breakthrough for sensitive client projects."
                 </p>
                 <div className="pt-2 border-t border-white/5 flex items-center gap-2.5">
                   <div className="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xs flex items-center justify-center">MV</div>
@@ -1402,8 +1402,8 @@ export default function NeuralPulseSphere() {
                   a: "Yes! You do not need to create an account, enter a credit card, or provide your phone number. You can immediately launch the web app or install the standalone native app and access coding, math, 8K visuals, video, and audio."
                 },
                 {
-                  q: "How does the 100% Offline Titan Edition work without the internet?",
-                  a: "The Titan Edition is built as an air-gapped system. When running on hardware that meets the minimum specifications (8+ CPU cores, 16GB RAM, or GPU), neural matrix operations execute locally through physical shaders and CPU registers with 0 KB of network transfer."
+                  q: "How does the 100% Offline Sovereign Edition work without the internet?",
+                  a: "The Girionix Pro Edition is built as an air-gapped system. When running on hardware that meets the minimum specifications (8+ CPU cores, 16GB RAM, or GPU), neural matrix operations execute locally through physical shaders and CPU registers with 0 KB of network transfer."
                 },
                 {
                   q: "Is my private code, math research, and chat data secure?",
@@ -1692,7 +1692,7 @@ export default function NeuralPulseSphere() {
                 </div>
                 <h3 className="text-2xl font-black text-white">Select Your Platform & Download</h3>
                 <p className="text-xs text-gray-400 font-sans">
-                  Choose your operating system below to download Standard, Titan Heavy, or Titan Lite standalone packages.
+                  Choose your operating system below to download Standard, Girionix Pro, or Girionix Lite standalone packages.
                 </p>
               </div>
 
@@ -1751,55 +1751,55 @@ export default function NeuralPulseSphere() {
                   </button>
                 </div>
 
-                {/* Titan Heavy Package */}
+                {/* Girionix Pro Package */}
                 <div className="p-5 rounded-2xl bg-black/70 border border-emerald-500/40 flex flex-col justify-between space-y-4 hover:border-emerald-400 transition-all">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-mono font-bold text-emerald-300 flex items-center gap-1.5">
                         <Cpu className="w-4 h-4 text-emerald-400 animate-pulse" />
-                        <span>Titan Heavy (High-End)</span>
+                        <span>Girionix Pro (High-End)</span>
                       </span>
                       <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 font-bold">16GB+ RAM</span>
                     </div>
                     <div className="font-mono text-sm font-bold text-white">
-                      {(TITAN_PLATFORM_INFO[selectedPlatform] || TITAN_PLATFORM_INFO.windows).fileName}
+                      {(PRO_PLATFORM_INFO[selectedPlatform] || PRO_PLATFORM_INFO.windows).fileName}
                     </div>
                     <p className="text-[11px] text-gray-400 font-sans">
                       100% On-Device Air-Gapped Workstation with hardware audit pre-flight verification.
                     </p>
                   </div>
                   <button
-                    onClick={() => handleDownloadWithFeedback((TITAN_PLATFORM_INFO[selectedPlatform] || TITAN_PLATFORM_INFO.windows).downloadUrl, (TITAN_PLATFORM_INFO[selectedPlatform] || TITAN_PLATFORM_INFO.windows).fileName)}
+                    onClick={() => handleDownloadWithFeedback((PRO_PLATFORM_INFO[selectedPlatform] || PRO_PLATFORM_INFO.windows).downloadUrl, (PRO_PLATFORM_INFO[selectedPlatform] || PRO_PLATFORM_INFO.windows).fileName)}
                     className="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 text-black font-mono font-extrabold text-xs shadow-glow-emerald hover:opacity-90 flex items-center justify-center gap-2 cursor-pointer transition-all"
                   >
                     <Download className="w-3.5 h-3.5" />
-                    <span>Download Titan Heavy ({(TITAN_PLATFORM_INFO[selectedPlatform] || TITAN_PLATFORM_INFO.windows).fileSize})</span>
+                    <span>Download Girionix Pro ({(PRO_PLATFORM_INFO[selectedPlatform] || PRO_PLATFORM_INFO.windows).fileSize})</span>
                   </button>
                 </div>
 
-                {/* Titan Lite Package */}
+                {/* Girionix Lite Package */}
                 <div className="p-5 rounded-2xl bg-black/70 border border-teal-500/30 flex flex-col justify-between space-y-4 hover:border-teal-400 transition-all">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-mono font-bold text-teal-300 flex items-center gap-1.5">
                         <Zap className="w-4 h-4 text-teal-400" />
-                        <span>Titan Lite (Battery Saver)</span>
+                        <span>Girionix Lite (Battery Saver)</span>
                       </span>
                       <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-teal-500/10 text-teal-300">2GB–8GB RAM</span>
                     </div>
                     <div className="font-mono text-sm font-bold text-white">
-                      {(TITAN_LITE_PLATFORM_INFO[selectedPlatform] || TITAN_LITE_PLATFORM_INFO.windows).fileName}
+                      {(LITE_PLATFORM_INFO[selectedPlatform] || LITE_PLATFORM_INFO.windows).fileName}
                     </div>
                     <p className="text-[11px] text-gray-400 font-sans">
                       100% Offline quantized neural execution for budget laptops and long battery life.
                     </p>
                   </div>
                   <button
-                    onClick={() => handleDownloadWithFeedback((TITAN_LITE_PLATFORM_INFO[selectedPlatform] || TITAN_LITE_PLATFORM_INFO.windows).downloadUrl, (TITAN_LITE_PLATFORM_INFO[selectedPlatform] || TITAN_LITE_PLATFORM_INFO.windows).fileName)}
+                    onClick={() => handleDownloadWithFeedback((LITE_PLATFORM_INFO[selectedPlatform] || LITE_PLATFORM_INFO.windows).downloadUrl, (LITE_PLATFORM_INFO[selectedPlatform] || LITE_PLATFORM_INFO.windows).fileName)}
                     className="w-full py-2.5 rounded-xl bg-gradient-to-r from-teal-400 to-emerald-400 text-black font-mono font-extrabold text-xs shadow-glow-emerald hover:opacity-90 flex items-center justify-center gap-2 cursor-pointer transition-all"
                   >
                     <Download className="w-3.5 h-3.5" />
-                    <span>Download Titan Lite ({(TITAN_LITE_PLATFORM_INFO[selectedPlatform] || TITAN_LITE_PLATFORM_INFO.windows).fileSize})</span>
+                    <span>Download Girionix Lite ({(LITE_PLATFORM_INFO[selectedPlatform] || LITE_PLATFORM_INFO.windows).fileSize})</span>
                   </button>
                 </div>
               </div>
@@ -1854,10 +1854,10 @@ export default function NeuralPulseSphere() {
                         🌐 Standard Universal
                       </th>
                       <th className="py-3 px-4 font-black text-emerald-300 min-w-[150px]">
-                        ⚡ Titan Heavy (High-End)
+                        ⚡ Girionix Pro (High-End)
                       </th>
                       <th className="py-3 px-4 font-black text-teal-300 min-w-[150px]">
-                        🌱 Titan Lite (Budget/Battery)
+                        🌱 Girionix Lite (Budget/Battery)
                       </th>
                     </tr>
                   </thead>
@@ -1974,9 +1974,9 @@ export default function NeuralPulseSphere() {
                       onClick={() => setSelectedPlatform(p.id)}
                       className={`px-4 py-2.5 rounded-2xl text-xs font-mono transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
                         isSelected
-                          ? selectedEdition === 'titan'
+                          ? (selectedEdition === 'pro')
                             ? 'bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 text-black font-black shadow-glow-emerald scale-105'
-                            : selectedEdition === 'titan-lite'
+                            : (selectedEdition === 'lite')
                               ? 'bg-gradient-to-r from-teal-400 to-emerald-400 text-black font-black shadow-glow-emerald scale-105'
                               : 'bg-gradient-to-r from-cyan-400 via-teal-400 to-purple-500 text-black font-black shadow-glow-cyan scale-105'
                           : 'bg-black/60 text-gray-400 hover:text-white border border-white/10 hover:bg-white/5'
@@ -1993,9 +1993,9 @@ export default function NeuralPulseSphere() {
 
             {/* Platform Sub-Header Card */}
             <div className={`p-4 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-              selectedEdition === 'titan'
+              (selectedEdition === 'pro')
                 ? 'bg-gradient-to-r from-emerald-950/50 via-teal-950/30 to-black border-emerald-500/40'
-                : selectedEdition === 'titan-lite'
+                : (selectedEdition === 'lite')
                   ? 'bg-gradient-to-r from-teal-950/50 via-cyan-950/30 to-black border-teal-500/40'
                   : 'bg-gradient-to-r from-cyan-950/40 via-purple-950/30 to-black border-cyan-500/30'
             }`}>
@@ -2003,7 +2003,7 @@ export default function NeuralPulseSphere() {
                 <div className="flex items-center gap-2">
                   <span className="text-xl">{detailedPlatformSpecs.icon}</span>
                   <span className="text-base font-bold text-white font-mono">
-                    {detailedPlatformSpecs.name} — {selectedEdition === 'titan' ? '⚡ Titan Heavy' : selectedEdition === 'titan-lite' ? '🌱 Titan Lite' : '🌐 Standard'} Specifications
+                    {detailedPlatformSpecs.name} — {(selectedEdition === 'pro') ? '⚡ Girionix Pro' : (selectedEdition === 'lite') ? '🌱 Girionix Lite' : '🌐 Standard'} Specifications
                   </span>
                 </div>
                 <p className="text-xs text-gray-300 font-sans">
@@ -2138,7 +2138,7 @@ export default function NeuralPulseSphere() {
                 </div>
 
                 <ol className="space-y-2 text-xs text-gray-300 list-decimal pl-4 leading-relaxed font-sans">
-                  <li>Download <code className="text-cyan-300 font-mono">Girionix_AI_Setup.exe</code> (or Titan Edition).</li>
+                  <li>Download <code className="text-cyan-300 font-mono">Girionix_AI_Setup.exe</code> (or Pro Edition).</li>
                   <li>Run the Setup Wizard; it auto-checks hardware specs and extracts files in under 1 second.</li>
                   <li>Launches with desktop shortcut, Start Menu folder, and local disk vault at <code className="text-cyan-300 font-mono text-[10px]">%LocalAppData%\Girionix AI\Data</code>.</li>
                   <li>Cleanly uninstalls via Windows Control Panel or <code className="text-rose-300 font-mono text-[10px]">Uninstall_Girionix_AI.exe</code>.</li>
@@ -2161,7 +2161,7 @@ export default function NeuralPulseSphere() {
                 </div>
 
                 <ol className="space-y-2 text-xs text-gray-300 list-decimal pl-4 leading-relaxed font-sans">
-                  <li>Download <code className="text-emerald-300 font-mono">Girionix_AI.apk</code> (or Titan Flagship APK).</li>
+                  <li>Download <code className="text-emerald-300 font-mono">Girionix_AI.apk</code> (or Pro Flagship APK).</li>
                   <li>Tap the downloaded file in your notifications or Files app and confirm install.</li>
                   <li>Runs in standalone hardware-accelerated WebView with 90-day offline sandbox persistence.</li>
                   <li>Uninstall anytime via standard Android long-press ➔ "Uninstall" or App Settings.</li>
@@ -2184,7 +2184,7 @@ export default function NeuralPulseSphere() {
                 </div>
 
                 <ol className="space-y-2 text-xs text-gray-300 list-decimal pl-4 leading-relaxed font-sans">
-                  <li>Download <code className="text-purple-300 font-mono">Girionix_AI_macOS.dmg</code> (or Titan Edition).</li>
+                  <li>Download <code className="text-purple-300 font-mono">Girionix_AI_macOS.dmg</code> (or Pro Edition).</li>
                   <li>Open the DMG image and drag the Girionix AI application to your Applications folder.</li>
                   <li>Runs with embedded local loopback server and vault at <code className="text-purple-300 font-mono text-[10px]">~/Library/Application Support/Girionix AI</code>.</li>
                   <li>Includes 1-click removal script: <code className="text-rose-300 font-mono text-[10px]">Uninstall_Girionix_Mac.command</code>.</li>

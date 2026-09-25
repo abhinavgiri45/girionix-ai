@@ -32,7 +32,7 @@ export default function CinematicVideoPlayer({
   aspectRatio = '2.39:1 Anamorphic Cinema',
   resolution = '4k',
   fps = '60 FPS',
-  isTitanMode = false,
+  isLocalMode = false,
   onFullscreen 
 }) {
   const [isPlaying, setIsPlaying] = useState(true);

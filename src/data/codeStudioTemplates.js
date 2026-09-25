@@ -383,7 +383,7 @@ export default function SaasExecutiveDashboard() {
 
   const transactions = [
     { id: 'TX-9021', company: 'Acme Robotics AI', plan: 'Enterprise Sovereign', amount: '$12,400', date: 'Today, 2:45 PM', status: 'Settled' },
-    { id: 'TX-9022', company: 'Nexus BioHealth', plan: 'Titan Cluster', amount: '$8,900', date: 'Today, 1:12 PM', status: 'Settled' },
+    { id: 'TX-9022', company: 'Nexus BioHealth', plan: 'Girionix Enterprise Cluster', amount: '$8,900', date: 'Today, 1:12 PM', status: 'Settled' },
     { id: 'TX-9023', company: 'Quantum Dynamics', plan: 'Developer Studio', amount: '$2,400', date: 'Today, 11:30 AM', status: 'Processing' },
     { id: 'TX-9024', company: 'Vanguard Aerospace', plan: 'Enterprise Sovereign', amount: '$24,000', date: 'Yesterday', status: 'Settled' },
     { id: 'TX-9025', company: 'Aether Cloud Labs', plan: 'Team Pro', amount: '$1,200', date: 'Yesterday', status: 'Settled' }
@@ -568,7 +568,7 @@ export default function AgileKanbanBoard() {
     { id: 'GIR-101', title: 'Integrate DeepSeek R1 671B model weights', column: 'in-progress', priority: 'Critical', tag: 'Core AI' },
     { id: 'GIR-102', title: 'Add dedicated /chat direct workspace routing', column: 'review', priority: 'High', tag: 'SPA Engine' },
     { id: 'GIR-103', title: 'Design Web Audio synth for arcade snake game', column: 'done', priority: 'Medium', tag: 'Canvas Dev' },
-    { id: 'GIR-104', title: 'Compile sovereign offline binary for Linux AppImage', column: 'backlog', priority: 'High', tag: 'Titan' },
+    { id: 'GIR-104', title: 'Compile sovereign offline binary for Linux AppImage', column: 'backlog', priority: 'High', tag: 'Sovereign' },
     { id: 'GIR-105', title: 'Optimize KaTeX LaTeX rendering in Math Lab', column: 'done', priority: 'Low', tag: 'KaTeX' }
   ]);
 

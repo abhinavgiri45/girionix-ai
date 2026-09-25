@@ -1332,7 +1332,7 @@ export default function ProductCard() {
         </button>
         <div className="w-28 h-28 rounded-full bg-gradient-to-tr from-cyan-500/40 to-purple-500/40 blur-xl absolute" />
         <div className="relative font-bold text-center font-mono text-cyan-200">
-          TITAN RIG 70B
+          GIRIONIX PRO RIG
         </div>
       </div>
 
@@ -1342,7 +1342,7 @@ export default function ProductCard() {
           <span>4.98</span>
           <span className="text-gray-500 font-normal">(1,240 reviews)</span>
         </div>
-        <h3 className="font-bold text-base text-white tracking-wide">Titan Workstation Core</h3>
+        <h3 className="font-bold text-base text-white tracking-wide">Girionix Pro Workstation</h3>
         <p className="text-xs text-gray-400">100% Air-Gapped Physical Neural Engine</p>
       </div>
 
@@ -1777,7 +1777,7 @@ export default function StandaloneSnakeGame() {
   return (
     <div className="flex flex-col items-center justify-center p-6 bg-[#0B0F19] text-white rounded-3xl border border-emerald-500/30 max-w-md mx-auto shadow-2xl space-y-4 font-sans">
       <div className="flex justify-between w-full items-center">
-        <h2 className="text-lg font-bold text-emerald-400 flex items-center gap-2">🐍 Titan Snake</h2>
+        <h2 className="text-lg font-bold text-emerald-400 flex items-center gap-2">🐍 Girionix Snake</h2>
         <div className="flex items-center gap-3 text-xs font-mono">
           <span className="text-gray-400">Score: <strong className="text-white">{score}</strong></span>
           <span className="text-amber-400 flex items-center gap-1"><Trophy className="w-3.5 h-3.5" /> {highScore}</span>
@@ -2392,7 +2392,7 @@ app.use(express.json());
 
 let items = [
   { id: '1', name: 'Girionix Pro Rig', tier: 'Ultra' },
-  { id: '2', name: 'Titan Lite Engine', tier: 'Lite' }
+  { id: '2', name: 'Girionix Lite Engine', tier: 'Lite' }
 ];
 
 app.get('/api/items', (req, res) => {

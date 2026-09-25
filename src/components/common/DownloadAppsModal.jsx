@@ -33,7 +33,7 @@ import { promptPWAInstall } from '../../services/pwaInstaller';
 
 export default function DownloadAppsModal({ isOpen, onClose }) {
   const [selectedPlatform, setSelectedPlatform] = useState(() => detectUserOS());
-  const [selectedEdition, setSelectedEdition] = useState('standard'); // 'standard' | 'titan' | 'titan-lite'
+  const [selectedEdition, setSelectedEdition] = useState('standard'); // 'standard' | 'pro' | 'lite'
   const [actionMessage, setActionMessage] = useState(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const [showSecurityGuide, setShowSecurityGuide] = useState(true);
@@ -91,11 +91,11 @@ export default function DownloadAppsModal({ isOpen, onClose }) {
     }
   };
 
-  const downloadMapTitan = {
+  const downloadMapPro = {
     windows: {
-      file: '/downloads/Girionix_AI_Titan_Setup.exe',
-      name: 'Girionix_AI_Titan_Setup.exe',
-      label: 'Download Titan Setup Wizard (.exe)',
+      file: '/downloads/Girionix_AI_Pro_Setup.exe',
+      name: 'Girionix_AI_Pro_Setup.exe',
+      label: 'Download Girionix Pro Setup Wizard (.exe)',
       standaloneFile: '/downloads/GirionixAI.exe',
       standaloneName: 'GirionixAI.exe',
       standaloneLabel: 'Direct Standalone Executable (.exe)',
@@ -106,17 +106,17 @@ export default function DownloadAppsModal({ isOpen, onClose }) {
       uninstallerName: 'Uninstall_Girionix_AI.exe'
     },
     android: {
-      file: '/downloads/Girionix_AI_Titan.apk',
-      name: 'Girionix_AI_Titan.apk',
-      label: 'Download Titan Android Package (.apk - Hardware Verified)',
-      uninstallGuide: 'Long-press Girionix AI Titan icon and tap "Uninstall".'
+      file: '/downloads/Girionix_AI_Pro.apk',
+      name: 'Girionix_AI_Pro.apk',
+      label: 'Download Girionix Pro Android Package (.apk - Hardware Verified)',
+      uninstallGuide: 'Long-press Girionix AI Pro icon and tap "Uninstall".'
     },
     mac: {
       file: '/downloads/Girionix_AI_macOS.zip',
       name: 'Girionix_AI_macOS.zip',
-      label: 'Download Titan macOS App Bundle (.zip)',
-      altFile: '/downloads/Girionix_AI_Titan_macOS.dmg',
-      altName: 'Girionix_AI_Titan_macOS.dmg',
+      label: 'Download Girionix Pro macOS App Bundle (.zip)',
+      altFile: '/downloads/Girionix_AI_Pro_macOS.dmg',
+      altName: 'Girionix_AI_Pro_macOS.dmg',
       altLabel: 'Download macOS Package (.dmg)',
       scriptFile: '/downloads/Install_Girionix_Mac.command',
       scriptName: 'Install_Girionix_Mac.command',
@@ -125,15 +125,15 @@ export default function DownloadAppsModal({ isOpen, onClose }) {
       uninstallerName: 'Uninstall_Girionix_Mac.command'
     },
     ios: {
-      file: '/downloads/Girionix_AI_Titan_iOS.mobileconfig',
-      name: 'Girionix_AI_Titan_iOS.mobileconfig',
-      label: 'Download Titan iOS Profile (.mobileconfig)',
-      uninstallGuide: 'Go to iOS Settings -> General -> VPN & Device Management -> Girionix AI Titan -> Remove Profile.'
+      file: '/downloads/Girionix_AI_Pro_iOS.mobileconfig',
+      name: 'Girionix_AI_Pro_iOS.mobileconfig',
+      label: 'Download Girionix Pro iOS Profile (.mobileconfig)',
+      uninstallGuide: 'Go to iOS Settings -> General -> VPN & Device Management -> Girionix AI Pro -> Remove Profile.'
     },
     linux: {
-      file: '/downloads/Girionix_AI_Titan_Linux.AppImage',
-      name: 'Girionix_AI_Titan_Linux.AppImage',
-      label: 'Download Titan Linux AppImage (.AppImage - Hardware Verified)',
+      file: '/downloads/Girionix_AI_Pro_Linux.AppImage',
+      name: 'Girionix_AI_Pro_Linux.AppImage',
+      label: 'Download Girionix Pro Linux AppImage (.AppImage - Hardware Verified)',
       scriptFile: '/downloads/install_girionix_linux.sh',
       scriptName: 'install_girionix_linux.sh',
       scriptLabel: '1-Click Linux Native Installer (.sh)',
@@ -142,11 +142,11 @@ export default function DownloadAppsModal({ isOpen, onClose }) {
     }
   };
 
-  const downloadMapTitanLite = {
+  const downloadMapLite = {
     windows: {
-      file: '/downloads/Girionix_AI_Titan_Lite_Setup.exe',
-      name: 'Girionix_AI_Titan_Lite_Setup.exe',
-      label: 'Download Titan Lite Setup Wizard (.exe)',
+      file: '/downloads/Girionix_AI_Lite_Setup.exe',
+      name: 'Girionix_AI_Lite_Setup.exe',
+      label: 'Download Girionix Lite Setup Wizard (.exe)',
       standaloneFile: '/downloads/GirionixAI.exe',
       standaloneName: 'GirionixAI.exe',
       standaloneLabel: 'Direct Standalone Executable (.exe)',
@@ -157,17 +157,17 @@ export default function DownloadAppsModal({ isOpen, onClose }) {
       uninstallerName: 'Uninstall_Girionix_AI.exe'
     },
     android: {
-      file: '/downloads/Girionix_AI_Titan_Lite.apk',
-      name: 'Girionix_AI_Titan_Lite.apk',
-      label: 'Download Titan Lite Android APK (.apk - 2GB+ RAM)',
-      uninstallGuide: 'Long-press Girionix AI Titan Lite icon and tap "Uninstall".'
+      file: '/downloads/Girionix_AI_Lite.apk',
+      name: 'Girionix_AI_Lite.apk',
+      label: 'Download Girionix Lite Android APK (.apk - 2GB+ RAM)',
+      uninstallGuide: 'Long-press Girionix AI Lite icon and tap "Uninstall".'
     },
     mac: {
       file: '/downloads/Girionix_AI_macOS.zip',
       name: 'Girionix_AI_macOS.zip',
-      label: 'Download Titan Lite macOS App Bundle (.zip)',
-      altFile: '/downloads/Girionix_AI_Titan_Lite_macOS.dmg',
-      altName: 'Girionix_AI_Titan_Lite_macOS.dmg',
+      label: 'Download Girionix Lite macOS App Bundle (.zip)',
+      altFile: '/downloads/Girionix_AI_Lite_macOS.dmg',
+      altName: 'Girionix_AI_Lite_macOS.dmg',
       altLabel: 'Download macOS Package (.dmg)',
       scriptFile: '/downloads/Install_Girionix_Mac.command',
       scriptName: 'Install_Girionix_Mac.command',
@@ -176,15 +176,15 @@ export default function DownloadAppsModal({ isOpen, onClose }) {
       uninstallerName: 'Uninstall_Girionix_Mac.command'
     },
     ios: {
-      file: '/downloads/Girionix_AI_Titan_Lite_iOS.mobileconfig',
-      name: 'Girionix_AI_Titan_Lite_iOS.mobileconfig',
-      label: 'Download Titan Lite iOS Profile (.mobileconfig)',
-      uninstallGuide: 'Go to iOS Settings -> General -> VPN & Device Management -> Girionix AI Titan Lite -> Remove Profile.'
+      file: '/downloads/Girionix_AI_Lite_iOS.mobileconfig',
+      name: 'Girionix_AI_Lite_iOS.mobileconfig',
+      label: 'Download Girionix Lite iOS Profile (.mobileconfig)',
+      uninstallGuide: 'Go to iOS Settings -> General -> VPN & Device Management -> Girionix AI Lite -> Remove Profile.'
     },
     linux: {
-      file: '/downloads/Girionix_AI_Titan_Lite_Linux.AppImage',
-      name: 'Girionix_AI_Titan_Lite_Linux.AppImage',
-      label: 'Download Titan Lite Linux AppImage (.AppImage - Low Spec)',
+      file: '/downloads/Girionix_AI_Lite_Linux.AppImage',
+      name: 'Girionix_AI_Lite_Linux.AppImage',
+      label: 'Download Girionix Lite Linux AppImage (.AppImage - Low Spec)',
       scriptFile: '/downloads/install_girionix_linux.sh',
       scriptName: 'install_girionix_linux.sh',
       scriptLabel: '1-Click Linux Native Installer (.sh)',
@@ -193,9 +193,9 @@ export default function DownloadAppsModal({ isOpen, onClose }) {
     }
   };
 
-  const downloadMap = selectedEdition === 'titan' 
-    ? downloadMapTitan 
-    : (selectedEdition === 'titan-lite' ? downloadMapTitanLite : downloadMapStandard);
+  const downloadMap = selectedEdition === 'pro' 
+    ? downloadMapPro 
+    : (selectedEdition === 'lite' ? downloadMapLite : downloadMapStandard);
 
   const handleDownloadFile = async (filePath, fileName, successMessage) => {
     setIsDownloading(true);
@@ -349,8 +349,8 @@ export default function DownloadAppsModal({ isOpen, onClose }) {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 my-4">
           {[
             { id: 'standard', label: '🌐 Standard Universal App', desc: 'Lightweight & Runs on all devices' },
-            { id: 'titan', label: '⚡ Titan Heavy Edition', desc: '100% Offline Heavy Engine (16GB+ RAM)' },
-            { id: 'titan-lite', label: '🌱 Titan Lite Edition', desc: '100% Offline for Low-End PCs (2GB+ RAM)' }
+            { id: 'pro', label: '⚡ Girionix Pro Workstation', desc: '100% Offline Heavy Engine (16GB+ RAM)' },
+            { id: 'lite', label: '🌱 Girionix Lite Edition', desc: '100% Offline for Low-End PCs (2GB+ RAM)' }
           ].map(ed => (
             <button
               key={ed.id}

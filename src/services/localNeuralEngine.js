@@ -1,7 +1,7 @@
 /**
  * Girionix AI — 100% On-Device Sovereign Neural Engine
  * Executes completely offline using physical CPU, GPU, RAM, and WebGPU/WASM resources.
- * Supports both Titan Heavy/Ultra (16GB+ RAM / 8+ Cores) and Titan Lite (2GB-8GB RAM / Dual-Core).
+ * Supports both Girionix Pro Physical Core (16GB+ RAM / 8+ Cores) and Girionix Lite (2GB-8GB RAM / Dual-Core).
  * 100% Air-Gapped Physical Execution (Zero Internet / Zero Network Traffic).
  */
 
@@ -10,26 +10,26 @@ import { conversationMemory } from './conversationMemory.js';
 import { localCodeSynthesizer } from './localCodeSynthesizer.js';
 import { localDomainKnowledge } from './localDomainKnowledge.js';
 
-export const TITAN_REQUIREMENTS = {
+export const GIRIONIX_LOCAL_REQUIREMENTS = {
   ultra: {
-    name: "Titan 70B Heavy Workstation",
+    name: "Girionix Pro Physical Neural Core",
     minRamGb: 16,
     recRamGb: 32,
     minCpuCores: 8,
     recCpuCores: 16,
     minStorageMb: 2048,
     targetTier: "High-End Physical Hardware (RTX/M-Series/Multi-Core)",
-    badge: "⚡ TITAN ULTRA"
+    badge: "⚡ GIRIONIX PRO"
   },
   lite: {
-    name: "Titan Lite (Low-End & Battery Saver)",
+    name: "Girionix Lite (Low-End & Battery Saver)",
     minRamGb: 2,
     recRamGb: 4,
     minCpuCores: 2,
     recCpuCores: 4,
     minStorageMb: 250,
     targetTier: "Low-End / Budget / Legacy Hardware (2GB-8GB RAM)",
-    badge: "🌱 TITAN LITE"
+    badge: "🌱 GIRIONIX LITE"
   }
 };
 
@@ -181,8 +181,8 @@ class LocalNeuralEngine {
 
     const auditTimeMs = Math.round(performance.now() - startTime);
 
-    const meetsUltra = ramGb >= TITAN_REQUIREMENTS.ultra.minRamGb && cpuCores >= TITAN_REQUIREMENTS.ultra.minCpuCores;
-    const meetsLite = ramGb >= TITAN_REQUIREMENTS.lite.minRamGb && cpuCores >= TITAN_REQUIREMENTS.lite.minCpuCores;
+    const meetsUltra = ramGb >= GIRIONIX_LOCAL_REQUIREMENTS.ultra.minRamGb && cpuCores >= GIRIONIX_LOCAL_REQUIREMENTS.ultra.minCpuCores;
+    const meetsLite = ramGb >= GIRIONIX_LOCAL_REQUIREMENTS.lite.minRamGb && cpuCores >= GIRIONIX_LOCAL_REQUIREMENTS.lite.minCpuCores;
     const passed = meetsUltra || meetsLite;
 
     let tier = 'lite';
@@ -198,7 +198,7 @@ class LocalNeuralEngine {
       meetsUltra,
       meetsLite,
       tier,
-      tierName: meetsUltra ? 'Titan Heavy / Ultra Workstation' : (meetsLite ? 'Titan Lite' : 'Standard Universal'),
+      tierName: meetsUltra ? 'Girionix Pro Physical Workstation' : (meetsLite ? 'Girionix Lite Core' : 'Standard Unified Core'),
       gpuInfo,
       gpuRenderer: gpuInfo.cleanName || gpuInfo.renderer,
       gpuVendor: gpuInfo.vendor,
@@ -208,23 +208,23 @@ class LocalNeuralEngine {
       storageGb: (storageMb / 1024).toFixed(1),
       estimatedTokensPerSec: meetsUltra ? 120 : (meetsLite ? 35 : 20),
       statusMessage: meetsUltra
-        ? '⚡ High-End Rig Detected: 100% Titan Ultra Heavy Workstation Ready (~90-140+ tok/s).'
-        : '🌱 Low-End / Standard Rig Detected: 100% Titan Lite Engine Active (~25-45 tok/s).',
+        ? '⚡ High-End Rig Detected: 100% Girionix Pro Physical Core Ready (~90-140+ tok/s).'
+        : '🌱 Low-End / Standard Rig Detected: 100% Girionix Lite Core Active (~25-45 tok/s).',
       ram: {
         valueGb: ramGb,
         pass: ramGb >= 4,
-        passUltra: ramGb >= TITAN_REQUIREMENTS.ultra.minRamGb,
-        passLite: ramGb >= TITAN_REQUIREMENTS.lite.minRamGb,
-        ultraMin: TITAN_REQUIREMENTS.ultra.minRamGb,
-        liteMin: TITAN_REQUIREMENTS.lite.minRamGb
+        passUltra: ramGb >= GIRIONIX_LOCAL_REQUIREMENTS.ultra.minRamGb,
+        passLite: ramGb >= GIRIONIX_LOCAL_REQUIREMENTS.lite.minRamGb,
+        ultraMin: GIRIONIX_LOCAL_REQUIREMENTS.ultra.minRamGb,
+        liteMin: GIRIONIX_LOCAL_REQUIREMENTS.lite.minRamGb
       },
       cpu: {
         cores: cpuCores,
         pass: cpuCores >= 4,
-        passUltra: cpuCores >= TITAN_REQUIREMENTS.ultra.minCpuCores,
-        passLite: cpuCores >= TITAN_REQUIREMENTS.lite.minCpuCores,
-        ultraMin: TITAN_REQUIREMENTS.ultra.minCpuCores,
-        liteMin: TITAN_REQUIREMENTS.lite.minCpuCores
+        passUltra: cpuCores >= GIRIONIX_LOCAL_REQUIREMENTS.ultra.minCpuCores,
+        passLite: cpuCores >= GIRIONIX_LOCAL_REQUIREMENTS.lite.minCpuCores,
+        ultraMin: GIRIONIX_LOCAL_REQUIREMENTS.ultra.minCpuCores,
+        liteMin: GIRIONIX_LOCAL_REQUIREMENTS.lite.minCpuCores
       },
       gpu: {
         ...gpuInfo,
@@ -739,11 +739,14 @@ class LocalNeuralEngine {
   /**
    * Synthesize on-device intelligent response offline without any cloud or internet.
    */
-  synthesizeOfflineResponse(prompt, modelId = 'girionix-titan-70b', isTitanLite = false, searchData = null, history = []) {
+  synthesizeOfflineResponse(prompt, modelId = 'girionix-pro', isLocalLite = false, searchData = null, history = []) {
     const p = prompt.trim();
     const lp = p.toLowerCase();
-    const isLite = isTitanLite || modelId === 'girionix-titan-lite' || this.activeProfile === 'lite';
-    const tag = isLite ? '🌱 Titan Lite (On-Device Lightweight)' : '⚡ Titan 70B Heavy Core (On-Device Workstation)';
+    const isLite = isLocalLite || modelId === 'girionix-lite' || this.activeProfile === 'lite';
+    const isOrbitContext = (history && history.some(m => m.tool || (typeof m.content === 'string' && m.content.includes('Giri Orbit')))) || /giri orbit|orbit copilot|office suite/i.test(prompt);
+    const tag = isOrbitContext
+      ? '⚡ Girionix Pro Co-Pilot'
+      : (isLite ? '🌱 Girionix Lite (On-Device Core)' : '⚡ Girionix Pro (Physical Neural Core)');
 
     // =========================================================================
     // 00. DIRECT CONVERSATIONAL MEMORY & RECALL QUERIES
@@ -1430,8 +1433,8 @@ $$e^{i\\pi} + 1 = 0$$`;
   async streamLocalResponse({ 
     prompt, 
     history = [], 
-    model = 'girionix-titan-70b', 
-    isTitanLite = false, 
+    model = 'girionix-pro', 
+    isLocalLite = false, 
     webSearchEnabled = false, 
     useThinking = true, 
     onToken, 
@@ -1441,7 +1444,7 @@ $$e^{i\\pi} + 1 = 0$$`;
       await this.auditSystemHardware();
     }
 
-    const isLite = isTitanLite || model === 'girionix-titan-lite' || this.activeProfile === 'lite';
+    const isLite = isLocalLite || model === 'girionix-lite' || this.activeProfile === 'lite';
 
     const isConversational = liveWebSearch.isConversationalOrNonSearchQuery(prompt);
     const isCode = this.isCodeQuery(prompt);
@@ -1462,8 +1465,8 @@ $$e^{i\\pi} + 1 = 0$$`;
         onReasoning(`📐 Evaluating mathematical equations and algebraic constraints...\n- Checking numerical bounds and formal identities\n- Deriving step-by-step solution with KaTeX notation...`);
       } else if (!isConversational) {
         onReasoning(isLite 
-          ? "🌱 Initializing Titan Lite Quantized Engine...\n- Allocating ultra-low memory buffer (~350MB RAM)\n- Running on physical CPU cores with zero network packets\n- Generating instant on-device token stream..."
-          : "⚡ Initializing Titan 70B Heavy Workstation Engine...\n- Pinning physical CPU threads and local GPU shader pipelines\n- Allocating dedicated in-memory tensor matrices\n- Executing 100% air-gapped multi-step reasoning chain (0 bytes sent)..."
+          ? "🌱 Initializing Girionix Lite Quantized Engine...\n- Allocating ultra-low memory buffer (~350MB RAM)\n- Running on physical CPU cores with zero network packets\n- Generating instant on-device token stream..."
+          : "⚡ Initializing Girionix Pro Physical Neural Engine...\n- Pinning physical CPU threads and local GPU shader pipelines\n- Allocating dedicated in-memory tensor matrices\n- Executing 100% air-gapped multi-step reasoning chain (0 bytes sent)..."
         );
       }
     }
@@ -1489,7 +1492,7 @@ $$e^{i\\pi} + 1 = 0$$`;
   /**
    * Universal streaming method compatible with CodeStudio, MathLab, ScriptStudio
    */
-  async generateStream({ messages = [], model = 'girionix-titan-70b', onChunk, onReasoningChunk, signal }) {
+  async generateStream({ messages = [], model = 'girionix-pro', onChunk, onReasoningChunk, signal }) {
     const userPrompt = messages.filter(m => m.role !== 'system').pop()?.content || '';
     return this.streamLocalResponse({
       prompt: userPrompt,

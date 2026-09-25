@@ -189,19 +189,19 @@ export const HIGH_END_SYSTEM_SPECS = {
   }
 };
 
-export const TITAN_PLATFORM_INFO = {
+export const PRO_PLATFORM_INFO = {
   windows: {
     id: 'windows',
-    name: 'Windows 10 / 11 / 12 (Titan Edition)',
-    iconLabel: 'Windows Titan',
-    tag: '⚡ 100% ON-DEVICE TITAN EDITION (FOR HIGH-END PCs)',
+    name: 'Windows 10 / 11 / 12 (Girionix Pro)',
+    iconLabel: 'Windows Pro',
+    tag: '⚡ 100% ON-DEVICE GIRIONIX PRO (FOR HIGH-END PCs)',
     fileType: '.EXE Setup Wizard (Hardware Verified)',
-    fileName: 'Girionix_AI_Titan_Setup.exe',
+    fileName: 'Girionix_AI_Pro_Setup.exe',
     fileSize: '10.63 MB (Pre-Flight Verified)',
-    downloadUrl: '/downloads/Girionix_AI_Titan_Setup.exe',
-    headline: 'Girionix AI Titan Edition for Windows (100% Offline Physical Execution)',
+    downloadUrl: '/downloads/Girionix_AI_Pro_Setup.exe',
+    headline: 'Girionix AI Pro Edition for Windows (100% Offline Physical Execution)',
     description: 'Specialized High-End edition with pre-flight hardware verification at installation time. Runs 100% offline utilizing your physical 16GB+ RAM, 8+ CPU cores, and NVIDIA RTX GPU.',
-    buttonText: 'Download Titan Edition (.exe Setup)',
+    buttonText: 'Download Pro Edition (.exe Setup)',
     features: [
       { title: 'Pre-Flight Hardware Check', desc: 'Automated installer verification confirms RAM, CPU cores, and GPU VRAM before installation.' },
       { title: '100% Offline Physical Execution', desc: 'Zero cloud latency; all neural layers execute directly on your physical hardware.' },
@@ -210,16 +210,16 @@ export const TITAN_PLATFORM_INFO = {
   },
   android: {
     id: 'android',
-    name: 'Android Flagship (Titan Edition)',
-    iconLabel: 'Android Titan',
-    tag: '⚡ 100% ON-DEVICE TITAN EDITION (FLAGSHIP ANDROID)',
+    name: 'Android Flagship (Girionix Pro)',
+    iconLabel: 'Android Pro',
+    tag: '⚡ 100% ON-DEVICE GIRIONIX PRO (FLAGSHIP ANDROID)',
     fileType: '.APK Package (Hardware Verified)',
-    fileName: 'Girionix_AI_Titan.apk',
+    fileName: 'Girionix_AI_Pro.apk',
     fileSize: '5.01 MB',
-    downloadUrl: '/downloads/Girionix_AI_Titan.apk',
-    headline: 'Girionix AI Titan Edition for Android Flagships',
+    downloadUrl: '/downloads/Girionix_AI_Pro.apk',
+    headline: 'Girionix AI Pro Edition for Android Flagships',
     description: 'Designed for Snapdragon 8 Gen 2/3 and 12GB–16GB RAM flagships with on-device hardware verification.',
-    buttonText: 'Download Titan APK (.apk Package)',
+    buttonText: 'Download Pro APK (.apk Package)',
     features: [
       { title: 'Flagship Hardware Verified', desc: 'Probes high-performance cores and Adreno/Immortalis GPU shaders.' },
       { title: '100% Offline Sandbox', desc: 'Runs full neural models offline on internal NPU & GPU.' },
@@ -228,16 +228,16 @@ export const TITAN_PLATFORM_INFO = {
   },
   mac: {
     id: 'mac',
-    name: 'macOS Apple Silicon (Titan Edition)',
-    iconLabel: 'macOS Titan',
-    tag: '⚡ 100% ON-DEVICE TITAN EDITION (APPLE SILICON)',
+    name: 'macOS Apple Silicon (Girionix Pro)',
+    iconLabel: 'macOS Pro',
+    tag: '⚡ 100% ON-DEVICE GIRIONIX PRO (APPLE SILICON)',
     fileType: '.DMG Universal Bundle (Hardware Verified)',
-    fileName: 'Girionix_AI_Titan_macOS.dmg',
+    fileName: 'Girionix_AI_Pro_macOS.dmg',
     fileSize: '5.13 MB',
-    downloadUrl: '/downloads/Girionix_AI_Titan_macOS.dmg',
-    headline: 'Girionix AI Titan Edition for macOS Apple Silicon',
+    downloadUrl: '/downloads/Girionix_AI_Pro_macOS.dmg',
+    headline: 'Girionix AI Pro Edition for macOS Apple Silicon',
     description: 'Optimized for Apple M2/M3/M4 Pro, Max, and Ultra with 16GB–128GB Unified Memory and Metal 3 shaders.',
-    buttonText: 'Download Titan DMG (.dmg Bundle)',
+    buttonText: 'Download Pro DMG (.dmg Bundle)',
     features: [
       { title: 'Metal 3 Hardware Verified', desc: 'Checks unified memory bandwidth and Apple 16+ core GPU acceleration.' },
       { title: 'Pure Local Apple Silicon Core', desc: 'Runs 100% offline with zero cloud dependency.' },
@@ -246,16 +246,16 @@ export const TITAN_PLATFORM_INFO = {
   },
   linux: {
     id: 'linux',
-    name: 'Linux Workstation (Titan Edition)',
-    iconLabel: 'Linux Titan',
-    tag: '⚡ 100% ON-DEVICE TITAN EDITION (LINUX WORKSTATION)',
+    name: 'Linux Workstation (Girionix Pro)',
+    iconLabel: 'Linux Pro',
+    tag: '⚡ 100% ON-DEVICE GIRIONIX PRO (LINUX WORKSTATION)',
     fileType: '.AppImage (Hardware Verified)',
-    fileName: 'Girionix_AI_Titan_Linux.AppImage',
+    fileName: 'Girionix_AI_Pro_Linux.AppImage',
     fileSize: '6.63 MB',
-    downloadUrl: '/downloads/Girionix_AI_Titan_Linux.AppImage',
-    headline: 'Girionix AI Titan Edition for Linux Workstations',
+    downloadUrl: '/downloads/Girionix_AI_Pro_Linux.AppImage',
+    headline: 'Girionix AI Pro Edition for Linux Workstations',
     description: 'Engineered for high-end multi-core Linux workstations with NVIDIA CUDA / Vulkan hardware acceleration.',
-    buttonText: 'Download Titan AppImage (.AppImage)',
+    buttonText: 'Download Pro AppImage (.AppImage)',
     features: [
       { title: 'Vulkan & CUDA Hardware Check', desc: 'Pre-flight check validates 8+ CPU cores, 16GB+ RAM, and GPU shaders.' },
       { title: '100% Air-Gapped Security', desc: 'Complete offline execution for confidential research and development.' },
@@ -264,16 +264,16 @@ export const TITAN_PLATFORM_INFO = {
   },
   ios: {
     id: 'ios',
-    name: 'iOS & iPadOS Pro (Titan Edition)',
-    iconLabel: 'iOS Titan',
-    tag: '⚡ 100% ON-DEVICE TITAN PROFILE (M-SERIES IPAD PRO)',
+    name: 'iOS & iPadOS Pro (Girionix Pro)',
+    iconLabel: 'iOS Pro',
+    tag: '⚡ 100% ON-DEVICE GIRIONIX PRO (M-SERIES IPAD PRO)',
     fileType: '.MobileConfig (Hardware Verified)',
-    fileName: 'Girionix_AI_Titan_iOS.mobileconfig',
+    fileName: 'Girionix_AI_Pro_iOS.mobileconfig',
     fileSize: '1.3 KB',
-    downloadUrl: '/downloads/Girionix_AI_Titan_iOS.mobileconfig',
-    headline: 'Girionix AI Titan Edition for iPad Pro (M-Series)',
+    downloadUrl: '/downloads/Girionix_AI_Pro_iOS.mobileconfig',
+    headline: 'Girionix AI Pro Edition for iPad Pro (M-Series)',
     description: 'High-end offline container profile for M1/M2/M4 iPad Pro and iPhone 15/16 Pro series.',
-    buttonText: 'Install Titan Profile (.mobileconfig)',
+    buttonText: 'Install Pro Profile (.mobileconfig)',
     features: [
       { title: 'M-Series iPad Hardware Check', desc: 'Optimized for Apple Silicon iPad Pros with 16GB Unified RAM.' },
       { title: 'Offline Local Neural Cache', desc: 'Executes cached models in airplane mode with zero network.' },
@@ -282,19 +282,19 @@ export const TITAN_PLATFORM_INFO = {
   }
 };
 
-export const TITAN_LITE_PLATFORM_INFO = {
+export const LITE_PLATFORM_INFO = {
   windows: {
     id: 'windows',
-    name: 'Windows 7 / 8 / 10 / 11 (Titan Lite)',
+    name: 'Windows 7 / 8 / 10 / 11 (Girionix Lite)',
     iconLabel: 'Windows Lite',
-    tag: '🌱 100% OFFLINE TITAN LITE (FOR LOW-END & BUDGET PCs)',
+    tag: '🌱 100% OFFLINE GIRIONIX LITE (FOR LOW-END & BUDGET PCs)',
     fileType: '.EXE Setup Wizard (Lightweight)',
-    fileName: 'Girionix_AI_Titan_Lite_Setup.exe',
+    fileName: 'Girionix_AI_Lite_Setup.exe',
     fileSize: '10.63 MB (Ultra-Lightweight)',
-    downloadUrl: '/downloads/Girionix_AI_Titan_Lite_Setup.exe',
-    headline: 'Girionix AI Titan Lite for Low-End Windows PCs (100% Offline)',
+    downloadUrl: '/downloads/Girionix_AI_Lite_Setup.exe',
+    headline: 'Girionix AI Lite for Low-End Windows PCs (100% Offline)',
     description: 'Designed for budget laptops, older PCs (2GB–8GB RAM, Dual/Quad-Core), and battery-saving offline computing with zero lag.',
-    buttonText: 'Download Titan Lite (.exe Setup)',
+    buttonText: 'Download Lite (.exe Setup)',
     features: [
       { title: 'Ultra-Lean 350MB RAM Footprint', desc: 'Runs smoothly on machines with 2GB–4GB RAM without slowing down Windows.' },
       { title: '100% Offline Physical Execution', desc: 'Zero internet required. Complete data privacy and instant token responses.' },
@@ -303,16 +303,16 @@ export const TITAN_LITE_PLATFORM_INFO = {
   },
   android: {
     id: 'android',
-    name: 'Android Budget & Low-RAM (Titan Lite)',
+    name: 'Android Budget & Low-RAM (Girionix Lite)',
     iconLabel: 'Android Lite',
-    tag: '🌱 100% OFFLINE TITAN LITE (BUDGET ANDROID)',
+    tag: '🌱 100% OFFLINE GIRIONIX LITE (BUDGET ANDROID)',
     fileType: '.APK Package (Ultra-Lean)',
-    fileName: 'Girionix_AI_Titan_Lite.apk',
+    fileName: 'Girionix_AI_Lite.apk',
     fileSize: '5.01 MB',
-    downloadUrl: '/downloads/Girionix_AI_Titan_Lite.apk',
-    headline: 'Girionix AI Titan Lite for Budget Android Phones',
+    downloadUrl: '/downloads/Girionix_AI_Lite.apk',
+    headline: 'Girionix AI Lite for Budget Android Phones',
     description: 'Ultra-compact offline APK package for Android devices with 2GB–4GB RAM. Battery-saver mode enabled.',
-    buttonText: 'Download Titan Lite APK (.apk)',
+    buttonText: 'Download Lite APK (.apk)',
     features: [
       { title: 'Battery-Saving Optimization', desc: 'Minimal CPU cycles and low power consumption.' },
       { title: '100% Airplane Mode Ready', desc: 'Generates code and answers without Wi-Fi or cellular data.' },
@@ -321,16 +321,16 @@ export const TITAN_LITE_PLATFORM_INFO = {
   },
   mac: {
     id: 'mac',
-    name: 'macOS Intel & Older Macs (Titan Lite)',
+    name: 'macOS Intel & Older Macs (Girionix Lite)',
     iconLabel: 'macOS Lite',
-    tag: '🌱 100% OFFLINE TITAN LITE (LEGACY & AIR MACS)',
+    tag: '🌱 100% OFFLINE GIRIONIX LITE (LEGACY & AIR MACS)',
     fileType: '.DMG Bundle (Lightweight)',
-    fileName: 'Girionix_AI_Titan_Lite_macOS.dmg',
+    fileName: 'Girionix_AI_Lite_macOS.dmg',
     fileSize: '5.13 MB',
-    downloadUrl: '/downloads/Girionix_AI_Titan_Lite_macOS.dmg',
-    headline: 'Girionix AI Titan Lite for Older Intel & MacBook Air',
+    downloadUrl: '/downloads/Girionix_AI_Lite_macOS.dmg',
+    headline: 'Girionix AI Lite for Older Intel & MacBook Air',
     description: 'Ultra-efficient offline bundle for older MacBooks (4GB–8GB RAM) and battery-conscious travel.',
-    buttonText: 'Download Titan Lite DMG (.dmg)',
+    buttonText: 'Download Lite DMG (.dmg)',
     features: [
       { title: 'Intel & M1 Air Optimized', desc: 'Smooth performance on older 4GB–8GB RAM MacBooks.' },
       { title: 'Zero Network Required', desc: 'Runs fully air-gapped without cloud connections.' },
@@ -339,16 +339,16 @@ export const TITAN_LITE_PLATFORM_INFO = {
   },
   linux: {
     id: 'linux',
-    name: 'Linux Lightweight & Netbooks (Titan Lite)',
+    name: 'Linux Lightweight & Netbooks (Girionix Lite)',
     iconLabel: 'Linux Lite',
-    tag: '🌱 100% OFFLINE TITAN LITE (LOW-SPEC LINUX)',
+    tag: '🌱 100% OFFLINE GIRIONIX LITE (LOW-SPEC LINUX)',
     fileType: '.AppImage (Lightweight)',
-    fileName: 'Girionix_AI_Titan_Lite_Linux.AppImage',
+    fileName: 'Girionix_AI_Lite_Linux.AppImage',
     fileSize: '6.63 MB',
-    downloadUrl: '/downloads/Girionix_AI_Titan_Lite_Linux.AppImage',
-    headline: 'Girionix AI Titan Lite for Lightweight Linux & Netbooks',
+    downloadUrl: '/downloads/Girionix_AI_Lite_Linux.AppImage',
+    headline: 'Girionix AI Lite for Lightweight Linux & Netbooks',
     description: 'Self-contained AppImage optimized for older Linux laptops, netbooks, and resource-constrained VMs.',
-    buttonText: 'Download Titan Lite AppImage',
+    buttonText: 'Download Lite AppImage',
     features: [
       { title: 'Ultra-Low Memory Mode', desc: 'Lightweight binary running on 2GB RAM Linux installations.' },
       { title: '100% Air-Gapped Operation', desc: 'Zero network calls for air-gapped workstations.' },
@@ -357,16 +357,16 @@ export const TITAN_LITE_PLATFORM_INFO = {
   },
   ios: {
     id: 'ios',
-    name: 'iOS & iPadOS Lightweight (Titan Lite)',
+    name: 'iOS & iPadOS Lightweight (Girionix Lite)',
     iconLabel: 'iOS Lite',
-    tag: '🌱 100% OFFLINE TITAN LITE (STANDARD IPHONE/IPAD)',
+    tag: '🌱 100% OFFLINE GIRIONIX LITE (STANDARD IPHONE/IPAD)',
     fileType: '.MobileConfig Profile',
-    fileName: 'Girionix_AI_Titan_Lite_iOS.mobileconfig',
+    fileName: 'Girionix_AI_Lite_iOS.mobileconfig',
     fileSize: '1.3 KB',
-    downloadUrl: '/downloads/Girionix_AI_Titan_Lite_iOS.mobileconfig',
-    headline: 'Girionix AI Titan Lite for iPhone & iPad',
+    downloadUrl: '/downloads/Girionix_AI_Lite_iOS.mobileconfig',
+    headline: 'Girionix AI Lite for iPhone & iPad',
     description: 'Lightweight offline WebClip container profile for all standard iPhones and iPads.',
-    buttonText: 'Install Titan Lite Profile',
+    buttonText: 'Install Lite Profile',
     features: [
       { title: 'Universal iOS Compatibility', desc: 'Runs smoothly on older iPhones and entry-level iPads.' },
       { title: 'Offline WebClip Cache', desc: 'Fast full-screen app container with local offline caching.' },
@@ -374,6 +374,7 @@ export const TITAN_LITE_PLATFORM_INFO = {
     ]
   }
 };
+
 
 export const PLATFORM_DETAILED_SPECS = {
   windows: {
@@ -398,7 +399,7 @@ export const PLATFORM_DETAILED_SPECS = {
         category: 'System Memory (RAM)',
         minimum: '4 GB DDR3 / DDR4 RAM (Idle footprint: ~42 MB)',
         recommended: '16 GB – 32 GB Dual-Channel DDR4 / DDR5 (5600–6400 MT/s) with sub-65ns memory latency',
-        girionixOptimization: 'Memory-mapped virtual paging with zero GC lockups; isolated 8GB memory block pre-allocation for Titan local neural weights.'
+        girionixOptimization: 'Memory-mapped virtual paging with zero GC lockups; isolated 8GB memory block pre-allocation for Girionix Pro local neural weights.'
       },
       {
         category: 'Storage & Vault Path',
@@ -425,9 +426,9 @@ export const PLATFORM_DETAILED_SPECS = {
         girionixOptimization: 'Low-latency Web Audio API engine with real-time 48-band frequency spectrum visualizer and 4-genre procedural orchestral soundtrack generator.'
       },
       {
-        category: 'Network & Offline Titan Mode',
+        category: 'Network & Offline Sovereign Mode',
         minimum: 'Standard Broadband / Wi-Fi for cloud neural models on entry-level hardware',
-        recommended: '100% Air-Gapped Offline Execution via Titan Edition (0 KB network transfer, 100% local CPU/GPU register compute)',
+        recommended: '100% Air-Gapped Offline Execution via Girionix Pro (0 KB network transfer, 100% local CPU/GPU register compute)',
         girionixOptimization: 'Dual-Engine Hybrid: Seamless instant fallback to offline neural engine if internet disconnection is detected.'
       },
       {
@@ -488,9 +489,9 @@ export const PLATFORM_DETAILED_SPECS = {
         girionixOptimization: 'Real-time Web Audio synthesizer with bilingual Hindi & English speech synthesis and zero background audio cracking.'
       },
       {
-        category: 'Network & Offline Titan Mode',
+        category: 'Network & Offline Sovereign Mode',
         minimum: '4G LTE / 5G / Wi-Fi 6 connection for cloud AI models',
-        recommended: '100% Offline Titan Lite on-device quantized neural inference (Airplane mode compatible, 0 KB network data)',
+        recommended: '100% Offline Girionix Lite on-device quantized neural inference (Airplane mode compatible, 0 KB network data)',
         girionixOptimization: 'Offline Service Worker container caching guarantees UI boots in 12ms even without SIM card or Wi-Fi.'
       },
       {
@@ -551,9 +552,9 @@ export const PLATFORM_DETAILED_SPECS = {
         girionixOptimization: 'CoreAudio low-latency buffer processing for 48kHz neural voice synthesis and procedural Hollywood music scoring.'
       },
       {
-        category: 'Network & Offline Titan Mode',
+        category: 'Network & Offline Sovereign Mode',
         minimum: 'Wi-Fi 6 / 6E / Gigabit Ethernet for online models',
-        recommended: '100% Air-Gapped Offline Execution via Titan Edition utilizing Apple Silicon unified memory and Metal compute',
+        recommended: '100% Air-Gapped Offline Execution via Girionix Pro utilizing Apple Silicon unified memory and Metal compute',
         girionixOptimization: 'Sub-10ms token generation on Apple Silicon without triggering thermal throttling.'
       },
       {
@@ -616,7 +617,7 @@ export const PLATFORM_DETAILED_SPECS = {
       {
         category: 'Network & Security',
         minimum: 'Broadband / Wi-Fi for cloud AI communication',
-        recommended: '100% Air-Gapped Offline Execution via Titan mode (isolated from network namespaces via unshare / cgroups)',
+        recommended: '100% Air-Gapped Offline Execution via Girionix Pro mode (isolated from network namespaces via unshare / cgroups)',
         girionixOptimization: 'Works inside firewalled, air-gapped corporate servers and research laboratories with zero telemetry.'
       },
       {
@@ -695,8 +696,8 @@ export const PLATFORM_DETAILED_SPECS = {
 export function getPlatformDetailedSpecs(platformId = 'windows', edition = 'standard') {
   const base = PLATFORM_DETAILED_SPECS[platformId] || PLATFORM_DETAILED_SPECS.windows;
 
-  if (edition === 'titan') {
-    const titanMatrix = base.matrix.map(row => {
+  if (edition === 'pro') {
+    const proMatrix = base.matrix.map(row => {
       if (row.category.includes('Operating System')) {
         return {
           ...row,
@@ -710,7 +711,7 @@ export function getPlatformDetailedSpecs(platformId = 'windows', edition = 'stan
                        platformId === 'mac' ? 'macOS Sequoia 15 on M2/M3/M4 Pro/Max/Ultra (Unified Memory)' :
                        platformId === 'linux' ? 'Ubuntu 24.04 LTS with NVIDIA CUDA 12.4 / ROCm 6.0' :
                        'iPadOS 18 (iPad Pro M4 with 16GB Unified RAM)',
-          girionixOptimization: '⚡ 100% Offline Titan Engine: Pre-flight audited local execution with zero cloud latency.'
+          girionixOptimization: '⚡ 100% Offline Girionix Pro Engine: Pre-flight audited local execution with zero cloud latency.'
         };
       }
       if (row.category.includes('Processor')) {
@@ -774,12 +775,12 @@ export function getPlatformDetailedSpecs(platformId = 'windows', edition = 'stan
 
     return {
       ...base,
-      badge: `⚡ Titan Heavy Hardware Specs (${base.name})`,
-      matrix: titanMatrix
+      badge: `⚡ Girionix Pro Hardware Specs (${base.name})`,
+      matrix: proMatrix
     };
   }
 
-  if (edition === 'titan-lite') {
+  if (edition === 'lite') {
     const liteMatrix = base.matrix.map(row => {
       if (row.category.includes('Operating System')) {
         return {
@@ -794,7 +795,7 @@ export function getPlatformDetailedSpecs(platformId = 'windows', edition = 'stan
                        platformId === 'mac' ? 'macOS Sonoma / Sequoia on MacBook Air' :
                        platformId === 'linux' ? 'Ubuntu 24.04 LTS / Fedora 40 / Linux Mint' :
                        'iOS 17 / 18 on iPhone SE / standard iPhone',
-          girionixOptimization: '🌱 Ultra-Lean Titan Lite: 100% offline physical execution with ~350MB RAM footprint.'
+          girionixOptimization: '🌱 Ultra-Lean Girionix Lite: 100% offline physical execution with ~350MB RAM footprint.'
         };
       }
       if (row.category.includes('Processor')) {
@@ -842,7 +843,7 @@ export function getPlatformDetailedSpecs(platformId = 'windows', edition = 'stan
 
     return {
       ...base,
-      badge: `🌱 Titan Lite Hardware Specs (${base.name})`,
+      badge: `🌱 Girionix Lite Hardware Specs (${base.name})`,
       matrix: liteMatrix
     };
   }

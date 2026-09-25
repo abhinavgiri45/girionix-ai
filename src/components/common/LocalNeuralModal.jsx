@@ -160,7 +160,7 @@ export default function LocalNeuralModal({
           <div className="p-3.5 rounded-xl bg-emerald-950/30 border border-emerald-500/30 flex items-center justify-between text-xs font-mono">
             <div className="flex items-center gap-2 text-emerald-300 font-bold">
               <Sparkles className="w-4 h-4 text-emerald-400 animate-pulse" />
-              <span>{report?.statusMessage || '🌱 Low-End / Standard Rig Detected: 100% Titan Lite Engine Active (~25-45 tok/s).'}</span>
+              <span>{report?.statusMessage || '🌱 Low-End / Standard Rig Detected: 100% Girionix Lite Engine Active (~25-45 tok/s).'}</span>
             </div>
             <span className="text-cyan-400">Est. Throughput: ~{report?.estimatedTokensPerSec || 35} T/s</span>
           </div>

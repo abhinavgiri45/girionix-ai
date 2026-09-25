@@ -17,7 +17,7 @@ import { DEMO_MATH_PROBLEMS } from '../../data/demoData';
 import { openrouter } from '../../services/openrouter';
 import { localNeuralEngine } from '../../services/localNeuralEngine';
 
-export default function MathLab({ activeModel, isTitanMode = false }) {
+export default function MathLab({ activeModel, isLocalMode = false }) {
   const [selectedProblem, setSelectedProblem] = useState(DEMO_MATH_PROBLEMS[0]);
   const [customEquation, setCustomEquation] = useState('');
   const [activeFunction, setActiveFunction] = useState('Math.sin(x) / (x || 0.0001)');
@@ -212,8 +212,8 @@ export default function MathLab({ activeModel, isTitanMode = false }) {
     setReasoningTrace('');
 
     try {
-      if (isTitanMode || activeModel?.isTitan || activeModel?.isLocal || !navigator.onLine) {
-        // 100% Offline Titan Tensor Engine Solver
+      if (isLocalMode || activeModel?.isLocal || !navigator.onLine) {
+        // 100% Offline Girionix Sovereign Tensor Solver
         await localNeuralEngine.generateStream({
           messages: [
             {
@@ -222,7 +222,7 @@ export default function MathLab({ activeModel, isTitanMode = false }) {
             },
             { role: 'user', content: `Solve with step-by-step derivations:\n\n${customEquation}` }
           ],
-          model: 'girionix-titan-math',
+          model: 'girionix-pro',
           onChunk: (chunk, acc) => {
             setSolvedDerivation(acc);
           }

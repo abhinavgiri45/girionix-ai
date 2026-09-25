@@ -80,7 +80,7 @@ export const GIRIONIX_CODING_MODELS = [
   }
 ];
 
-export default function CodeStudio({ activeModel, injectedCode, isTitanMode = false }) {
+export default function CodeStudio({ activeModel, injectedCode, isLocalMode = false }) {
   const [project, setProject] = useState(DEMO_CODE_PROJECT);
   const [activeFileName, setActiveFileName] = useState('App.jsx');
   const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
@@ -591,7 +591,7 @@ export default function CodeStudio({ activeModel, injectedCode, isTitanMode = fa
         lower === 'snake' || lower === 'snake game' || lower === 'calculator' || lower === 'todo' || lower === 'todo app' || lower === 'basic code' || lower === 'basic';
 
       if (isCompleteAppRequest) {
-        const modelName = GIRIONIX_CODING_MODELS.find(m => m.id === selectedGirionixModel)?.shortName || 'Titan Coder';
+        const modelName = GIRIONIX_CODING_MODELS.find(m => m.id === selectedGirionixModel)?.shortName || 'Girionix Coder';
         const synthesized = localCodeSynthesizer.synthesizePureCode(instruction, modelName);
         if (synthesized) {
           handleCodeChange(synthesized, `Generated: ${instruction}`);
@@ -625,7 +625,7 @@ ${activeFile.content}
 \`\`\``;
 
       let modelId = selectedGirionixModel;
-      if (modelId === 'girionix-pro' || modelId?.startsWith('girionix-titan')) {
+      if (modelId === 'girionix-pro' || modelId === 'girionix-local-core') {
         modelId = 'qwen/qwen-2.5-coder-32b-instruct';
       }
 

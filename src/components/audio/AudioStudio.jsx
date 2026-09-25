@@ -47,7 +47,7 @@ export const ELEVENLABS_VOICE_LIBRARY = [
   { id: 'madhur', name: 'Madhur', category: 'Indian Narrator', accent: 'Hindi & Indian English', gender: 'Male', age: 'Middle-Aged', tags: ['Baritone', 'Deep', 'Commanding'], desc: 'Resonant baritone Indian narrator with flawless Hindi and English diction.' }
 ];
 
-export default function AudioStudio({ activeModel, isTitanMode = false }) {
+export default function AudioStudio({ activeModel, isLocalMode = false }) {
   // Sub-tabs: 'voice' | 'clone' | 'sfx' | 'mixer' | 'score' | 'singing'
   const [activeSubTab, setActiveSubTab] = useState('voice');
   const [selectedScoreTheme, setSelectedScoreTheme] = useState('epic');
@@ -151,7 +151,7 @@ export default function AudioStudio({ activeModel, isTitanMode = false }) {
   ];
 
   const voiceOptions = [
-    { id: 'titan-deep', name: '⚡ Titan Deep Baritone (Male)', gender: 'Male', accent: 'Deep & Authoritative', pitch: 0.85, rate: 0.95 },
+    { id: 'girionix-deep', name: '⚡ Girionix Deep Baritone (Male)', gender: 'Male', accent: 'Deep & Authoritative', pitch: 0.85, rate: 0.95 },
     { id: 'aurora-warm', name: '✨ Aurora Studio Warm (Female)', gender: 'Female', accent: 'Inspiring & Melodic', pitch: 1.1, rate: 1.0 },
     { id: 'nova-ai', name: '🤖 Nova Cybernetic Core', gender: 'Neural', accent: 'Precise & Crisp', pitch: 1.0, rate: 1.05 },
     { id: 'bharat-narrator', name: '🇮🇳 Bharat Bilingual Narrator', gender: 'Polymath', accent: 'English & Hindi Fluent', pitch: 0.95, rate: 1.0 }

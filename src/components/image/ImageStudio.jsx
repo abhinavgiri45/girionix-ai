@@ -24,7 +24,7 @@ import { DEMO_IMAGE_PROMPTS } from '../../data/demoData';
 import { openrouter } from '../../services/openrouter';
 import { imageGenerator } from '../../services/imageGenerator';
 
-export default function ImageStudio({ activeModel, isTitanMode = false, onOpenVideoStudio }) {
+export default function ImageStudio({ activeModel, isLocalMode = false, onOpenVideoStudio }) {
   const [prompt, setPrompt] = useState(DEMO_IMAGE_PROMPTS[0].prompt);
   const [negativePrompt, setNegativePrompt] = useState('');
   const [showNegative, setShowNegative] = useState(false);
@@ -297,7 +297,7 @@ export default function ImageStudio({ activeModel, isTitanMode = false, onOpenVi
                 </span>
               </h2>
               <p className="text-xs text-gray-400 font-mono">
-                {isTitanMode ? '⚡ Titan 8K Neural Vision (100% Offline GPU Engine)' : '🎨 FLUX.1 Cinema Ultra & Arri Alexa 85mm f/1.2'}
+                {isLocalMode ? '⚡ Girionix Pro Vision Engine (100% Offline GPU Engine)' : '🎨 FLUX.1 Cinema Ultra & Arri Alexa 85mm f/1.2'}
               </p>
             </div>
           </div>

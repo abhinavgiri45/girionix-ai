@@ -3,9 +3,6 @@
  * Unified registry of frontier AI models with context-aware naming for AI Studios and Giri Orbit.
  */
 
-// Purged legacy models; keeping empty export for backward safety
-export const TITAN_AI_MODELS = [];
-
 export const AI_MODELS = [
   {
     id: "gemini-2.5-flash",
@@ -411,7 +408,7 @@ export function getDedicatedStudioModel(tabId) {
   return {
     ...domain,
     activeEngineName: domain.name,
-    isTitanMode: false,
+    isLocalMode: false,
     executionSpeed: domain.speed,
     hardwareProvider: domain.provider
   };

@@ -46,7 +46,7 @@ import {
 import { imageGenerator, VIDEO_MODELS } from '../../services/imageGenerator';
 import CinematicVideoPlayer from './CinematicVideoPlayer';
 
-export default function VideoStudio({ activeModel, isAppInstalled = false, isTitanMode = false, onOpenDownload }) {
+export default function VideoStudio({ activeModel, isAppInstalled = false, isLocalMode = false, onOpenDownload }) {
   // Modes: 'text' | 'image' | 'interpolate' | 'loop'
   const [generationMode, setGenerationMode] = useState('text');
   const [customPrompt, setCustomPrompt] = useState('a majestic cybernetic dragon soaring above futuristic neo-Tokyo skyscrapers at midnight with volumetric rain reflections');
@@ -945,7 +945,7 @@ export default function VideoStudio({ activeModel, isAppInstalled = false, isTit
           aspectRatio={aspectRatio}
           resolution={resolution}
           fps={fps}
-          isTitanMode={isTitanMode}
+          isLocalMode={isLocalMode}
         />
       </div>
     </div>
