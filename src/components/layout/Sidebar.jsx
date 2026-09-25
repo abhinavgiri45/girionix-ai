@@ -201,22 +201,7 @@ export default function Sidebar({
 
         {/* Footer: Matching Screenshot with Lock icon */}
         <div className="pt-2 border-t border-white/[0.06] space-y-2">
-          {!isOfficeMode && onLaunchOrbitStation && (
-            <button
-              onClick={onLaunchOrbitStation}
-              className="w-full p-2 rounded-xl bg-gradient-to-r from-blue-950/20 to-cyan-950/20 hover:from-blue-950/40 hover:to-cyan-950/40 border border-cyan-500/20 hover:border-cyan-500/40 flex items-center justify-between text-left transition-all group cursor-pointer"
-              title="Open Giri Orbit AI Copilot"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-sm">🌐</span>
-                <div className="flex flex-col">
-                  <span className="text-xs font-bold text-white group-hover:text-cyan-300">Giri Orbit Co-Pilot</span>
-                  <span className="text-[10px] font-mono text-cyan-400/80">Girionix Pro Active</span>
-                </div>
-              </div>
-              <ChevronRight className="w-3.5 h-3.5 text-gray-500 group-hover:text-cyan-300 transition-transform" />
-            </button>
-          )}
+
 
           <a
             href="https://giri-corporation.pages.dev/"

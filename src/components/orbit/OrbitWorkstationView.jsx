@@ -24,7 +24,7 @@ import {
   Trash2,
   BookOpen
 } from 'lucide-react';
-import { giriOrbitBridge, ORBIT_TOOLS } from '../../services/giriOrbitBridge';
+import { giriOrbitBridge, ORBIT_TOOLS, detectToolFromPrompt } from '../../services/giriOrbitBridge';
 import { storage } from '../../services/storage';
 import { openrouter } from '../../services/openrouter';
 
@@ -42,14 +42,29 @@ export default function OrbitWorkstationView({ onExitOrbitMode }) {
     return 'drift';
   });
 
+  const [isAutoDetectMode, setIsAutoDetectMode] = useState(true);
+  const [copiedLink, setCopiedLink] = useState(false);
+
   const handleSelectTool = (toolId) => {
     setActiveTool(toolId);
+    setIsAutoDetectMode(false);
     giriOrbitBridge.orbitContext.activeTool = toolId;
     if (typeof window !== 'undefined') {
       const url = new URL(window.location.href);
       url.searchParams.set('tool', toolId);
       window.history.replaceState({}, '', url.pathname + (url.search ? url.search : ''));
     }
+  };
+
+  const handleEnableAutoMode = () => {
+    setIsAutoDetectMode(true);
+  };
+
+  const handleCopyDirectLink = () => {
+    const directUrl = `${window.location.origin}/orbit`;
+    navigator.clipboard.writeText(directUrl);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2500);
   };
 
   const [orbitContext, setOrbitContext] = useState(() => giriOrbitBridge.orbitContext);
@@ -129,6 +144,12 @@ export default function OrbitWorkstationView({ onExitOrbitMode }) {
     }
   };
 
+  // Real-time live prompt tool detection
+  const liveDetection = React.useMemo(() => {
+    if (!input.trim() || input.trim().length < 3) return null;
+    return detectToolFromPrompt(input, activeTool);
+  }, [input, activeTool]);
+
   const handleSend = async (customPrompt) => {
     const promptToSend = customPrompt || input;
     if (!promptToSend.trim() || isStreaming) return;
@@ -138,10 +159,22 @@ export default function OrbitWorkstationView({ onExitOrbitMode }) {
       setIsListening(false);
     }
 
+    // Auto-identify target tool based on prompt semantics and formulas
+    const detected = detectToolFromPrompt(promptToSend, activeTool);
+    const shouldAutoSwitch = isAutoDetectMode || detected.confidence === 'high';
+    const targetTool = (shouldAutoSwitch && detected.confidence !== 'none' && detected.confidence !== 'neutral')
+      ? detected.detectedTool
+      : activeTool;
+
+    if (targetTool !== activeTool) {
+      setActiveTool(targetTool);
+      giriOrbitBridge.orbitContext.activeTool = targetTool;
+    }
+
     const userMessage = {
       id: 'orbit-msg-' + Date.now(),
       role: 'user',
-      tool: activeTool,
+      tool: targetTool,
       content: promptToSend.trim(),
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
@@ -150,7 +183,9 @@ export default function OrbitWorkstationView({ onExitOrbitMode }) {
     const assistantMessage = {
       id: assistantId,
       role: 'assistant',
-      tool: activeTool,
+      tool: targetTool,
+      autoDetected: Boolean(shouldAutoSwitch && detected.confidence !== 'none' && detected.confidence !== 'neutral'),
+      detectionReason: detected.reason,
       content: '',
       isStreaming: true,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -164,8 +199,8 @@ export default function OrbitWorkstationView({ onExitOrbitMode }) {
     abortControllerRef.current = new AbortController();
 
     try {
-      const toolObj = ORBIT_TOOLS[activeTool.toUpperCase()] || ORBIT_TOOLS.DRIFT;
-      const systemDirective = giriOrbitBridge.buildOrbitSystemDirective(activeTool) +
+      const toolObj = ORBIT_TOOLS[targetTool.toUpperCase()] || ORBIT_TOOLS.DRIFT;
+      const systemDirective = giriOrbitBridge.buildOrbitSystemDirective(targetTool, shouldAutoSwitch) +
         `\n\nOPERATOR: Working in Giri Orbit for ${orbitContext.operatorName || 'Orbit Workspace Member'}.` +
         `\nACTIVE DOCUMENT: "${orbitContext.documentTitle || 'Untitled'}".` +
         `\nMODEL ENGINE: Girionix Pro Enterprise Office Core. Provide high-density, beautifully structured enterprise-grade deliverables with clean tables, formatted headings, and formulas where applicable.`;
@@ -336,10 +371,26 @@ export default function OrbitWorkstationView({ onExitOrbitMode }) {
           </div>
         </div>
 
-        {/* Center: 4 Orbit Tool Switchers */}
-        <div className="hidden sm:flex items-center p-1 rounded-2xl bg-black/60 border border-white/10 text-xs font-medium">
+        {/* Center: Auto-Detect + 4 Orbit Tool Switchers */}
+        <div className="hidden sm:flex items-center p-1 rounded-2xl bg-black/60 border border-white/10 text-xs font-medium gap-1">
+          <button
+            onClick={handleEnableAutoMode}
+            className={`px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer ${
+              isAutoDetectMode
+                ? 'bg-gradient-to-r from-purple-500/25 to-pink-500/25 text-purple-200 border border-purple-400/50 shadow-sm font-bold shadow-glow-purple'
+                : 'text-gray-400 hover:text-gray-200'
+            }`}
+            title="Automatically identify optimal office tool from prompt"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-purple-400 animate-pulse" />
+            <span>Auto-Detect</span>
+          </button>
+
+          <div className="w-px h-4 bg-white/10 mx-0.5" />
+
           {Object.values(ORBIT_TOOLS).map((tool) => {
-            const isSelected = activeTool === tool.id;
+            const isSelected = !isAutoDetectMode && activeTool === tool.id;
+            const isAutoMatched = isAutoDetectMode && activeTool === tool.id;
             return (
               <button
                 key={tool.id}
@@ -347,21 +398,35 @@ export default function OrbitWorkstationView({ onExitOrbitMode }) {
                 className={`px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer ${
                   isSelected
                     ? 'bg-gradient-to-r from-cyan-500/25 to-blue-500/25 text-cyan-200 border border-cyan-400/40 shadow-sm font-bold'
+                    : isAutoMatched
+                    ? 'text-cyan-300 bg-white/[0.06] font-semibold border border-cyan-500/30'
                     : 'text-gray-400 hover:text-gray-200'
                 }`}
+                title={isAutoMatched ? `Auto-detected active context: ${tool.name}` : tool.name}
               >
                 <span>{tool.name}</span>
+                {isAutoMatched && <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />}
               </button>
             );
           })}
         </div>
 
-        {/* Right Status, Clear, & Official Link */}
+        {/* Right Status, Direct Link, Clear, & Official Orbit Link */}
         <div className="flex items-center gap-2">
+          {/* Direct Link Share Button */}
+          <button
+            onClick={handleCopyDirectLink}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-cyan-500/30 text-gray-300 text-xs font-mono transition-all cursor-pointer"
+            title="Copy direct shareable URL for this Giri Orbit Co-Pilot workstation"
+          >
+            {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-gray-400" />}
+            <span className="hidden md:inline">{copiedLink ? 'Copied URL!' : '/orbit'}</span>
+          </button>
+
           {messages.length > 0 && (
             <button
               onClick={handleClearSession}
-              className="p-1.5 rounded-xl text-gray-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all text-xs flex items-center gap-1"
+              className="p-1.5 rounded-xl text-gray-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all text-xs flex items-center gap-1 cursor-pointer"
               title="Clear current Orbit conversation"
             >
               <Trash2 className="w-4 h-4" />
@@ -387,13 +452,26 @@ export default function OrbitWorkstationView({ onExitOrbitMode }) {
 
       {/* Secondary Mobile Switcher Bar */}
       <div className="sm:hidden flex items-center justify-between px-3 py-2 bg-[#090C19] border-b border-white/10 overflow-x-auto gap-1">
+        <button
+          onClick={handleEnableAutoMode}
+          className={`px-2 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1 ${
+            isAutoDetectMode
+              ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 font-bold'
+              : 'text-gray-400'
+          }`}
+        >
+          <Sparkles className="w-3 h-3 text-purple-400" />
+          <span>Auto</span>
+        </button>
         {Object.values(ORBIT_TOOLS).map((tool) => (
           <button
             key={tool.id}
             onClick={() => handleSelectTool(tool.id)}
             className={`px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
-              activeTool === tool.id
+              !isAutoDetectMode && activeTool === tool.id
                 ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold'
+                : isAutoDetectMode && activeTool === tool.id
+                ? 'text-cyan-300 font-semibold bg-white/[0.05]'
                 : 'text-gray-400'
             }`}
           >
@@ -456,15 +534,22 @@ export default function OrbitWorkstationView({ onExitOrbitMode }) {
             <div className="space-y-4 py-2">
               {messages.map((m) => {
                 const isAssistant = m.role === 'assistant';
+                const msgTool = ORBIT_TOOLS[(m.tool || activeTool).toUpperCase()] || ORBIT_TOOLS.DRIFT;
                 return (
                   <div
                     key={m.id}
                     className={`flex flex-col ${isAssistant ? 'items-start' : 'items-end'} animate-fadeIn`}
                   >
                     <div className="flex items-center gap-2 mb-1 px-1 text-[11px] font-mono text-gray-400">
-                      <span>{isAssistant ? `✦ ${toolConfig.name} Co-Pilot (Girionix Pro)` : 'You'}</span>
+                      <span>{isAssistant ? `✦ ${msgTool.name} Co-Pilot (Girionix Pro)` : 'You'}</span>
                       <span>•</span>
                       <span>{m.timestamp}</span>
+                      {isAssistant && m.autoDetected && (
+                        <span className="px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 text-[10px] font-semibold border border-purple-500/30 flex items-center gap-1" title={m.detectionReason}>
+                          <Sparkles className="w-2.5 h-2.5 text-purple-400" />
+                          <span>Auto-Identified</span>
+                        </span>
+                      )}
                     </div>
 
                     <div
@@ -487,7 +572,7 @@ export default function OrbitWorkstationView({ onExitOrbitMode }) {
                             title="Insert directly into your active Giri Orbit document / spreadsheet / slide"
                           >
                             {importedId === m.id ? <Check className="w-3.5 h-3.5 text-emerald-300" /> : <Download className="w-3.5 h-3.5 text-emerald-400" />}
-                            <span>{importedId === m.id ? 'Imported to Workplace!' : `📥 Insert to ${toolConfig.name}`}</span>
+                            <span>{importedId === m.id ? 'Imported to Workplace!' : `📥 Insert to ${msgTool.name}`}</span>
                           </button>
 
                           <div className="flex items-center gap-1.5">
@@ -537,6 +622,32 @@ export default function OrbitWorkstationView({ onExitOrbitMode }) {
 
           {/* Bottom Prompt Input Dock */}
           <div className="sticky bottom-0 pt-2 pb-3 bg-[#070912]/90 backdrop-blur-xl border-t border-white/10 w-full">
+            {/* Real-time Dynamic Tool Auto-Identification Chip */}
+            {liveDetection && liveDetection.confidence !== 'none' && liveDetection.confidence !== 'neutral' && (
+              <div className="mb-2 px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyan-950/40 via-purple-950/30 to-blue-950/40 border border-cyan-500/30 flex items-center justify-between text-xs text-cyan-200 animate-fadeIn">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+                  <span>
+                    Auto-Identified: <strong className="text-white font-bold">{liveDetection.toolName}</strong> ({liveDetection.reason})
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-[11px] font-mono">
+                  {activeTool !== liveDetection.detectedTool && !isAutoDetectMode && (
+                    <button
+                      type="button"
+                      onClick={() => handleSelectTool(liveDetection.detectedTool)}
+                      className="px-2 py-0.5 rounded bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 font-bold border border-cyan-500/40 transition-colors cursor-pointer"
+                    >
+                      Switch to {liveDetection.toolName}
+                    </button>
+                  )}
+                  <span className="text-cyan-400/80">
+                    {isAutoDetectMode ? '⚡ Optimal Output Formatter Ready' : 'Manual Station Selected'}
+                  </span>
+                </div>
+              </div>
+            )}
+
             <div className="relative rounded-2xl bg-black/60 border border-cyan-500/30 focus-within:border-cyan-400/60 transition-colors p-2 flex items-end gap-2">
               <textarea
                 ref={textareaRef}
@@ -582,8 +693,14 @@ export default function OrbitWorkstationView({ onExitOrbitMode }) {
               <div className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
                 <span>Girionix Pro Office Engine</span>
+                {isAutoDetectMode && (
+                  <span className="px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center gap-1">
+                    <Sparkles className="w-2.5 h-2.5 text-purple-400" />
+                    Auto-Detection Active
+                  </span>
+                )}
               </div>
-              <span>Press Enter ↵ to Send</span>
+              <span className="hidden sm:inline text-gray-400">Press Enter ↵ to Send</span>
             </div>
           </div>
         </div>

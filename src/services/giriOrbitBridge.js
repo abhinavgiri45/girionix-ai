@@ -220,17 +220,174 @@ class GiriOrbitBridgeService {
   /**
    * Build an official office system prompt directive for the active Orbit tool
    */
-  buildOrbitSystemDirective(activeTool = 'drift') {
+  buildOrbitSystemDirective(activeTool = 'drift', autoDetected = false) {
     const tool = ORBIT_TOOLS[activeTool?.toUpperCase()] || ORBIT_TOOLS.DRIFT;
-    return `\n\n[GIRI ORBIT DEDICATED SUITE DIRECTIVE: ACTIVE TOOL = ${tool.name.toUpperCase()} (${tool.category.toUpperCase()})]
-You are functioning as the official dedicated AI Co-Pilot for ${tool.name} in the Giri Orbit Office Suite (https://giri-orbit.pages.dev).
-- Target Output Requirements:
-  - If Giri Drift (Docs): Provide clear executive headings, bulleted deliverables, and publication-ready prose.
-  - If Giri Axis (Spreadsheets): Structure outputs strictly as formatted tabular data with headers, and supply executable spreadsheet formulas (e.g. =SUM, =AVERAGE, =VLOOKUP, =GROWTH).
-  - If Giri Kinetic (Presentations): Format content as a slide deck with Slide 1 (Title/Vision), Slide 2 (Key Metrics/Data), Slide 3 (SWOT/Strategy), Slide 4 (Next Milestones & CTA).
-  - If Giri Aegis (PDF & Security): Provide an official compliance audit stamp, cryptographic verification notation, and zero-telemetry sign-off block.
-- Maintain professional, enterprise-grade executive precision.`;
+    const autoNote = autoDetected 
+      ? `\n[INTELLIGENT AUTO-IDENTIFICATION: Context dynamically tuned to ${tool.name} (${tool.category}) based on prompt semantics and office workflow requirements]`
+      : '';
+
+    return `\n\n[GIRI ORBIT HIGH-PRECISION SUITE DIRECTIVE: ACTIVE TOOL = ${tool.name.toUpperCase()} (${tool.category.toUpperCase()})]${autoNote}
+You are functioning as the official dedicated AI Co-Pilot for ${tool.name} in the Giri Orbit Enterprise Office Suite (https://giri-orbit.pages.dev).
+You MUST provide world-class, professional output tailored strictly to the current office tool context:
+
+- When ACTIVE TOOL is GIRI AXIS (Spreadsheets & Financial Models):
+  1. Provide structured financial assumptions and architecture first.
+  2. Structure numerical projections strictly inside a high-density, perfectly formatted Markdown Table with clear column headers (e.g. Metric, Q1, Q2, Q3, Q4, FY Total, YoY Growth).
+  3. Include an explicit section: "### 📐 Executable Spreadsheet Formulas (For Giri Axis / Excel)" detailing the exact formulas (e.g. \`=SUM(C2:F2)\`, \`=AVERAGE(B3:B10)\`, \`=IF(E5>0, "Profitable", "Deficit")\`, \`=VLOOKUP(...)\`) so the operator can copy them straight into spreadsheet cells.
+  4. Conclude with 3 key financial sensitivity notes and margin variances.
+
+- When ACTIVE TOOL is GIRI KINETIC (Presentations & Keynotes):
+  1. Structure your output slide-by-slide with horizontal rule separators (\`---\`).
+  2. For EACH slide, supply:
+     - \`### 🎞️ Slide [N]: [Catchy Executive Title]\`
+     - **Headline / Core Hook**: (1 punchy line)
+     - **Slide Visual & Layout**: (Describe charts, iconography, or split-column visuals)
+     - **Key Talking Points**: (3-4 crisp, high-impact bullet points)
+     - **Speaker Notes / Stage Track**: (What the presenter should say out loud)
+  3. Keep language punchy, persuasive, and designed for high visual engagement.
+
+- When ACTIVE TOOL is GIRI AEGIS (PDF Studio & Compliance Auditing):
+  1. Produce legally structured, audit-grade documentation (e.g. NDA, SLA addendum, terms, compliance disclosure).
+  2. Include an official cryptographic audit stamp banner at the top or bottom:
+\`\`\`
+╔══════════════════════════════════════════════════════════════════════════════╗
+║ GIRI AEGIS ENTERPRISE VERIFICATION STAMP & AUDIT ADDENDUM                    ║
+║ Document ID: GIRI-AEGIS-${Math.floor(100000 + Math.random() * 900000)} • Status: VERIFIED & COMPLIANT           ║
+║ Cryptographic Protocol: SHA-256 ZERO-TELEMETRY CERTIFIED                     ║
+║ Authority: Giri Corporation Enterprise Digital Governance Framework          ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+\`\`\`
+  3. Use formal legal precision, defined terms, liability limitations, and execution signature blocks.
+
+- When ACTIVE TOOL is GIRI DRIFT (Word Processor & Executive Documentation):
+  1. Structure as an enterprise memorandum, whitepaper, or standard operating procedure (SOP).
+  2. Include Executive Summary, Background, Strategic Objectives, Scope & Deliverables, Risk Mitigation, and Action Items with owners and deadlines.
+  3. Provide publication-ready prose with clean markdown hierarchy (#, ##, ###, bullet points, callout blockquotes).
+
+Deliver immediate, production-ready, executive-quality results with zero filler.`;
   }
+}
+
+/**
+ * Intelligent Tool Auto-Identification Engine
+ * Evaluates prompt keywords, formulas, and structural patterns to classify
+ * the optimal Giri Orbit tool: 'axis', 'kinetic', 'aegis', or 'drift'.
+ */
+export function detectToolFromPrompt(text, currentTool = 'drift') {
+  if (!text || typeof text !== 'string') {
+    const currentObj = ORBIT_TOOLS[currentTool?.toUpperCase()] || ORBIT_TOOLS.DRIFT;
+    return {
+      detectedTool: currentTool || 'drift',
+      toolName: currentObj.name,
+      confidence: 'none',
+      reason: 'No prompt text',
+      matchedKeywords: []
+    };
+  }
+
+  const clean = text.toLowerCase();
+
+  // Pattern definitions with weights
+  const axisPatterns = [
+    { pattern: /=(sum|average|vlookup|hlookup|xlookup|if|count|index|match|pmt|irr|npv|stdev|round|max|min)\s*\(/i, weight: 15, name: 'spreadsheet formula' },
+    { pattern: /\b(spreadsheet|worksheet|tabular|csv|excel|tsv|workbook|sheet)\b/i, weight: 8, name: 'spreadsheet' },
+    { pattern: /\b(table of|in a table|data table|column[s]?|row[s]?|cell[s]?)\b/i, weight: 6, name: 'table structure' },
+    { pattern: /\b(revenue|opex|capex|ebitda|gross profit|net income|balance sheet|p&l|profit and loss|cash flow|cagr|variance|financial model|unit economics|cac|ltv|churn rate|arpu|q1|q2|q3|q4|fiscal year)\b/i, weight: 5, name: 'financial metrics' },
+    { pattern: /\b(calculate|sum of|average of|forecast model|budget tracker|projection table)\b/i, weight: 5, name: 'numerical forecast' }
+  ];
+
+  const kineticPatterns = [
+    { pattern: /\b(slide[s]?|slide \d+|slideshow|keynote|pitch deck|deck outline|presentation deck|powerpoint|ppt|deck)\b/i, weight: 10, name: 'presentation slide' },
+    { pattern: /\b(presentation outline|pitch to investors|investor pitch|board deck|all-hands deck|keynote speech|speaker notes|talk track)\b/i, weight: 8, name: 'presentation outline' },
+    { pattern: /\b(swot analysis slide|market traction slide|product reveal keynote|vision slide|closing slide)\b/i, weight: 7, name: 'keynote slide' }
+  ];
+
+  const aegisPatterns = [
+    { pattern: /\b(pdf|contract|agreement|nda|non-disclosure|sla|service level agreement|sublease|memorandum of understanding|mou)\b/i, weight: 10, name: 'contract / agreement' },
+    { pattern: /\b(compliance|audit stamp|audit trail|cryptographic seal|verification seal|gdpr|soc-2|hipaa|iso 27001|regulatory compliance)\b/i, weight: 9, name: 'audit stamp / compliance' },
+    { pattern: /\b(indemnity|governing law|jurisdiction|confidentiality clause|liability clause|severability|sign-off block|authorized signature)\b/i, weight: 7, name: 'legal clause' },
+    { pattern: /\b(watermark|tamper-evident|zero-telemetry stamp|digital seal)\b/i, weight: 8, name: 'security seal' }
+  ];
+
+  const driftPatterns = [
+    { pattern: /\b(executive memo|memorandum|briefing memo|strategic briefing|formal letter|press release|whitepaper|manifesto)\b/i, weight: 8, name: 'executive memo' },
+    { pattern: /\b(sop|standard operating procedure|documentation|policy document|handbook|minutes of meeting)\b/i, weight: 7, name: 'SOP / documentation' },
+    { pattern: /\b(draft a doc|draft a document|write an article|essay|narrative|writeup)\b/i, weight: 5, name: 'document drafting' }
+  ];
+
+  let scores = {
+    axis: 0,
+    kinetic: 0,
+    aegis: 0,
+    drift: 0
+  };
+
+  let matchedReasons = {
+    axis: [],
+    kinetic: [],
+    aegis: [],
+    drift: []
+  };
+
+  const evaluate = (toolKey, list) => {
+    for (const item of list) {
+      if (item.pattern.test(clean)) {
+        scores[toolKey] += item.weight;
+        matchedReasons[toolKey].push(item.name);
+      }
+    }
+  };
+
+  evaluate('axis', axisPatterns);
+  evaluate('kinetic', kineticPatterns);
+  evaluate('aegis', aegisPatterns);
+  evaluate('drift', driftPatterns);
+
+  // Direct explicit keyword override (e.g. "for Giri Axis", "in Giri Kinetic", "for Aegis")
+  if (clean.includes('axis') || clean.includes('giri axis')) {
+    scores.axis += 25;
+    matchedReasons.axis.push('Explicit Axis reference');
+  }
+  if (clean.includes('kinetic') || clean.includes('giri kinetic')) {
+    scores.kinetic += 25;
+    matchedReasons.kinetic.push('Explicit Kinetic reference');
+  }
+  if (clean.includes('aegis') || clean.includes('giri aegis')) {
+    scores.aegis += 25;
+    matchedReasons.aegis.push('Explicit Aegis reference');
+  }
+  if (clean.includes('drift') || clean.includes('giri drift')) {
+    scores.drift += 25;
+    matchedReasons.drift.push('Explicit Drift reference');
+  }
+
+  // Find max score
+  const entries = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+  const [topTool, topScore] = entries[0];
+
+  if (topScore >= 5) {
+    const confidence = topScore >= 12 ? 'high' : topScore >= 7 ? 'medium' : 'low';
+    const toolObj = ORBIT_TOOLS[topTool.toUpperCase()];
+    return {
+      detectedTool: topTool,
+      toolName: toolObj?.name || topTool,
+      confidence,
+      score: topScore,
+      reason: matchedReasons[topTool].slice(0, 2).join(' & ') || 'Contextually matched input',
+      matchedKeywords: matchedReasons[topTool]
+    };
+  }
+
+  // Default fallback to current tool
+  const currentObj = ORBIT_TOOLS[currentTool?.toUpperCase()] || ORBIT_TOOLS.DRIFT;
+  return {
+    detectedTool: currentTool || 'drift',
+    toolName: currentObj.name,
+    confidence: 'neutral',
+    score: 0,
+    reason: `Station default (${currentObj.name})`,
+    matchedKeywords: []
+  };
 }
 
 export const giriOrbitBridge = new GiriOrbitBridgeService();
