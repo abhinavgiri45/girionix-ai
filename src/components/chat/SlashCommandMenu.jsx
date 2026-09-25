@@ -16,7 +16,8 @@ import {
   Trash2,
   Download,
   Layers,
-  Music
+  Music,
+  Wrench
 } from 'lucide-react';
 
 export default function SlashCommandMenu({ 
@@ -35,6 +36,7 @@ export default function SlashCommandMenu({
   const cleanFilter = activeFilter.startsWith('/') ? activeFilter.slice(1) : activeFilter;
 
   const commands = [
+    { cmd: '/tools', desc: 'Open Power Tools Hub (Live Code Runner, JSON, Regex, Personas, Focus Audio)', icon: <Wrench className="w-3.5 h-3.5 text-cyan-400" />, category: 'Tools' },
     { cmd: '/code', desc: 'Open Coding Studio (React 18, Tailwind, Algorithms & Live Preview)', icon: <Code2 className="w-3.5 h-3.5 text-cyan-400" />, category: 'Studio' },
     { cmd: '/studio', desc: 'Open full-screen AI Studio workspace', icon: <Layers className="w-3.5 h-3.5 text-purple-400" />, category: 'Studio' },
     { cmd: '/image', desc: 'Create a photorealistic 8K FLUX.1 visual art render', icon: <ImageIcon className="w-3.5 h-3.5 text-rose-400" />, category: 'Creative' },

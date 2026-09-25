@@ -81,7 +81,8 @@ export default function ChatView({
   onOpenAbout,
   onOpenDownload,
   onOpenSettings,
-  onOpenWhySwitch
+  onOpenWhySwitch,
+  onOpenTools
 }) {
   const [pinnedItems, setPinnedItems] = useState(() => storage.getPinnedItems());
   const [activePersona, setActivePersona] = useState(() => storage.getSettings().activePersona || 'default');
@@ -295,6 +296,11 @@ export default function ChatView({
 
   const handleSelectSlashCommand = (cmd) => {
     setShowSlashMenu(false);
+    if (cmd === '/tools') {
+      if (onOpenTools) onOpenTools();
+      setInput('');
+      return;
+    }
     if (cmd === '/export') {
       setIsExportModalOpen(true);
       setInput('');

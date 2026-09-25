@@ -408,6 +408,7 @@ export default function App() {
           onChangeName={() => setIsNameModalOpen(true)}
           isAppInstalled={isAppInstalled}
           isOfficeMode={isOfficeMode}
+          showTools={storage.getSettings().showToolsInHeader !== false}
           onImportToWorkplace={handleImportLatestToWorkplace}
         />
 

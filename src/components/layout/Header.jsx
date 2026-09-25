@@ -21,7 +21,8 @@ export default function Header({
   userName,
   onChangeName,
   isOfficeMode = false,
-  onImportToWorkplace
+  onImportToWorkplace,
+  showTools = true
 }) {
   return (
     <header className="h-14 border-b px-3 sm:px-5 flex items-center justify-between z-30 backdrop-blur-xl bg-[#090a0f]/95 border-white/[0.08] select-none">
@@ -90,7 +91,7 @@ export default function Header({
         )}
 
         {/* ⚙ Tools Pill Button (Matching Reference Image) */}
-        {onOpenTools && (
+        {onOpenTools && showTools && (
           <button
             onClick={onOpenTools}
             className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-gray-200 hover:text-white border border-white/10 text-xs font-medium transition-all cursor-pointer shadow-sm active:scale-95"

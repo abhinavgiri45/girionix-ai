@@ -397,3 +397,7 @@ export class InBrowserPythonRunner {
 }
 
 export const inBrowserPythonRunner = new InBrowserPythonRunner();
+
+export async function runPythonInBrowser(code) {
+  return inBrowserPythonRunner.run(code);
+}

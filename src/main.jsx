@@ -28,10 +28,7 @@ class RootErrorBoundary extends React.Component {
           <div className="flex flex-wrap gap-3 justify-center">
             <button 
               onClick={() => {
-                try {
-                  localStorage.clear();
-                  sessionStorage.clear();
-                } catch (_) {}
+                this.setState({ hasError: false, error: null });
                 window.location.href = '/chat';
               }}
               className="px-6 py-3 rounded-2xl bg-cyan-400 hover:bg-cyan-300 text-black font-extrabold text-xs transition-all shadow-glow-cyan cursor-pointer"
@@ -40,6 +37,7 @@ class RootErrorBoundary extends React.Component {
             </button>
             <button 
               onClick={() => {
+                this.setState({ hasError: false, error: null });
                 window.location.reload();
               }}
               className="px-6 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-all cursor-pointer border border-white/10"

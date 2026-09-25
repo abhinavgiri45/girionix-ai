@@ -42,10 +42,17 @@ export default function SettingsModal({ isOpen, onClose, onApiKeyUpdated }) {
   const [alwaysDirectChat, setAlwaysDirectChat] = useState(() => {
     try { return localStorage.getItem('girionix_always_direct_chat') === 'true'; } catch (_) { return false; }
   });
+  const [showToolsInHeader, setShowToolsInHeader] = useState(() => {
+    try {
+      const s = storage.getSettings();
+      return s.showToolsInHeader !== false;
+    } catch (_) { return true; }
+  });
   const [savedSuccess, setSavedSuccess] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
+      setShowToolsInHeader(storage.getSettings().showToolsInHeader !== false);
       const cfg = universalApiEngine.getProviderConfig();
       setProviderConfig(cfg);
       setSelectedProvider(cfg.providerId);
@@ -527,6 +534,41 @@ export default function SettingsModal({ isOpen, onClose, onApiKeyUpdated }) {
                 <span
                   className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
                     alwaysDirectChat ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* Show Tools Pill Button Toggle */}
+            <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 flex items-center justify-between gap-3">
+              <div className="space-y-0.5">
+                <div className="text-xs font-bold text-white flex items-center gap-2">
+                  <span>Show "Tools" button in header</span>
+                  {showToolsInHeader && (
+                    <span className="px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 text-[9px] font-mono border border-cyan-500/30">
+                      Enabled
+                    </span>
+                  )}
+                </div>
+                <div className="text-[11px] text-gray-400 font-sans">
+                  Show or hide the quick Tools pill button in the top navigation bar. (You can still open tools anytime via <code className="text-cyan-300">/tools</code>).
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const updated = !showToolsInHeader;
+                  setShowToolsInHeader(updated);
+                  storage.saveSettings({ ...storage.getSettings(), showToolsInHeader: updated });
+                }}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                  showToolsInHeader ? 'bg-cyan-500 shadow-glow-cyan' : 'bg-white/10'
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                    showToolsInHeader ? 'translate-x-5' : 'translate-x-0'
                   }`}
                 />
               </button>

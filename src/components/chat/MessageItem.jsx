@@ -30,6 +30,7 @@ import {
   Code,
   Wand2,
   Sliders,
+  Sigma,
   X
 } from 'lucide-react';
 import KatexMath from '../common/KatexMath';
