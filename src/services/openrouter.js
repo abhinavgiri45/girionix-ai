@@ -96,10 +96,85 @@ export const openrouter = {
   },
 
   /**
-   * Neural Gateway Fallback Handler - High-IQ On-Device Sovereign Synthesis
+   * Neural Gateway Handler - High-Intelligence Free Cloud LLM (ChatGPT / Gemini / Claude Parity)
+   * Real-time SSE streaming with reasoning support and automatic sovereign on-device fallback.
    */
   async streamFreeNeuralAI({ messages, webSearchEnabled = false, useThinking = true, onChunk, onReasoningChunk, signal }) {
     const userPrompt = messages.filter(m => m.role !== 'system').pop()?.content || '';
+
+    // Priority 1: High-Intelligence Free Neural Cloud Gateway (Live ChatGPT/Gemini-Grade LLM)
+    if (typeof fetch !== 'undefined' && (typeof navigator === 'undefined' || navigator.onLine !== false)) {
+      try {
+        const payloadMessages = messages.map(m => ({
+          role: m.role === 'assistant' ? 'assistant' : m.role === 'system' ? 'system' : 'user',
+          content: m.content || ''
+        }));
+
+        const response = await fetch('https://text.pollinations.ai/openai', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            messages: payloadMessages,
+            model: 'openai',
+            stream: true,
+            temperature: 0.7
+          }),
+          signal
+        });
+
+        if (response.ok && response.body) {
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = '';
+          let accumulatedContent = '';
+          let accumulatedReasoning = '';
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+
+            for (const line of lines) {
+              const trimmed = line.trim();
+              if (!trimmed || trimmed.startsWith(':')) continue;
+              if (trimmed === 'data: [DONE]') break;
+              if (trimmed.startsWith('data: ')) {
+                try {
+                  const json = JSON.parse(trimmed.slice(6));
+                  const delta = json.choices?.[0]?.delta;
+                  if (delta?.reasoning) {
+                    accumulatedReasoning += delta.reasoning;
+                    if (onReasoningChunk) onReasoningChunk(delta.reasoning, accumulatedReasoning);
+                  }
+                  if (delta?.content) {
+                    accumulatedContent += delta.content;
+                    if (onChunk) onChunk(delta.content, accumulatedContent);
+                  }
+                } catch (_) {}
+              }
+            }
+          }
+
+          if (accumulatedContent.trim()) {
+            return {
+              content: accumulatedContent,
+              reasoning: accumulatedReasoning,
+              modelUsed: 'Girionix Frontier Neural Engine (GPT-OSS)'
+            };
+          }
+        }
+      } catch (err) {
+        if (signal?.aborted) throw err;
+        console.warn('Free cloud neural gateway offline, falling back to sovereign on-device synthesis:', err.message);
+      }
+    }
+
+    // Priority 2: Sovereign On-Device Local Neural Engine (100% Offline Emergency Fallback)
     try {
       const text = await localNeuralEngine.streamLocalResponse({
         prompt: userPrompt,
