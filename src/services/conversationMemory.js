@@ -260,6 +260,141 @@ ${lastCodeObj.code}
   },
 
   /**
+   * Scans previous messages backwards to extract the most recent assistant response text
+   */
+  getLastAssistantMessage(messages = []) {
+    if (!Array.isArray(messages) || messages.length === 0) return null;
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const msg = messages[i];
+      if (!msg || typeof msg.content !== 'string') continue;
+      if (msg.role === 'assistant' || msg.role === 'model') {
+        const text = this.cleanMessageText(msg.content);
+        if (text && text.length > 15) {
+          return {
+            id: msg.id,
+            content: text
+          };
+        }
+      }
+    }
+    return null;
+  },
+
+  /**
+   * Determines if user prompt is a follow-up revision / transformation request
+   * targeting the previous assistant response (e.g. "humanize", "improve it", "make it better", "shorten it", "simplify", "rephrase")
+   */
+  isTextRevisionRequest(prompt, lastAssistant = null) {
+    if (!prompt || typeof prompt !== 'string') return null;
+    const p = prompt.trim().toLowerCase();
+
+    // 1. Humanize
+    if (
+      p === 'humanize' ||
+      p === 'humanise' ||
+      p === 'humanize it' ||
+      p === 'humanise it' ||
+      p === 'humanize this' ||
+      /\b(humanize|humanise|make\s+(it|this)\s+(sound\s+)?human|less\s+robotic|more\s+human|more\s+natural|natural\s+tone|conversational\s+tone|sound\s+like\s+a\s+(human|person)|sound\s+natural)\b/i.test(p)
+    ) {
+      return { type: 'humanize', label: 'Humanize & Natural Voice' };
+    }
+
+    // 2. Improve / Polish
+    if (
+      p === 'improve' || p === 'improve it' || p === 'improve this' || p === 'make it better' ||
+      /\b(improve(\s+(it|this))?|make\s+(it|this)\s+better|enhance(\s+(it|this))?|refine(\s+(it|this))?|polish(\s+(it|this))?|elevate(\s+(it|this))?|better\s+version|make\s+it\s+more\s+compelling)\b/i.test(p)
+    ) {
+      return { type: 'improve', label: 'Quality Elevation & Improvement' };
+    }
+
+    // 3. Shorten / Summarize / Concise
+    if (
+      p === 'shorten' || p === 'shorten it' || p === 'make it short' || p === 'concise' || p === 'brief' ||
+      /\b(shorten(\s+(it|this))?|make\s+(it|this)\s+(shorter|brief|concise)|summarize(\s+(it|this))?|tldr|too\s+long|cut\s+it\s+down|in\s+short)\b/i.test(p)
+    ) {
+      return { type: 'shorten', label: 'Concise & Shortened Summary' };
+    }
+
+    // 4. Simplify / ELI5
+    if (
+      p === 'simplify' || p === 'simplify it' || p === 'eli5' ||
+      /\b(simplify(\s+(it|this))?|make\s+(it|this)\s+simpler|explain\s+simply|like\s+i'?m\s+5|eli5|easier\s+to\s+understand|in\s+simple\s+words|simple\s+explanation)\b/i.test(p)
+    ) {
+      return { type: 'simplify', label: 'Simpler & Intuitive Explanation' };
+    }
+
+    // 5. Expand / Elaborate
+    if (
+      p === 'expand' || p === 'elaborate' || p === 'expand it' ||
+      /\b(expand(\s+(it|this))?|make\s+(it|this)\s+longer|elaborate(\s+(on\s+this|on\s+it))?|more\s+details?|add\s+depth|in-depth\s+version)\b/i.test(p)
+    ) {
+      return { type: 'expand', label: 'In-Depth Elaboration' };
+    }
+
+    // 6. Rephrase / Rewrite / Paraphrase
+    if (
+      p === 'rephrase' || p === 'rewrite' || p === 'paraphrase' ||
+      /\b(rephrase(\s+(it|this))?|rewrite(\s+(it|this))?|paraphrase(\s+(it|this))?|say\s+(it|this)\s+differently|different\s+wording)\b/i.test(p)
+    ) {
+      return { type: 'rephrase', label: 'Rephrased & Rewritten Version' };
+    }
+
+    // 7. Tone Modulation (Formal / Casual / Engaging / Professional)
+    const toneMatch = p.match(/\b(?:make\s+(?:it|this)\s+(?:more\s+)?|in\s+a\s+)(formal|professional|casual|friendly|humorous|persuasive|academic|poetic)\s*(?:tone|voice|style)?\b/i);
+    if (toneMatch) {
+      return { type: 'tone', tone: toneMatch[1].toLowerCase(), label: `${toneMatch[1]} Tone Adaptation` };
+    }
+
+    return null;
+  },
+
+  /**
+   * Constructs the explicit Active Text Revision Directive
+   */
+  buildTextRevisionDirective(lastAssistantText, prompt, revisionInfo) {
+    if (!lastAssistantText) return '';
+
+    const cleanSnippet = lastAssistantText.slice(0, 3200);
+    const revType = revisionInfo?.type || 'improve';
+
+    let specificGuideline = '';
+    if (revType === 'humanize') {
+      specificGuideline = `Rewrite the previous content with genuine human warmth, authenticity, and natural cadence. Remove all robotic buzzwords, overly stiff transitions, and cookie-cutter phrasing. Write as a passionate, articulate, and empathetic thinker sharing real insights directly with the reader.`;
+    } else if (revType === 'improve') {
+      specificGuideline = `Significantly elevate the quality, eloquence, depth, and organization of the previous response. Enhance vocabulary, sharpen logical flow, strengthen key arguments, and format with clear, engaging headings.`;
+    } else if (revType === 'shorten') {
+      specificGuideline = `Distill the previous response down to its essential core. Deliver a high-density, impactful version that captures all key takeaways in 1/3 of the length without losing depth.`;
+    } else if (revType === 'simplify') {
+      specificGuideline = `Explain the previous concepts using clear, intuitive analogies and plain everyday language that anyone can understand immediately. Strip away convoluted jargon while keeping the core truth intact.`;
+    } else if (revType === 'expand') {
+      specificGuideline = `Flesh out the previous response with rich historical, technical, or philosophical depth, concrete examples, and comprehensive analysis.`;
+    } else if (revType === 'rephrase') {
+      specificGuideline = `Rephrase and express the core message of the previous response with fresh phrasing, varied sentence structures, and compelling rhythm.`;
+    } else if (revType === 'tone') {
+      specificGuideline = `Rewrite the previous response strictly in a ${revisionInfo.tone} tone and voice while retaining all substantive facts.`;
+    } else {
+      specificGuideline = `Directly modify and elevate the previous response to satisfy the user's command: "${prompt}".`;
+    }
+
+    return `\n\n[CRITICAL ACTIVE CONVERSATION REVISION MANDATE]:
+The user's prompt is: "${prompt}".
+THIS IS A DIRECT REVISION INSTRUCTION TARGETING YOUR IMMEDIATE PRECEDING RESPONSE IN THIS CHAT.
+
+- TARGET PREVIOUS CONTENT TO TRANSFORM:
+"""
+${cleanSnippet}
+"""
+
+- TRANSFORMATION TYPE: ${revisionInfo?.label || 'Direct Revision'}
+- MANDATORY EXECUTION RULES:
+1. ABSOLUTE PROHIBITION ON DEFINITIONS: DO NOT define what "${prompt}" means. DO NOT explain the concept of "${prompt}". DO NOT write an essay or dictionary entry about "${prompt}".
+2. NO CLARIFICATION ASKING: Do not ask "what would you like me to ${prompt}?" The target is already provided above!
+3. IMMEDIATELY REWRITE & DELIVER: Output the complete revised, transformed version of the target content above right away.
+4. TRANSFORMATION OBJECTIVE: ${specificGuideline}`;
+  },
+
+  /**
    * Builds an explicit memory directive to inject into system prompt for cloud LLMs
    */
   buildMemoryDirective(messages = [], userName = '') {
@@ -327,6 +462,15 @@ You possess complete, persistent knowledge of the user you are currently talking
     directive += `\n  1. You have complete recall of this entire session from the very first question at the beginning.`;
     directive += `\n  2. If the user asks what they asked earlier, at the beginning, before, or requests a recap, cite the exact questions and details from the chronological log above with 100% precision.`;
     directive += `\n  3. Resolve all pronouns ("it", "that", "the previous code", "the last point") and conversational acknowledgments ("nice", "cool", "great", "ok") seamlessly without losing context or starting an unrelated topic.`;
+
+    // Active Revision & Transformation Injection
+    const lastAssistant = this.getLastAssistantMessage(messages);
+    if (memory.lastUserPrompt && lastAssistant) {
+      const revisionInfo = this.isTextRevisionRequest(memory.lastUserPrompt, lastAssistant);
+      if (revisionInfo) {
+        directive += this.buildTextRevisionDirective(lastAssistant.content, memory.lastUserPrompt, revisionInfo);
+      }
+    }
 
     return directive;
   },
@@ -621,7 +765,11 @@ You possess complete, persistent knowledge of the user you are currently talking
     const isCodeFollowup = /\b(test\s+cases?|unit\s+tests?|optimize\s+it|refactor\s+it|debug\s+it|add\s+types?|typescript\s+version|convert\s+to\s+python)\b/i.test(p);
     const isTranslationFollowup = /\b(translate\s+(it|this|that)?\s*(to|into)?\s*(hindi|spanish|french|german|japanese))\b/i.test(p);
 
-    if (!isAcknowledgment && !isPronounFollowup && !isElaborationFollowup && !isCodeFollowup && !isTranslationFollowup) {
+    // Active Revision Trigger (humanize, improve, shorten, simplify, rephrase, tone, etc.)
+    const revisionInfo = this.isTextRevisionRequest(prompt, lastAssistant);
+    const isRevision = Boolean(revisionInfo);
+
+    if (!isAcknowledgment && !isPronounFollowup && !isElaborationFollowup && !isCodeFollowup && !isTranslationFollowup && !isRevision) {
       return { isFollowup: false };
     }
 
@@ -643,6 +791,9 @@ You possess complete, persistent knowledge of the user you are currently talking
 
     return {
       isFollowup: true,
+      isRevision,
+      revisionInfo,
+      revisionType: revisionInfo?.type || null,
       isAcknowledgment,
       targetSubject: targetSubject || 'the previously discussed topic',
       lastAssistantText: lastAssistant.content,

@@ -273,7 +273,8 @@ export const geminiStudioEngine = {
         }
 
         // System Instruction configuration
-        const memoryDirective = conversationMemory.buildMemoryDirective(history);
+        const fullHistoryForMemory = prompt ? [...history, { role: 'user', content: prompt }] : history;
+        const memoryDirective = conversationMemory.buildMemoryDirective(fullHistoryForMemory);
         const combinedSystem = systemInstruction 
           ? (systemInstruction.includes('[COMPREHENSIVE SESSION MEMORY') ? systemInstruction : `${systemInstruction}\n\n${memoryDirective}`)
           : memoryDirective;

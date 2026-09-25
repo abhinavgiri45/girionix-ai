@@ -181,7 +181,19 @@ export const openrouter = {
     // 3. Ensure system prompt always carries the full master polymath prompt & active directives
     const baseSystem = messages.find(m => m.role === 'system')?.content || '';
     const needsMemory = !baseSystem.includes('[COMPREHENSIVE SESSION MEMORY');
-    const finalSystemPrompt = `${GIRIONIX_SYSTEM_PROMPT}\n\n${baseSystem}${featureDirectives}${needsMemory ? memoryDirective : ''}`;
+
+    // Guarantee active revision directive for "humanize", "improve it", etc.
+    const lastUserPrompt = cleanDialogue.length > 0 ? cleanDialogue[cleanDialogue.length - 1].content : '';
+    const lastAssistant = conversationMemory.getLastAssistantMessage(cleanDialogue.slice(0, -1));
+    let revisionDirective = '';
+    if (lastUserPrompt && lastAssistant && !baseSystem.includes('[CRITICAL ACTIVE CONVERSATION REVISION MANDATE]')) {
+      const revInfo = conversationMemory.isTextRevisionRequest(lastUserPrompt, lastAssistant);
+      if (revInfo) {
+        revisionDirective = conversationMemory.buildTextRevisionDirective(lastAssistant.content, lastUserPrompt, revInfo);
+      }
+    }
+
+    const finalSystemPrompt = `${GIRIONIX_SYSTEM_PROMPT}\n\n${baseSystem}${featureDirectives}${needsMemory ? memoryDirective : ''}${revisionDirective}`;
 
     const enrichedMessages = [
       { role: 'system', content: finalSystemPrompt },

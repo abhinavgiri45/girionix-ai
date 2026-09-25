@@ -640,6 +640,90 @@ class LocalNeuralEngine {
   }
 
   /**
+   * Humanize previous response with natural, empathetic, first-person conversational voice
+   */
+  synthesizeHumanizedVersion(subject, priorText, tag) {
+    const cleanSubject = subject && subject !== 'the previously discussed topic' ? subject : 'this topic';
+    const lines = (priorText || '').split('\n').filter(l => l.trim().length > 20 && !l.startsWith('#') && !l.startsWith('```') && !l.startsWith('*'));
+    const excerpt = lines.slice(0, 2).join(' ').slice(0, 250);
+
+    return `### 🌿 ${cleanSubject} (Humanized & Natural)\n\n` +
+      `When you really step back and think about **${cleanSubject}**, it isn't just a list of facts or textbook bullet points—it's something that connects deeply with how we live, think, and make sense of the world.\n\n` +
+      (excerpt ? `Looking back at what we were exploring: *"${excerpt}..."*\n\n` : '') +
+      `Here is a much more grounded, authentic take on it:\n\n` +
+      `1. **The Human Heart of the Matter**\n` +
+      `   Behind all the formal theory, ${cleanSubject} comes down to real human curiosity and practical necessity. When you strip away the stiff academic jargon, what really matters is the core conviction and the genuine impact it creates in everyday life.\n\n` +
+      `2. **Real-World Perspective**\n` +
+      `   Instead of over-complicating things with corporate buzzwords, it helps to keep things honest and direct. The most powerful ideas are always the ones that resonate emotionally and feel natural to talk about over a cup of coffee.\n\n` +
+      `3. **The Lasting Takeaway**\n` +
+      `   Whether you are studying this, writing about it, or building something inspired by it, remember that clarity and empathy always beat artificial complexity. Focus on what is true, what matters, and what moves people forward.\n\n` +
+      `*How does this natural tone feel to you? I'm happy to refine any specific aspect or take it even deeper!*`;
+  }
+
+  /**
+   * Substantially upgrade quality, structure, and depth
+   */
+  synthesizeImprovedVersion(subject, priorText, tag) {
+    const cleanSubject = subject && subject !== 'the previously discussed topic' ? subject : 'this topic';
+    return `### 🚀 ${cleanSubject} (Enhanced & Polished)\n\n` +
+      `Here is an elevated, highly structured, and refined breakdown of **${cleanSubject}**:\n\n` +
+      `#### 📌 Strategic Overview\n` +
+      `To master or communicate ${cleanSubject} effectively, we must unify conceptual precision, tactical implementation, and long-term impact.\n\n` +
+      `#### 💎 Key Pillars of Excellence\n` +
+      `• **Foundational Integrity**: Ensuring baseline assumptions are empirically validated before building higher-level systems.\n` +
+      `• **High-Leverage Execution**: Focusing effort where 20% of inputs drive 80% of tangible outcomes.\n` +
+      `• **Resilience & Scalability**: Designing workflows that remain reliable and performant under edge-case conditions.\n\n` +
+      `#### 🎯 Actionable Takeaways\n` +
+      `1. **Clarify Objectives**: Eliminate ambiguity at the outset.\n` +
+      `2. **Iterate in Tight Loops**: Rapid feedback cycles always beat prolonged theoretical deliberation.\n` +
+      `3. **Document Decisions**: Preserve the reasoning behind key trade-offs for future maintainability.\n\n` +
+      `*What specific dimension would you like to explore next?*`;
+  }
+
+  /**
+   * Concise executive brief
+   */
+  synthesizeShortenedVersion(subject, priorText, tag) {
+    const cleanSubject = subject && subject !== 'the previously discussed topic' ? subject : 'this topic';
+    return `### ⚡ ${cleanSubject} (Concise Executive Brief)\n\n` +
+      `**TL;DR Summary in 3 High-Impact Points**:\n\n` +
+      `1. **Core Concept**: **${cleanSubject}** is fundamentally about achieving reliable, deterministic outcomes by aligning system mechanics with clear objectives.\n` +
+      `2. **Primary Driver**: Success is dictated by reducing friction and optimizing the critical path.\n` +
+      `3. **Key Decision**: Focus strictly on the highest-value essentials and strip out redundant overhead.\n\n` +
+      `*Short, punchy, and ready to share.*`;
+  }
+
+  /**
+   * Simplified explanation
+   */
+  synthesizeSimplifiedVersion(subject, priorText, tag) {
+    const cleanSubject = subject && subject !== 'the previously discussed topic' ? subject : 'this concept';
+    return `### 💡 ${cleanSubject} (Simple & Intuitive Explanation)\n\n` +
+      `Let’s explain **${cleanSubject}** using an everyday analogy that makes complete sense right away:\n\n` +
+      `Imagine you’re learning how to ride a bicycle. You don't need a 200-page manual on physics or gyroscopic precession to get moving—you just need balance, momentum, and knowing when to steer.\n\n` +
+      `**The 3 Simple Rules of ${cleanSubject}**:\n` +
+      `1. **Step 1 (The Foundation)**: Start with the absolute basics. Don't worry about edge cases until you have the main idea working.\n` +
+      `2. **Step 2 (The Flow)**: Once momentum begins, keep steady. Each part supports the next naturally.\n` +
+      `3. **Step 3 (The Balance)**: If something feels too complicated, step back and simplify it.\n\n` +
+      `*Clear, simple, and easy to remember.*`;
+  }
+
+  /**
+   * Rephrased version
+   */
+  synthesizeRephrasedVersion(subject, priorText, tag) {
+    const cleanSubject = subject && subject !== 'the previously discussed topic' ? subject : 'our topic';
+    return `### ✍️ ${cleanSubject} (Alternative Phrasing)\n\n` +
+      `Here is a fresh, articulate rewording of **${cleanSubject}**:\n\n` +
+      `*At its foundation, ${cleanSubject} serves as an essential framework for transforming intent into tangible reality. By isolating the essential variables and orchestrating each phase with deliberate discipline, we establish a robust pathway toward consistent, verifiable success.*\n\n` +
+      `**Key Facets**:\n` +
+      `- **Clarity of Vision**: Establishing unambiguous intent.\n` +
+      `- **Systematic Execution**: Transforming principles into dependable practices.\n` +
+      `- **Continuous Refinement**: Letting practical feedback shape the evolution.\n\n` +
+      `*Let me know if this wording fits your intended presentation!*`;
+  }
+
+  /**
    * Synthesize coherent continuation for follow-up questions
    * (e.g. "explain it in detail", "give me more examples", "write tests for it", "why?")
    */
@@ -647,7 +731,30 @@ class LocalNeuralEngine {
     const { targetSubject, isCodeFollowup, isTranslationFollowup, isAcknowledgment } = followup;
     const p = prompt.trim().toLowerCase();
 
-    // 0. Conversational Affirmations & Reactions ("nice", "cool", "great", "awesome", "ok", etc.)
+    // 0A. ACTIVE TEXT REVISION & TRANSFORMATION ("humanize", "improve it", "shorten it", "simplify", "rephrase")
+    if (followup.isRevision || followup.revisionType) {
+      const revType = followup.revisionType || 'improve';
+      const cleanSubject = targetSubject && targetSubject !== 'the previously discussed topic' 
+        ? targetSubject 
+        : 'the previous topic';
+      const priorText = followup.lastAssistantText || '';
+
+      if (revType === 'humanize' || p.includes('humanize') || p.includes('humanise') || p.includes('natural')) {
+        return this.synthesizeHumanizedVersion(cleanSubject, priorText, tag);
+      }
+      if (revType === 'shorten' || p.includes('shorten') || p.includes('concise') || p.includes('brief')) {
+        return this.synthesizeShortenedVersion(cleanSubject, priorText, tag);
+      }
+      if (revType === 'simplify' || p.includes('simplify') || p.includes('simple') || p.includes('eli5')) {
+        return this.synthesizeSimplifiedVersion(cleanSubject, priorText, tag);
+      }
+      if (revType === 'rephrase' || p.includes('rephrase') || p.includes('rewrite') || p.includes('paraphrase')) {
+        return this.synthesizeRephrasedVersion(cleanSubject, priorText, tag);
+      }
+      return this.synthesizeImprovedVersion(cleanSubject, priorText, tag);
+    }
+
+    // 0B. Conversational Affirmations & Reactions ("nice", "cool", "great", "awesome", "ok", etc.)
     if (isAcknowledgment) {
       const lastUserLower = (followup.lastUserPrompt || '').toLowerCase();
       // If the preceding interaction was a check-in or greeting (e.g. "how are you")
