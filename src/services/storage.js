@@ -263,12 +263,54 @@ export const storage = {
     // 4. Return empty string if not configured (so login/profile modal appears)
     return '';
   },
+
+  getUserAge: () => {
+    try {
+      const profile = storage.getUserProfile();
+      return profile?.age || '';
+    } catch (_) {
+      return '';
+    }
+  },
+
+  getUserDob: () => {
+    try {
+      const profile = storage.getUserProfile();
+      return profile?.dob || '';
+    } catch (_) {
+      return '';
+    }
+  },
+
+  getUserGender: () => {
+    try {
+      const profile = storage.getUserProfile();
+      return profile?.gender || '';
+    } catch (_) {
+      return '';
+    }
+  },
   setUserName: (name) => {
     const clean = (name || '').trim();
     if (clean && clean !== 'Orbit User') {
       const existing = storage.getUserProfile();
       storage.setUserProfile({ ...existing, name: clean });
     }
+  },
+
+  setUserAge: (age) => {
+    const existing = storage.getUserProfile();
+    return storage.setUserProfile({ ...existing, age: String(age || '') });
+  },
+
+  setUserDob: (dob) => {
+    const existing = storage.getUserProfile();
+    return storage.setUserProfile({ ...existing, dob: String(dob || '') });
+  },
+
+  setUserGender: (gender) => {
+    const existing = storage.getUserProfile();
+    return storage.setUserProfile({ ...existing, gender: String(gender || 'prefer_not_to_say') });
   },
 
   getApiKey: () => {

@@ -342,11 +342,15 @@ ${toneMap[promptTone]}
   };
 
   // User Profile Memory
+  const userProf = (typeof storage.getUserProfile === 'function')
+    ? storage.getUserProfile()
+    : { name: '', age: '', dob: '', gender: '' };
+
   const currentUserProfile = {
-    name: storage.getUserName() || 'Orbit User',
-    age: storage.getUserAge() || 'Not specified',
-    dob: storage.getUserDob() || 'Not specified',
-    gender: storage.getUserGender() || 'Not specified'
+    name: userProf.name || (typeof storage.getUserName === 'function' ? storage.getUserName() : '') || 'Orbit User',
+    age: userProf.age || (typeof storage.getUserAge === 'function' ? storage.getUserAge() : '') || 'Not specified',
+    dob: userProf.dob || (typeof storage.getUserDob === 'function' ? storage.getUserDob() : '') || 'Not specified',
+    gender: userProf.gender || (typeof storage.getUserGender === 'function' ? storage.getUserGender() : '') || 'Not specified'
   };
 
   // -------------------------------------------------------------
