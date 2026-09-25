@@ -1,135 +1,51 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://girionix-ai.pages.dev/chat</loc>
-    <lastmod>2026-09-18T00:00:00+00:00</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>1.0000</priority>
-  </url>
-  <url>
     <loc>https://girionix-ai.pages.dev/</loc>
-    <lastmod>2026-09-18T00:00:00+00:00</lastmod>
+    <lastmod>2026-09-25T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0000</priority>
   </url>
   <url>
-    <loc>https://girionix-ai.pages.dev/workspace</loc>
-    <lastmod>2026-09-18T00:00:00+00:00</lastmod>
+    <loc>https://girionix-ai.pages.dev/chat</loc>
+    <lastmod>2026-09-25T00:00:00+00:00</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0000</priority>
+  </url>
+  <url>
+    <loc>https://girionix-ai.pages.dev/orbit</loc>
+    <lastmod>2026-09-25T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9500</priority>
   </url>
   <url>
-    <loc>https://girionix-ai.pages.dev/code</loc>
-    <lastmod>2026-09-18T00:00:00+00:00</lastmod>
+    <loc>https://girionix-ai.pages.dev/office</loc>
+    <lastmod>2026-09-25T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
-    <priority>0.9200</priority>
+    <priority>0.9500</priority>
   </url>
   <url>
-    <loc>https://girionix-ai.pages.dev/studio</loc>
-    <lastmod>2026-09-18T00:00:00+00:00</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9200</priority>
-  </url>
-  <url>
-    <loc>https://girionix-ai.pages.dev/math</loc>
-    <lastmod>2026-09-18T00:00:00+00:00</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9000</priority>
-  </url>
-  <url>
-    <loc>https://girionix-ai.pages.dev/script</loc>
-    <lastmod>2026-09-18T00:00:00+00:00</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9000</priority>
-  </url>
-  <url>
-    <loc>https://girionix-ai.pages.dev/image</loc>
-    <lastmod>2026-09-18T00:00:00+00:00</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9000</priority>
-  </url>
-  <url>
-    <loc>https://girionix-ai.pages.dev/video</loc>
-    <lastmod>2026-09-18T00:00:00+00:00</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9000</priority>
-  </url>
-  <url>
-    <loc>https://girionix-ai.pages.dev/audio</loc>
-    <lastmod>2026-09-18T00:00:00+00:00</lastmod>
+    <loc>https://girionix-ai.pages.dev/workspace</loc>
+    <lastmod>2026-09-25T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9000</priority>
   </url>
   <url>
     <loc>https://girionix-ai.pages.dev/pro</loc>
-    <lastmod>2026-09-18T00:00:00+00:00</lastmod>
+    <lastmod>2026-09-25T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9000</priority>
   </url>
   <url>
     <loc>https://girionix-ai.pages.dev/download</loc>
-    <lastmod>2026-09-18T00:00:00+00:00</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9000</priority>
-  </url>
-  <url>
-    <loc>https://girionix-ai.pages.dev/overview</loc>
-    <lastmod>2026-09-18T00:00:00+00:00</lastmod>
+    <lastmod>2026-09-25T00:00:00+00:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8500</priority>
   </url>
   <url>
-    <loc>https://girionix-ai.pages.dev/code-studio</loc>
-    <lastmod>2026-09-18T00:00:00+00:00</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8500</priority>
-  </url>
-  <url>
-    <loc>https://girionix-ai.pages.dev/math-lab</loc>
-    <lastmod>2026-09-18T00:00:00+00:00</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8500</priority>
-  </url>
-  <url>
-    <loc>https://girionix-ai.pages.dev/script-studio</loc>
-    <lastmod>2026-09-18T00:00:00+00:00</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8500</priority>
-  </url>
-  <url>
-    <loc>https://girionix-ai.pages.dev/vision-forge</loc>
-    <lastmod>2026-09-18T00:00:00+00:00</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8500</priority>
-  </url>
-  <url>
-    <loc>https://girionix-ai.pages.dev/cinema-studio</loc>
-    <lastmod>2026-09-18T00:00:00+00:00</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8500</priority>
-  </url>
-  <url>
-    <loc>https://girionix-ai.pages.dev/audio-studio</loc>
-    <lastmod>2026-09-18T00:00:00+00:00</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8500</priority>
-  </url>
-  <url>
-    <loc>https://girionix-ai.pages.dev/why-switch</loc>
-    <lastmod>2026-09-18T00:00:00+00:00</lastmod>
+    <loc>https://girionix-ai.pages.dev/about</loc>
+    <lastmod>2026-09-25T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8000</priority>
-  </url>
-  <url>
-    <loc>https://girionix-ai.pages.dev/specs</loc>
-    <lastmod>2026-09-18T00:00:00+00:00</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8000</priority>
-  </url>
-  <url>
-    <loc>https://girionix-ai.pages.dev/privacy</loc>
-    <lastmod>2026-09-18T00:00:00+00:00</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7000</priority>
   </url>
 </urlset>
