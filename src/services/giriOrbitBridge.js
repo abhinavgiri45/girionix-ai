@@ -54,11 +54,31 @@ export const ORBIT_TOOLS = {
   }
 };
 
+export function normalizeToolName(tool) {
+  if (!tool || typeof tool !== 'string') return null;
+  const t = tool.toLowerCase().trim();
+  if (t === 'axis' || t === 'sheet' || t === 'sheets' || t === 'spreadsheet' || t === 'grid' || t === 'table') return 'axis';
+  if (t === 'drift' || t === 'doc' || t === 'docs' || t === 'writer' || t === 'word') return 'drift';
+  if (t === 'kinetic' || t === 'show' || t === 'slides' || t === 'presentation' || t === 'deck') return 'kinetic';
+  if (t === 'aegis' || t === 'pdf' || t === 'pdf-studio' || t === 'pdfstudio') return 'aegis';
+  return null;
+}
+
 class GiriOrbitBridgeService {
   constructor() {
+    let initialTool = 'drift';
+    if (typeof window !== 'undefined') {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const raw = params.get('tool') || params.get('lockTool') || params.get('officeTool') || params.get('app') || params.get('station');
+        const norm = normalizeToolName(raw);
+        if (norm) initialTool = norm;
+      } catch (_) {}
+    }
+
     this.orbitContext = {
       connected: false,
-      activeTool: 'drift', // 'drift' | 'axis' | 'kinetic' | 'aegis'
+      activeTool: initialTool, // 'drift' | 'axis' | 'kinetic' | 'aegis'
       documentTitle: 'Untitled Document',
       operatorName: 'Orbit Workspace Member',
       selectedContent: ''
@@ -82,11 +102,15 @@ class GiriOrbitBridgeService {
                               params.get('source') === 'orbit' || 
                               params.get('portal') === 'orbit' ||
                               params.get('embed') === 'orbit' ||
-                              params.get('embed') === 'office';
+                              params.get('embed') === 'office' ||
+                              params.has('tool') ||
+                              params.has('lockTool') ||
+                              params.has('officeTool') ||
+                              (params.get('embed') === 'true' && (params.get('name') === 'Orbit User' || params.has('tool') || params.has('lockTool')));
       const isOrbitReferrer = typeof document !== 'undefined' && 
                               document.referrer && 
                               document.referrer.includes('giri-orbit.pages.dev');
-      const isIframeFromOrbit = (window.self !== window.top) && (isOrbitReferrer || params.has('orbit') || params.has('office'));
+      const isIframeFromOrbit = (window.self !== window.top) && (isOrbitReferrer || params.has('orbit') || params.has('office') || params.has('tool') || params.has('lockTool') || params.get('embed') === 'true');
 
       return Boolean(isExplicitPath || isExplicitParam || isIframeFromOrbit);
     } catch (_) {
@@ -103,58 +127,93 @@ class GiriOrbitBridgeService {
     window.addEventListener('message', (e) => {
       if (!e.data || typeof e.data !== 'object') return;
 
+      const type = e.data.type || '';
+      const payload = e.data.payload || e.data;
+
+      // Extract tool across any known Giri Orbit message protocol
+      const rawTool = payload.tool || payload.activeTool || payload.officeTool || 
+                      payload.currentView || payload.module || payload.mode || 
+                      payload.lockTool || e.data.tool || e.data.activeTool;
+      const normalizedTool = normalizeToolName(rawTool);
+
+      if (normalizedTool) {
+        this.orbitContext.activeTool = normalizedTool;
+        this.orbitContext.connected = true;
+        this.notifyListeners();
+        window.dispatchEvent(new CustomEvent('girionix:orbit-tool-detected', { detail: { tool: normalizedTool } }));
+      }
+
       // Handle handshake from parent Giri Orbit
-      if (e.data.type === 'GIRI_ORBIT_HANDSHAKE' || e.data.type === 'GIRIONIX_ORBIT_HANDSHAKE') {
-        const payload = e.data.payload || {};
-        this.orbitContext = {
-          connected: true,
-          activeTool: payload.activeTool || this.orbitContext.activeTool,
-          documentTitle: payload.documentTitle || this.orbitContext.documentTitle,
-          operatorName: payload.operatorName || payload.userName || this.orbitContext.operatorName,
-          selectedContent: payload.selectedContent || ''
-        };
+      if (type === 'GIRI_ORBIT_HANDSHAKE' || type === 'GIRIONIX_ORBIT_HANDSHAKE') {
+        this.orbitContext.connected = true;
+        if (normalizedTool) this.orbitContext.activeTool = normalizedTool;
+        if (payload.documentTitle) this.orbitContext.documentTitle = payload.documentTitle;
+        if (payload.operatorName || payload.userName) {
+          this.orbitContext.operatorName = payload.operatorName || payload.userName;
+        }
         this.notifyListeners();
         
         // Acknowledge handshake
         if (e.source) {
           e.source.postMessage({
             type: 'GIRIONIX_ORBIT_ACKNOWLEDGE',
-            payload: { status: 'ready', edition: 'Giri Orbit Dedicated AI Workstation v2.0' }
+            payload: { status: 'ready', activeTool: this.orbitContext.activeTool, edition: 'Giri Orbit Dedicated AI Workstation v2.0' }
           }, '*');
         }
       }
 
-      // Handle direct tool selection from parent Giri Orbit
-      if (e.data.type === 'GIRI_ORBIT_SELECT_TOOL') {
-        const tool = (e.data.payload?.tool || e.data.tool || '').toLowerCase();
-        if (tool && ['drift', 'axis', 'kinetic', 'aegis'].includes(tool)) {
-          this.orbitContext.activeTool = tool;
+      // Handle direct tool selection / lock messages from parent Giri Orbit
+      if (
+        type === 'SET_ACTIVE_TOOL' || 
+        type === 'LOCK_TOOL' || 
+        type === 'ORBIT_TOOL_CHANGE' || 
+        type === 'GIRIONIX_SET_TOOL' || 
+        type === 'SET_OFFICE_TOOL' || 
+        type === 'SELECT_TOOL' || 
+        type === 'GIRI_ORBIT_SELECT_TOOL'
+      ) {
+        if (normalizedTool) {
+          this.orbitContext.activeTool = normalizedTool;
+          this.orbitContext.connected = true;
           this.notifyListeners();
         }
       }
 
       // Handle context injection (e.g. user selected text in Drift or a cell in Axis)
-      if (e.data.type === 'GIRI_ORBIT_INJECT_CONTEXT') {
-        const payload = e.data.payload || {};
-        if (payload.activeTool) this.orbitContext.activeTool = payload.activeTool;
+      if (type === 'GIRI_ORBIT_INJECT_CONTEXT' || type === 'INJECT_CONTEXT') {
+        if (normalizedTool) this.orbitContext.activeTool = normalizedTool;
         if (payload.documentTitle) this.orbitContext.documentTitle = payload.documentTitle;
         if (payload.selectedContent) this.orbitContext.selectedContent = payload.selectedContent;
         this.orbitContext.connected = true;
         this.notifyListeners();
       }
 
+      // Handle prompt execution from parent Giri Orbit Quick Assist
+      if (type === 'GIRIONIX_EXECUTE_PROMPT') {
+        const prompt = payload.prompt || e.data.prompt || '';
+        if (prompt) {
+          window.dispatchEvent(new CustomEvent('girionix:orbit-execute-prompt', { detail: { prompt } }));
+        }
+      }
+
       // Handle request for latest AI message
-      if (e.data.type === 'GIRIONIX_REQUEST_LATEST_MESSAGE') {
+      if (type === 'GIRIONIX_REQUEST_LATEST_MESSAGE') {
         window.dispatchEvent(new CustomEvent('girionix:orbit-request-latest', { detail: { source: e.source } }));
       }
     });
 
-    // Announce availability to parent window if embedded
+    // Announce availability and immediately request current tool from parent window if embedded
     if (window.self !== window.top) {
       try {
         window.parent.postMessage({
           type: 'GIRIONIX_ORBIT_STATION_MOUNTED',
           payload: { timestamp: Date.now(), station: 'Girionix Orbit Co-Pilot' }
+        }, '*');
+        window.parent.postMessage({
+          type: 'GIRIONIX_REQUEST_ACTIVE_TOOL'
+        }, '*');
+        window.parent.postMessage({
+          type: 'GIRI_ORBIT_GET_STATE'
         }, '*');
       } catch (_) {}
     }

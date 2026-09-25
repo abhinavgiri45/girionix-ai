@@ -24,7 +24,7 @@ import {
   Trash2,
   BookOpen
 } from 'lucide-react';
-import { giriOrbitBridge, ORBIT_TOOLS, detectToolFromPrompt } from '../../services/giriOrbitBridge';
+import { giriOrbitBridge, ORBIT_TOOLS, detectToolFromPrompt, normalizeToolName } from '../../services/giriOrbitBridge';
 import { storage } from '../../services/storage';
 import { openrouter } from '../../services/openrouter';
 
@@ -33,13 +33,12 @@ export default function OrbitWorkstationView({ onExitOrbitMode }) {
     try {
       if (typeof window !== 'undefined') {
         const params = new URLSearchParams(window.location.search);
-        const t = params.get('tool') || params.get('app') || params.get('station');
-        if (t && ['drift', 'axis', 'kinetic', 'aegis'].includes(t.toLowerCase())) {
-          return t.toLowerCase();
-        }
+        const raw = params.get('tool') || params.get('lockTool') || params.get('officeTool') || params.get('app') || params.get('station') || params.get('mode');
+        const norm = normalizeToolName(raw);
+        if (norm) return norm;
       }
     } catch (_) {}
-    return 'drift';
+    return giriOrbitBridge.orbitContext.activeTool || 'drift';
   });
 
   const [isAutoDetectMode, setIsAutoDetectMode] = useState(true);
@@ -87,9 +86,33 @@ export default function OrbitWorkstationView({ onExitOrbitMode }) {
     giriOrbitBridge.initBridge();
     const unsubscribe = giriOrbitBridge.subscribe((ctx) => {
       setOrbitContext(ctx);
-      if (ctx.activeTool) setActiveTool(ctx.activeTool);
+      if (ctx.activeTool) {
+        setActiveTool(ctx.activeTool);
+      }
     });
-    return () => unsubscribe();
+
+    const handleToolDetected = (e) => {
+      const tool = e.detail?.tool;
+      if (tool && ['drift', 'axis', 'kinetic', 'aegis'].includes(tool)) {
+        setActiveTool(tool);
+      }
+    };
+
+    const handlePrompt = (e) => {
+      const p = e.detail?.prompt;
+      if (p) {
+        handleSend(p);
+      }
+    };
+
+    window.addEventListener('girionix:orbit-tool-detected', handleToolDetected);
+    window.addEventListener('girionix:orbit-execute-prompt', handlePrompt);
+
+    return () => {
+      unsubscribe();
+      window.removeEventListener('girionix:orbit-tool-detected', handleToolDetected);
+      window.removeEventListener('girionix:orbit-execute-prompt', handlePrompt);
+    };
   }, []);
 
   // Save sessions to isolated Orbit storage
@@ -399,13 +422,17 @@ export default function OrbitWorkstationView({ onExitOrbitMode }) {
                   isSelected
                     ? 'bg-gradient-to-r from-cyan-500/25 to-blue-500/25 text-cyan-200 border border-cyan-400/40 shadow-sm font-bold'
                     : isAutoMatched
-                    ? 'text-cyan-300 bg-white/[0.06] font-semibold border border-cyan-500/30'
+                    ? 'text-white bg-white/[0.08] font-bold border border-cyan-500/40 shadow-sm'
                     : 'text-gray-400 hover:text-gray-200'
                 }`}
                 title={isAutoMatched ? `Auto-detected active context: ${tool.name}` : tool.name}
               >
                 <span>{tool.name}</span>
-                {isAutoMatched && <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />}
+                {isAutoMatched && (
+                  <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-cyan-400/20 text-cyan-300 border border-cyan-400/30 font-bold">
+                    ACTIVE
+                  </span>
+                )}
               </button>
             );
           })}
@@ -467,15 +494,18 @@ export default function OrbitWorkstationView({ onExitOrbitMode }) {
           <button
             key={tool.id}
             onClick={() => handleSelectTool(tool.id)}
-            className={`px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
+            className={`px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1 ${
               !isAutoDetectMode && activeTool === tool.id
                 ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold'
                 : isAutoDetectMode && activeTool === tool.id
-                ? 'text-cyan-300 font-semibold bg-white/[0.05]'
+                ? 'text-cyan-300 font-bold bg-white/[0.08] border border-cyan-500/30'
                 : 'text-gray-400'
             }`}
           >
-            {tool.name}
+            <span>{tool.name}</span>
+            {isAutoDetectMode && activeTool === tool.id && (
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
+            )}
           </button>
         ))}
       </div>
@@ -659,7 +689,17 @@ export default function OrbitWorkstationView({ onExitOrbitMode }) {
                     handleSend();
                   }
                 }}
-                placeholder={isListening ? 'Listening to your voice dictation...' : `Ask ${toolConfig.name} Co-Pilot to draft a document, build a spreadsheet model, or outline slides...`}
+                placeholder={
+                  isListening 
+                    ? 'Listening to your voice dictation...' 
+                    : activeTool === 'axis'
+                    ? 'Ask Giri Axis Co-Pilot to generate financial models, formulas (=SUM, =AVERAGE), or tables...'
+                    : activeTool === 'kinetic'
+                    ? 'Ask Giri Kinetic Co-Pilot to structure presentations, pitch decks, or slide outlines...'
+                    : activeTool === 'aegis'
+                    ? 'Ask Giri Aegis Co-Pilot to draft legal contracts, compliance disclosures, or audit stamps...'
+                    : 'Ask Giri Drift Co-Pilot to draft executive memos, strategic briefs, or documentation...'
+                }
                 rows={1}
                 className="flex-1 bg-transparent text-sm text-white placeholder-gray-500 px-3 py-1.5 focus:outline-none resize-none leading-relaxed max-h-36 overflow-y-auto"
               />
