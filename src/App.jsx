@@ -226,22 +226,30 @@ export default function App() {
     return () => clearInterval(updateInterval);
   }, [isOfficeMode]);
 
-  // Deep URL & Route Synchronization for dedicated /chat, /workspace links
+  // Deep URL & Route Synchronization for dedicated /chat, /orbit, /office links
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const currentPath = window.location.pathname.toLowerCase().replace(/\/+$/, '');
     
+    if (isOrbitWorkstationActive) {
+      if (currentPath !== '/orbit' && currentPath !== '/office') {
+        const targetPath = '/orbit';
+        window.history.pushState({ path: targetPath }, '', targetPath + window.location.search);
+      }
+      return;
+    }
+
     if (!isAboutOpen) {
       const targetPath = '/chat';
-      if (currentPath !== targetPath && (currentPath === '' || currentPath === '/' || currentPath === '/intro' || currentPath === '/about')) {
+      if (currentPath !== targetPath && (currentPath === '' || currentPath === '/' || currentPath === '/intro' || currentPath === '/about' || currentPath === '/orbit' || currentPath === '/office')) {
         window.history.pushState({ path: targetPath }, '', targetPath + window.location.search);
       }
     } else {
-      if (currentPath === '/chat' || currentPath === '/workspace') {
+      if (currentPath === '/chat' || currentPath === '/workspace' || currentPath === '/orbit' || currentPath === '/office') {
         window.history.pushState({ path: '/intro' }, '', '/intro' + window.location.search);
       }
     }
-  }, [isAboutOpen]);
+  }, [isAboutOpen, isOrbitWorkstationActive]);
 
   // Handle browser Back / Forward navigation (popstate)
   useEffect(() => {
@@ -249,10 +257,11 @@ export default function App() {
     const handlePopState = () => {
       const path = window.location.pathname.toLowerCase().replace(/\/+$/, '');
       const params = new URLSearchParams(window.location.search);
-      if (path === '/orbit' || params.get('mode') === 'orbit' || params.get('portal') === 'orbit') {
+      if (path === '/orbit' || path === '/office' || params.get('mode') === 'orbit' || params.get('mode') === 'office' || params.get('portal') === 'orbit' || params.get('embed') === 'orbit' || params.get('embed') === 'office') {
         setIsOrbitWorkstationActive(true);
         return;
       }
+      setIsOrbitWorkstationActive(false);
       if (path === '/chat' || path === '/workspace' || path === '/app') {
         setIsAboutOpen(false);
       } else if (path === '' || path === '/' || path === '/intro' || path === '/about') {
@@ -328,6 +337,13 @@ export default function App() {
     }
   };
 
+  const handleLaunchOrbitStation = () => {
+    setIsOrbitWorkstationActive(true);
+    if (typeof window !== 'undefined') {
+      window.history.pushState({ path: '/orbit' }, '', '/orbit' + window.location.search);
+    }
+  };
+
   if (isOrbitWorkstationActive) {
     return (
       <OrbitWorkstationView
@@ -338,7 +354,8 @@ export default function App() {
           url.searchParams.delete('source');
           url.searchParams.delete('portal');
           url.searchParams.delete('embed');
-          const targetPath = url.pathname === '/orbit' ? '/chat' : url.pathname;
+          url.searchParams.delete('tool');
+          const targetPath = (url.pathname === '/orbit' || url.pathname === '/office') ? '/chat' : url.pathname;
           window.history.pushState({}, '', targetPath + (url.search ? url.search : ''));
         }}
       />
@@ -367,7 +384,7 @@ export default function App() {
         onOpenProStatus={() => setIsProStatusOpen(true)}
         isAppInstalled={isAppInstalled}
         isOfficeMode={isOfficeMode}
-        onLaunchOrbitStation={() => setIsOrbitWorkstationActive(true)}
+        onLaunchOrbitStation={handleLaunchOrbitStation}
       />
 
       {/* Main Workspace Area */}
@@ -444,7 +461,7 @@ export default function App() {
           storage.savePinnedItems(updated);
         }}
         onOpenLocalEngine={() => setIsLocalModalOpen(true)}
-        onLaunchOrbitStation={() => setIsOrbitWorkstationActive(true)}
+        onLaunchOrbitStation={handleLaunchOrbitStation}
       />
 
       {/* Introducing Girionix AI Landing & Announcement Page */}

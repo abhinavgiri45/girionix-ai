@@ -29,7 +29,29 @@ import { storage } from '../../services/storage';
 import { openrouter } from '../../services/openrouter';
 
 export default function OrbitWorkstationView({ onExitOrbitMode }) {
-  const [activeTool, setActiveTool] = useState('drift');
+  const [activeTool, setActiveTool] = useState(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        const t = params.get('tool') || params.get('app') || params.get('station');
+        if (t && ['drift', 'axis', 'kinetic', 'aegis'].includes(t.toLowerCase())) {
+          return t.toLowerCase();
+        }
+      }
+    } catch (_) {}
+    return 'drift';
+  });
+
+  const handleSelectTool = (toolId) => {
+    setActiveTool(toolId);
+    giriOrbitBridge.orbitContext.activeTool = toolId;
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.set('tool', toolId);
+      window.history.replaceState({}, '', url.pathname + (url.search ? url.search : ''));
+    }
+  };
+
   const [orbitContext, setOrbitContext] = useState(() => giriOrbitBridge.orbitContext);
   const [sessions, setSessions] = useState(() => storage.getOrbitSessions());
   const [activeSessionId, setActiveSessionId] = useState(() => storage.getOrbitActiveSessionId());
@@ -321,7 +343,7 @@ export default function OrbitWorkstationView({ onExitOrbitMode }) {
             return (
               <button
                 key={tool.id}
-                onClick={() => setActiveTool(tool.id)}
+                onClick={() => handleSelectTool(tool.id)}
                 className={`px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer ${
                   isSelected
                     ? 'bg-gradient-to-r from-cyan-500/25 to-blue-500/25 text-cyan-200 border border-cyan-400/40 shadow-sm font-bold'
@@ -368,7 +390,7 @@ export default function OrbitWorkstationView({ onExitOrbitMode }) {
         {Object.values(ORBIT_TOOLS).map((tool) => (
           <button
             key={tool.id}
-            onClick={() => setActiveTool(tool.id)}
+            onClick={() => handleSelectTool(tool.id)}
             className={`px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
               activeTool === tool.id
                 ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold'

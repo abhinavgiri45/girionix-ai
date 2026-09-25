@@ -75,7 +75,8 @@ class GiriOrbitBridgeService {
       const path = window.location.pathname.toLowerCase().replace(/\/+$/, '');
       const params = new URLSearchParams(window.location.search);
       
-      const isExplicitPath = path === '/orbit' || path.startsWith('/orbit/');
+      const isExplicitPath = path === '/orbit' || path.startsWith('/orbit/') || 
+                              path === '/office' || path.startsWith('/office/');
       const isExplicitParam = params.get('mode') === 'orbit' || 
                               params.get('mode') === 'office' || 
                               params.get('source') === 'orbit' || 
@@ -120,6 +121,15 @@ class GiriOrbitBridgeService {
             type: 'GIRIONIX_ORBIT_ACKNOWLEDGE',
             payload: { status: 'ready', edition: 'Giri Orbit Dedicated AI Workstation v2.0' }
           }, '*');
+        }
+      }
+
+      // Handle direct tool selection from parent Giri Orbit
+      if (e.data.type === 'GIRI_ORBIT_SELECT_TOOL') {
+        const tool = (e.data.payload?.tool || e.data.tool || '').toLowerCase();
+        if (tool && ['drift', 'axis', 'kinetic', 'aegis'].includes(tool)) {
+          this.orbitContext.activeTool = tool;
+          this.notifyListeners();
         }
       }
 
