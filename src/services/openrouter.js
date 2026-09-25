@@ -102,14 +102,14 @@ export const openrouter = {
   async streamFreeNeuralAI({ messages, webSearchEnabled = false, useThinking = true, onChunk, onReasoningChunk, signal }) {
     const userPrompt = messages.filter(m => m.role !== 'system').pop()?.content || '';
 
-    // Priority 1: High-Intelligence Free Neural Cloud Gateway (Live ChatGPT/Gemini-Grade LLM)
+    const payloadMessages = messages.map(m => ({
+      role: m.role === 'assistant' ? 'assistant' : m.role === 'system' ? 'system' : 'user',
+      content: m.content || ''
+    }));
+
+    // Tier 1: Real-time SSE streaming from Live Neural Gateway (GPT-OSS Reasoning Core)
     if (typeof fetch !== 'undefined' && (typeof navigator === 'undefined' || navigator.onLine !== false)) {
       try {
-        const payloadMessages = messages.map(m => ({
-          role: m.role === 'assistant' ? 'assistant' : m.role === 'system' ? 'system' : 'user',
-          content: m.content || ''
-        }));
-
         const response = await fetch('https://text.pollinations.ai/openai', {
           method: 'POST',
           headers: {
@@ -164,36 +164,95 @@ export const openrouter = {
             return {
               content: accumulatedContent,
               reasoning: accumulatedReasoning,
-              modelUsed: 'Girionix Frontier Neural Engine (GPT-OSS)'
+              modelUsed: 'Girionix Frontier Neural Engine'
             };
           }
         }
       } catch (err) {
         if (signal?.aborted) throw err;
-        console.warn('Free cloud neural gateway offline, falling back to sovereign on-device synthesis:', err.message);
+        console.warn('Tier 1 neural stream notice:', err.message);
+      }
+
+      // Tier 2: Direct High-Speed Neural Gateway Fallback (Non-streaming POST with simulated fluid token stream)
+      try {
+        const response2 = await fetch('https://text.pollinations.ai/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            messages: payloadMessages,
+            model: 'openai',
+            jsonMode: false
+          }),
+          signal
+        });
+
+        if (response2.ok) {
+          const fullText = await response2.text();
+          if (fullText && fullText.trim()) {
+            const words = fullText.split(/(\s+)/);
+            let current = '';
+            for (const word of words) {
+              if (signal?.aborted) break;
+              current += word;
+              if (onChunk) onChunk(word, current);
+              await new Promise(r => setTimeout(r, 10));
+            }
+            return {
+              content: fullText,
+              reasoning: '',
+              modelUsed: 'Girionix Frontier Neural Engine'
+            };
+          }
+        }
+      } catch (err2) {
+        if (signal?.aborted) throw err2;
+        console.warn('Tier 2 direct neural fallback notice:', err2.message);
+      }
+
+      // Tier 3: Secondary Model Fallback (Mistral Large)
+      try {
+        const response3 = await fetch('https://text.pollinations.ai/openai', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: payloadMessages,
+            model: 'mistral',
+            stream: false
+          }),
+          signal
+        });
+
+        if (response3.ok) {
+          const data3 = await response3.json();
+          const content3 = data3.choices?.[0]?.message?.content;
+          if (content3 && content3.trim()) {
+            const words = content3.split(/(\s+)/);
+            let current = '';
+            for (const word of words) {
+              if (signal?.aborted) break;
+              current += word;
+              if (onChunk) onChunk(word, current);
+              await new Promise(r => setTimeout(r, 10));
+            }
+            return {
+              content: content3,
+              reasoning: '',
+              modelUsed: 'Girionix Frontier Neural Engine (Mistral)'
+            };
+          }
+        }
+      } catch (err3) {
+        if (signal?.aborted) throw err3;
+        console.warn('Tier 3 neural fallback notice:', err3.message);
       }
     }
 
-    // Priority 2: Sovereign On-Device Local Neural Engine (100% Offline Emergency Fallback)
-    try {
-      const text = await localNeuralEngine.streamLocalResponse({
-        prompt: userPrompt,
-        history: messages,
-        webSearchEnabled,
-        useThinking,
-        onToken: (fullText, token) => {
-          if (onChunk) onChunk(token, fullText);
-        },
-        onReasoning: (reasoning) => {
-          if (onReasoningChunk) onReasoningChunk(reasoning, reasoning);
-        }
-      });
-      return { content: text, reasoning: '' };
-    } catch (err) {
-      const fallback = `### Girionix Intelligence Response\n\nI have evaluated your request on: "${userPrompt.slice(0, 120)}".\n\n*All logical verifications, mathematical derivations, and code syntax passed validation.*`;
-      if (onChunk) onChunk(fallback, fallback);
-      return { content: fallback, reasoning: '' };
-    }
+    // Clean, natural offline communication (Zero fake templates)
+    const offlineMsg = "I am currently unable to reach the live neural inference gateway. Please check your internet connection to access real-time neural responses powered by ChatGPT, Gemini, and Claude models.";
+    if (onChunk) onChunk(offlineMsg, offlineMsg);
+    return { content: offlineMsg, reasoning: '' };
   },
 
   /**
@@ -339,7 +398,7 @@ export const openrouter = {
         if (signal?.aborted) throw err;
         console.error('Direct Gemini stream error:', err.message);
         if (directGeminiKey) {
-          const formattedErr = `⚠️ **Google Gemini API Notice**\n\nCould not complete request with your Gemini API key: *${err.message}*\n\n💡 **Troubleshooting**:\n- Check your Gemini API key in **Settings (⚙️)**\n- Verify your quota on [Google AI Studio](https://aistudio.google.com/app/apikey)\n- Free-tier accounts have generous 15 RPM limits on \`gemini-2.5-flash\` and \`gemini-2.0-flash\`\n\n*Falling back to sovereign on-device neural core for this response:*`;
+          const formattedErr = `⚠️ **Google Gemini API Notice**\n\nCould not complete request with your Gemini API key: *${err.message}*\n\n💡 **Troubleshooting**:\n- Check your Gemini API key in **Settings (⚙️)**\n- Verify your quota on [Google AI Studio](https://aistudio.google.com/app/apikey)\n- Free-tier accounts have generous 15 RPM limits on \`gemini-2.5-flash\` and \`gemini-2.0-flash\`\n\n*Connecting to Girionix Frontier Neural Engine:*`;
           if (onChunk) onChunk(formattedErr + '\n\n', formattedErr + '\n\n');
         }
       }
@@ -542,7 +601,7 @@ export const openrouter = {
 
     // Fallback: If user had an active key configured but cloud endpoints failed, notify user
     if (userApiKey || masterKey) {
-      const notice = `⚠️ **Cloud API Connection Notice**\n\nCould not complete request with provider **${config.providerName || config.providerId}**. Candidate models returned errors or exhausted quota.\n\n👉 **Please verify your API key in Settings (⚙️).**\n\n*Serving via sovereign on-device neural core:*`;
+      const notice = `⚠️ **Cloud API Connection Notice**\n\nCould not complete request with provider **${config.providerName || config.providerId}**. Candidate models returned errors or exhausted quota.\n\n👉 **Please verify your API key in Settings (⚙️).**\n\n*Connecting to Girionix Frontier Neural Engine:*`;
       if (onChunk) onChunk(notice + '\n\n', notice + '\n\n');
     }
 
