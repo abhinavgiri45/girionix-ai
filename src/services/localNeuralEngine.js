@@ -331,7 +331,7 @@ class LocalNeuralEngine {
       return arith;
     }
 
-    const offlineText = "I am currently running in offline mode without an active network connection. Please connect to the internet to access real-time neural models like ChatGPT, Gemini, and Claude.";
+    const offlineText = "I am currently running in offline mode without an active network connection. Please connect to the internet to access real-time neural responses.";
     if (onToken) onToken(offlineText, offlineText);
     return offlineText;
   }

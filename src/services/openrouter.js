@@ -250,7 +250,7 @@ export const openrouter = {
     }
 
     // Clean, natural offline communication (Zero fake templates)
-    const offlineMsg = "I am currently unable to reach the live neural inference gateway. Please check your internet connection to access real-time neural responses powered by ChatGPT, Gemini, and Claude models.";
+    const offlineMsg = "I am currently unable to reach the live neural inference gateway. Please check your internet connection to access real-time neural responses.";
     if (onChunk) onChunk(offlineMsg, offlineMsg);
     return { content: offlineMsg, reasoning: '' };
   },
