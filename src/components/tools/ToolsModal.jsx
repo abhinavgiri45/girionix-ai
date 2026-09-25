@@ -539,7 +539,7 @@ export default function ToolsModal({
                   </div>
                 </div>
 
-                {/* 6. Titan Local Core */}
+                {/* 6. Girionix Local Core */}
                 <div
                   onClick={() => { 
                     if (onOpenLocalEngine) onOpenLocalEngine(); 
@@ -554,8 +554,8 @@ export default function ToolsModal({
                     <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-teal-500/20 text-teal-300">100% Offline Air-Gapped</span>
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-white group-hover:text-teal-300">Titan Sovereign Local Core</h3>
-                    <div className="text-[10px] font-mono text-teal-400 font-bold">⚡ Model: Titan 70B & Titan Lite Engine</div>
+                    <h3 className="text-sm font-bold text-white group-hover:text-teal-300">Girionix Local Neural Core</h3>
+                    <div className="text-[10px] font-mono text-teal-400 font-bold">⚡ Model: Girionix Local Core Engine</div>
                   </div>
                   <p className="text-xs text-gray-400 leading-relaxed">
                     Runs strictly on your machine's physical CPU cores, RAM, and GPU shaders with zero internet network traffic.

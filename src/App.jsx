@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
-import StudioPanel from './components/layout/StudioPanel';
 import CommandPalette from './components/layout/CommandPalette';
 import ToolsModal from './components/tools/ToolsModal';
 import VoiceOrbModal from './components/chat/VoiceOrbModal';
@@ -19,7 +18,6 @@ import MobileBottomNav from './components/layout/MobileBottomNav';
 import SettingsModal from './components/settings/SettingsModal';
 
 import { AI_MODELS } from './services/modelCatalog';
-import { CODE_STUDIO_TEMPLATES } from './data/codeStudioTemplates';
 import { storage } from './services/storage';
 import { updateService } from './services/updateService';
 import { giriOrbitBridge } from './services/giriOrbitBridge';
@@ -34,8 +32,6 @@ export default function App() {
   }, [isOrbitWorkstationActive]);
 
   const [isAppInstalled, setIsAppInstalled] = useState(() => storage.isAppInstalled());
-  const [isTitanMode, setIsTitanMode] = useState(false);
-  const [isTitanWorkstationOpen, setIsTitanWorkstationOpen] = useState(false);
   const [activeModel, setActiveModel] = useState(() => {
     const savedModelId = storage.getActiveModelId();
     const found = AI_MODELS.find(m => m.id === savedModelId);
@@ -63,46 +59,7 @@ export default function App() {
     };
     window.addEventListener('girionix:model-sync', handleModelSync);
     return () => window.removeEventListener('girionix:model-sync', handleModelSync);
-  }, [activeModel, isTitanMode]);
-  // Dedicated Page Routing: Support direct URLs like /chat, /workspace, /code, /studio
-  const [activeStudioTab, setActiveStudioTab] = useState(() => {
-    try {
-      if (typeof window === 'undefined') return 'ai-studio';
-      const path = window.location.pathname.toLowerCase().replace(/\/+$/, '');
-      const params = new URLSearchParams(window.location.search);
-      const studioParam = params.get('studio');
-      if (studioParam) return studioParam;
-      if (path === '/code') return 'code';
-      if (path === '/script') return 'script';
-      if (path === '/math') return 'math';
-      if (path === '/image' || path === '/vision') return 'image';
-      if (path === '/video' || path === '/motion') return 'video';
-      if (path === '/audio') return 'audio';
-      return 'ai-studio';
-    } catch (_) {
-      return 'ai-studio';
-    }
-  });
-
-  const [layoutMode, setLayoutMode] = useState(() => {
-    try {
-      if (typeof window === 'undefined') return 'chat';
-      const path = window.location.pathname.toLowerCase().replace(/\/+$/, '');
-      const params = new URLSearchParams(window.location.search);
-      const isOffice = params.get('mode') === 'office' || params.get('embed') === 'true' || params.has('office') || (window.self !== window.top);
-      if (isOffice) return 'chat';
-      const studioParam = params.get('studio');
-      if (studioParam) {
-        return params.get('view') === 'studio' ? 'studio' : 'split';
-      }
-      if (['/code', '/script', '/math', '/image', '/video', '/audio', '/studio'].includes(path)) {
-        return 'split';
-      }
-      return 'chat';
-    } catch (_) {
-      return 'chat';
-    }
-  });
+  }, [activeModel]);
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isToolsOpen, setIsToolsOpen] = useState(false);
@@ -119,11 +76,6 @@ export default function App() {
       const isOffice = params.get('mode') === 'office' || params.get('embed') === 'true' || params.get('embed') === 'office' || params.has('office') || (window.self !== window.top);
       if (isOffice) return false;
 
-      // Direct studio or workspace link
-      if (params.get('studio')) {
-        return false;
-      }
-
       // Skip intro if explicit native app flags or direct chat mode requested
       if (params.get('direct') === 'chat' || params.get('app') === 'true' || params.get('native') === 'true') {
         return false;
@@ -134,7 +86,7 @@ export default function App() {
         return true;
       }
 
-      // Default: Direct start in chat workspace without landing page audio/intro
+      // Default: Direct start in chat workspace
       return false;
     } catch (_) {
       return false;
@@ -145,6 +97,7 @@ export default function App() {
     setIntroTab('comparison');
     setIsAboutOpen(true);
   };
+
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
   const [isProStatusOpen, setIsProStatusOpen] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
@@ -175,23 +128,13 @@ export default function App() {
       window.removeEventListener('storage', handleProfileUpdate);
     };
   }, []);
-  const [injectedCode, setInjectedCode] = useState(null);
+
   const [sessions, setSessions] = useState(() => storage.getSessions());
   const [activeSessionId, setActiveSessionId] = useState(() => storage.getActiveSessionId());
   const [pinnedItems, setPinnedItems] = useState(() => storage.getPinnedItems());
   const [activePersona, setActivePersona] = useState(() => storage.getSettings().activePersona || 'default');
-  const [mobileActivePane, setMobileActivePane] = useState(() => {
-    try {
-      if (typeof window === 'undefined') return 'chat';
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('studio') || params.get('view') === 'studio') return 'studio';
-      return 'chat';
-    } catch (_) {
-      return 'chat';
-    }
-  });
 
-  // 1-Click Bridge: Import latest AI message directly to Giri Orbit workplace (Drift, Axis, Kinetic, PDF)
+  // 1-Click Bridge: Import latest AI message directly to Giri Orbit workplace
   const handleImportLatestToWorkplace = () => {
     const curSession = sessions.find(s => s.id === activeSessionId) || sessions[0];
     const lastMsg = curSession?.messages?.filter(m => m.role === 'assistant')?.slice(-1)[0];
@@ -231,49 +174,6 @@ export default function App() {
     return () => window.removeEventListener('message', handleWindowMessage);
   }, [sessions, activeSessionId]);
 
-  const handleToggleTitanMode = (enableTitan, targetModelId = null) => {
-    setIsTitanMode(enableTitan);
-    try {
-      localStorage.setItem('girionix_titan_mode', enableTitan ? 'true' : 'false');
-    } catch (_) {}
-    if (enableTitan) {
-      const selected = targetModelId ? (TITAN_AI_MODELS.find(m => m.id === targetModelId) || TITAN_AI_MODELS[0]) : TITAN_AI_MODELS[0];
-      handleSetActiveModel(selected);
-    } else {
-      const savedModelId = storage.getActiveModelId();
-      const found = AI_MODELS.find(m => m.id === savedModelId);
-      handleSetActiveModel(found || AI_MODELS[0]);
-    }
-  };
-
-  const handleLaunchOfficeDemo = (demoType) => {
-    setIsAboutOpen(false);
-    setLayoutMode('split');
-    setMobileActivePane('studio');
-
-    if (demoType === 'code-snake') {
-      setActiveStudioTab('code');
-      const template = CODE_STUDIO_TEMPLATES.find(t => t.id === 'cyber-snake');
-      if (template) setInjectedCode(template.code);
-    } else if (demoType === 'code-dashboard') {
-      setActiveStudioTab('code');
-      const template = CODE_STUDIO_TEMPLATES.find(t => t.id === 'saas-dashboard');
-      if (template) setInjectedCode(template.code);
-    } else if (demoType === 'code-kanban') {
-      setActiveStudioTab('code');
-      const template = CODE_STUDIO_TEMPLATES.find(t => t.id === 'agile-kanban');
-      if (template) setInjectedCode(template.code);
-    } else if (demoType === 'code-quantum') {
-      setActiveStudioTab('code');
-      const template = CODE_STUDIO_TEMPLATES.find(t => t.id === 'quantum-particle');
-      if (template) setInjectedCode(template.code);
-    } else if (demoType === 'math-lab') {
-      setActiveStudioTab('math');
-    } else if (demoType === 'voice-orb') {
-      setIsVoiceModeOpen(true);
-    }
-  };
-
   // Load user name and settings on boot + strict app mode detection
   useEffect(() => {
     const isApp = storage.isAppInstalled();
@@ -293,13 +193,13 @@ export default function App() {
         window.location.hash.includes('native=true')
       );
       if (isRunningApp && isExplicitNative) {
-        setIsAboutOpen(false); // Standalone installed desktop/mobile app goes straight to workspace
+        setIsAboutOpen(false);
       }
     };
 
     checkAppMode();
 
-    // Signal Native App Bridge (Android / Desktop) that workspace is ready
+    // Signal Native App Bridge that workspace is ready
     try {
       if (typeof window !== 'undefined') {
         if (window.GirionixBridge?.onWebsiteReady) {
@@ -310,7 +210,7 @@ export default function App() {
       }
     } catch (_) {}
 
-    // Background Over-The-Air (OTA) Code Update Check
+    // Background OTA Code Update Check
     const runUpdateCheck = async () => {
       try {
         const res = await updateService.checkForUpdates();
@@ -322,45 +222,25 @@ export default function App() {
     runUpdateCheck();
     const updateInterval = setInterval(runUpdateCheck, 15 * 60 * 1000);
 
-    if (typeof window !== 'undefined' && window.matchMedia) {
-      const mql = window.matchMedia('(display-mode: standalone)');
-      const handler = () => checkAppMode();
-      if (mql.addEventListener) mql.addEventListener('change', handler);
-      return () => {
-        clearInterval(updateInterval);
-        if (mql.removeEventListener) mql.removeEventListener('change', handler);
-      };
-    }
     return () => clearInterval(updateInterval);
-  }, []);
+  }, [isOfficeMode]);
 
-  // Deep URL & Route Synchronization for dedicated /chat, /workspace, /code links
+  // Deep URL & Route Synchronization for dedicated /chat, /workspace links
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const currentPath = window.location.pathname.toLowerCase().replace(/\/+$/, '');
     
     if (!isAboutOpen) {
-      // User is in the Workspace: reflect dedicated route in browser address bar
-      let targetPath = '/chat';
-      if (layoutMode === 'split' || layoutMode === 'studio') {
-        if (activeStudioTab === 'code') targetPath = '/code';
-        else if (activeStudioTab === 'script') targetPath = '/script';
-        else if (activeStudioTab === 'math') targetPath = '/math';
-        else if (activeStudioTab === 'image') targetPath = '/image';
-        else if (activeStudioTab === 'video') targetPath = '/video';
-        else if (activeStudioTab === 'audio') targetPath = '/audio';
-        else targetPath = '/studio';
-      }
+      const targetPath = '/chat';
       if (currentPath !== targetPath && (currentPath === '' || currentPath === '/' || currentPath === '/intro' || currentPath === '/about')) {
         window.history.pushState({ path: targetPath }, '', targetPath + window.location.search);
       }
     } else {
-      // User is on the Introduction page
-      if (currentPath === '/chat' || currentPath === '/code' || currentPath === '/studio' || currentPath === '/workspace') {
+      if (currentPath === '/chat' || currentPath === '/workspace') {
         window.history.pushState({ path: '/intro' }, '', '/intro' + window.location.search);
       }
     }
-  }, [isAboutOpen, layoutMode, activeStudioTab]);
+  }, [isAboutOpen]);
 
   // Handle browser Back / Forward navigation (popstate)
   useEffect(() => {
@@ -372,27 +252,8 @@ export default function App() {
         setIsOrbitWorkstationActive(true);
         return;
       }
-      const studioParam = params.get('studio');
-      if (studioParam) {
-        setIsAboutOpen(false);
-        setLayoutMode(params.get('view') === 'studio' ? 'studio' : 'split');
-        setActiveStudioTab(studioParam);
-        setMobileActivePane('studio');
-        return;
-      }
       if (path === '/chat' || path === '/workspace' || path === '/app') {
         setIsAboutOpen(false);
-        setLayoutMode('chat');
-      } else if (['/code', '/script', '/math', '/image', '/video', '/audio', '/studio'].includes(path)) {
-        setIsAboutOpen(false);
-        setLayoutMode('split');
-        if (path === '/code') setActiveStudioTab('code');
-        else if (path === '/script') setActiveStudioTab('script');
-        else if (path === '/math') setActiveStudioTab('math');
-        else if (path === '/image') setActiveStudioTab('image');
-        else if (path === '/video') setActiveStudioTab('video');
-        else if (path === '/audio') setActiveStudioTab('audio');
-        else setActiveStudioTab('ai-studio');
       } else if (path === '' || path === '/' || path === '/intro' || path === '/about') {
         setIsAboutOpen(true);
       }
@@ -419,10 +280,6 @@ export default function App() {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'v') {
         e.preventDefault();
         setIsVoiceModeOpen(prev => !prev);
-      }
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 's') {
-        e.preventDefault();
-        setLayoutMode(prev => prev === 'split' ? 'chat' : 'split');
       }
       if (e.key === '?' && !['INPUT', 'TEXTAREA'].includes(e.target.tagName)) {
         setIsShortcutsOpen(true);
@@ -460,19 +317,6 @@ export default function App() {
     };
     setSessions([freshSession]);
     setActiveSessionId(freshSession.id);
-  };
-
-  const handleOpenInCodeStudio = (code) => {
-    setInjectedCode(code);
-    setActiveStudioTab('code');
-    setLayoutMode('split');
-    setMobileActivePane('studio');
-  };
-
-  const handleLaunchStudioFromTools = (studioId) => {
-    setActiveStudioTab(studioId);
-    setLayoutMode('split');
-    setMobileActivePane('studio');
   };
 
   const handleCloseIntro = () => {
@@ -528,8 +372,6 @@ export default function App() {
       {/* Main Workspace Area */}
       <div className="flex-1 flex flex-col h-full overflow-hidden min-w-0">
         <Header
-          layoutMode={layoutMode}
-          setLayoutMode={setLayoutMode}
           onOpenTools={() => setIsToolsOpen(true)}
           onOpenSettings={() => setIsSettingsOpen(true)}
           onOpenAbout={() => {
@@ -542,130 +384,53 @@ export default function App() {
           onOpenScratchpad={() => setIsScratchpadOpen(true)}
           onOpenUpdates={() => setIsUpdateModalOpen(true)}
           onOpenLocalEngine={() => setIsLocalModalOpen(true)}
-          onOpenTitanWorkstation={() => setIsTitanWorkstationOpen(true)}
           onNewChat={handleCreateNewSession}
           onToggleSidebar={() => setIsSidebarCollapsed(prev => !prev)}
           userName={userName}
           onChangeName={() => setIsNameModalOpen(true)}
           isAppInstalled={isAppInstalled}
-          isTitanMode={isTitanMode}
-          onToggleTitanMode={handleToggleTitanMode}
-          onLaunchOfficeDemo={handleLaunchOfficeDemo}
           isOfficeMode={isOfficeMode}
           onImportToWorkplace={handleImportLatestToWorkplace}
         />
 
-        {/* Mobile View Switcher when in Split Mode on small screens */}
-        {layoutMode === 'split' && (
-          <div className="flex md:hidden items-center justify-between px-3 py-1.5 bg-[#090C17] border-b border-white/10 gap-2 shrink-0">
-            <button
-              onClick={() => setMobileActivePane('chat')}
-              className={`flex-1 py-1.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-                mobileActivePane === 'chat'
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-glow-cyan'
-                  : 'text-gray-400 hover:text-white bg-white/[0.03]'
-              }`}
-            >
-              <span>💬 Chat</span>
-            </button>
-            <button
-              onClick={() => setMobileActivePane('studio')}
-              className={`flex-1 py-1.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-                mobileActivePane === 'studio'
-                  ? 'bg-gradient-to-r from-purple-500/25 to-cyan-500/25 text-cyan-200 border border-cyan-500/40 shadow-sm'
-                  : 'text-gray-400 hover:text-white bg-white/[0.03]'
-              }`}
-            >
-              <span>{activeStudioTab === 'ai-studio' ? '✦ AI Studio' : `💻 Studio (${activeStudioTab.toUpperCase()})`}</span>
-            </button>
-          </div>
-        )}
-
-        {/* Workspace Dual Pane / Chat Layout */}
-        <main className="flex-1 overflow-hidden relative flex flex-col md:flex-row min-w-0">
-          {/* Left Pane: Chat & Welcome Screen */}
-          {(layoutMode === 'chat' || layoutMode === 'split') && (
-            <div className={`h-full flex-col transition-all duration-300 min-w-0 ${
-              layoutMode === 'split' 
-                ? (mobileActivePane === 'chat' ? 'flex w-full md:w-1/2 md:border-r md:border-white/[0.08]' : 'hidden md:flex md:w-1/2 md:border-r md:border-white/[0.08]') 
-                : 'flex w-full'
-            }`}>
-              <ChatView
-                activeModel={activeModel}
-                setActiveModel={handleSetActiveModel}
-                onOpenInCodeStudio={handleOpenInCodeStudio}
-                onOpenStudioTab={(tabId) => {
-                  setActiveStudioTab(tabId);
-                  setLayoutMode('split');
-                  setMobileActivePane('studio');
-                }}
-                layoutMode={layoutMode}
-                setLayoutMode={setLayoutMode}
-                userName={userName}
-                sessions={sessions}
-                setSessions={setSessions}
-                activeSessionId={activeSessionId}
-                setActiveSessionId={setActiveSessionId}
-                onCreateNewSession={handleCreateNewSession}
-                onOpenVoiceModal={() => setIsVoiceModeOpen(true)}
-                onOpenAbout={() => {
-                  setIntroTab('overview');
-                  setIsAboutOpen(true);
-                }}
-                onOpenWhySwitch={handleOpenWhySwitch}
-                onOpenDownload={() => setIsDownloadOpen(true)}
-                onOpenSettings={() => setIsSettingsOpen(true)}
-                isAppInstalled={isAppInstalled}
-                isTitanMode={isTitanMode}
-                onOpenTitanWorkstation={() => setIsTitanWorkstationOpen(true)}
-              />
-            </div>
-          )}
-
-          {/* Right Pane: Live AI Studio (Code Sandbox, Math Lab, 8K Vision, Motion Lab) */}
-          {(layoutMode === 'studio' || layoutMode === 'split') && (
-            <div className={`h-full flex-col transition-all duration-300 min-w-0 ${
-              layoutMode === 'split' 
-                ? (mobileActivePane === 'studio' ? 'flex w-full md:w-1/2' : 'hidden md:flex md:w-1/2') 
-                : 'flex w-full'
-            }`}>
-              <StudioPanel
-                activeStudioTab={activeStudioTab}
-                setActiveStudioTab={setActiveStudioTab}
-                activeModel={activeModel}
-                injectedCode={injectedCode}
-                onClose={() => {
-                  setLayoutMode('chat');
-                  setMobileActivePane('chat');
-                }}
-                isAppInstalled={isAppInstalled}
-                isTitanMode={isTitanMode}
-                onOpenDownload={() => setIsDownloadOpen(true)}
-              />
-            </div>
-          )}
+        {/* Full-width Workspace Chat View */}
+        <main className="flex-1 overflow-hidden relative flex flex-col min-w-0">
+          <ChatView
+            activeModel={activeModel}
+            setActiveModel={handleSetActiveModel}
+            userName={userName}
+            sessions={sessions}
+            setSessions={setSessions}
+            activeSessionId={activeSessionId}
+            setActiveSessionId={setActiveSessionId}
+            onCreateNewSession={handleCreateNewSession}
+            onOpenVoiceModal={() => setIsVoiceModeOpen(true)}
+            onOpenAbout={() => {
+              setIntroTab('overview');
+              setIsAboutOpen(true);
+            }}
+            onOpenWhySwitch={handleOpenWhySwitch}
+            onOpenDownload={() => setIsDownloadOpen(true)}
+            onOpenSettings={() => setIsSettingsOpen(true)}
+            onOpenTools={() => setIsToolsOpen(true)}
+            isAppInstalled={isAppInstalled}
+          />
         </main>
 
         {/* Dedicated Mobile Bottom Navigation Bar (md:hidden) */}
         <MobileBottomNav
-          layoutMode={layoutMode}
-          setLayoutMode={setLayoutMode}
-          mobileActivePane={mobileActivePane}
-          setMobileActivePane={setMobileActivePane}
           onOpenTools={() => setIsToolsOpen(true)}
           onOpenDownload={() => setIsDownloadOpen(true)}
           onOpenProStatus={() => setIsProStatusOpen(true)}
           isAppInstalled={isAppInstalled}
-          isTitanMode={isTitanMode}
           isOfficeMode={isOfficeMode}
         />
       </div>
 
-      {/* Tools & AI Studio Hub Modal */}
+      {/* Tools Hub Modal */}
       <ToolsModal
         isOpen={isToolsOpen}
         onClose={() => setIsToolsOpen(false)}
-        onLaunchStudio={handleLaunchStudioFromTools}
         activePersona={activePersona}
         onSelectPersona={(p) => {
           setActivePersona(p);
@@ -681,17 +446,13 @@ export default function App() {
         onLaunchOrbitStation={() => setIsOrbitWorkstationActive(true)}
       />
 
-      {/* Official OpenAI-Style Introducing Girionix AI Landing & Announcement Page */}
+      {/* Introducing Girionix AI Landing & Announcement Page */}
       <IntroducingGirionixPage
         isOpen={isAboutOpen}
         initialTab={introTab}
         onClose={handleCloseIntro}
-        onLaunchApp={(studioTab) => {
+        onLaunchApp={() => {
           handleCloseIntro();
-          if (studioTab && typeof studioTab === 'string') {
-            setActiveStudioTab(studioTab);
-            setLayoutMode('split');
-          }
         }}
         onOpenDownload={() => {
           handleCloseIntro();
@@ -705,7 +466,7 @@ export default function App() {
         onClose={() => setIsDownloadOpen(false)}
         onInstalledChange={(installed) => {
           setIsAppInstalled(installed);
-          if (installed) setActiveModel(AI_MODELS[0]); // Automatically switch to Pro once installed!
+          if (installed) setActiveModel(AI_MODELS[0]);
         }}
       />
 
@@ -774,7 +535,6 @@ export default function App() {
       <CommandPalette
         isOpen={isCommandPaletteOpen}
         onClose={() => setIsCommandPaletteOpen(false)}
-        setCurrentStudio={(s) => { setActiveStudioTab(s); setLayoutMode('split'); }}
         setActiveModel={handleSetActiveModel}
         onOpenSettings={() => setIsSettingsOpen(true)}
       />
@@ -784,7 +544,6 @@ export default function App() {
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
         onApiKeyUpdated={() => {
-          // Re-trigger re-render across views
           setActiveModel(prev => ({ ...prev }));
         }}
       />

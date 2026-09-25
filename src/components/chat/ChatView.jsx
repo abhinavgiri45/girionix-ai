@@ -81,9 +81,6 @@ export default function ChatView({
   onOpenAbout,
   onOpenDownload,
   onOpenSettings,
-  isAppInstalled = false,
-  isTitanMode = false,
-  onOpenTitanWorkstation,
   onOpenWhySwitch
 }) {
   const [pinnedItems, setPinnedItems] = useState(() => storage.getPinnedItems());
@@ -106,6 +103,7 @@ export default function ChatView({
   const [isListening, setIsListening] = useState(false);
   const [isVoiceOrbOpen, setIsVoiceOrbOpen] = useState(false);
   const [isEngineDropdownOpen, setIsEngineDropdownOpen] = useState(false);
+  const [isPlusMenuOpen, setIsPlusMenuOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isFileModalOpen, setIsFileModalOpen] = useState(false);
   const [isPromptEnhancerOpen, setIsPromptEnhancerOpen] = useState(false);
@@ -169,8 +167,7 @@ export default function ChatView({
     const handleModelSync = (e) => {
       const modelId = e.detail?.modelId;
       if (modelId && (!activeModel || activeModel.id !== modelId)) {
-        const pool = isTitanMode ? TITAN_AI_MODELS : AI_MODELS;
-        const matched = pool.find(m => m.id === modelId) || AI_MODELS.find(m => m.id === modelId);
+        const matched = AI_MODELS.find(m => m.id === modelId);
         if (matched) {
           setActiveModel(matched);
         }
@@ -178,7 +175,7 @@ export default function ChatView({
     };
     window.addEventListener('girionix:model-sync', handleModelSync);
     return () => window.removeEventListener('girionix:model-sync', handleModelSync);
-  }, [activeModel, isTitanMode, setActiveModel]);
+  }, [activeModel, setActiveModel]);
 
 
   const abortControllerRef = useRef(null);
@@ -187,13 +184,16 @@ export default function ChatView({
   const chatScrollContainerRef = useRef(null);
   const isUserNearBottomRef = useRef(true);
   const engineDropdownRef = useRef(null);
+  const plusMenuRef = useRef(null);
 
-  // Close engine dropdown on outside click anywhere on the page
+  // Close dropdowns on outside click anywhere on the page
   useEffect(() => {
-    if (!isEngineDropdownOpen) return;
     const handleClickOutside = (e) => {
       if (engineDropdownRef.current && !engineDropdownRef.current.contains(e.target)) {
         setIsEngineDropdownOpen(false);
+      }
+      if (plusMenuRef.current && !plusMenuRef.current.contains(e.target)) {
+        setIsPlusMenuOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -202,7 +202,7 @@ export default function ChatView({
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('touchstart', handleClickOutside);
     };
-  }, [isEngineDropdownOpen]);
+  }, []);
 
   // Background auto-upgrade check on app startup
   useEffect(() => {
@@ -1141,8 +1141,8 @@ export default function ChatView({
           )}
 
 
-          {/* Main Input Textarea & Action Buttons */}
-          <div className="relative rounded-2xl bg-black/60 border border-white/10 focus-within:border-cyan-500/40 transition-colors p-2 flex flex-col">
+          {/* Main Unified Input Card matching GranthMind screenshot */}
+          <div className="relative rounded-3xl bg-[#14151b] border border-white/[0.08] focus-within:border-cyan-500/40 focus-within:ring-1 focus-within:ring-cyan-500/20 transition-all shadow-2xl p-3 flex flex-col">
             {/* Live Token & Character Counter HUD */}
             {input.trim().length > 0 && (
               <div className="flex items-center justify-between px-2 pt-0.5 pb-1.5 text-[11px] font-mono text-gray-400 border-b border-white/5 mb-1.5 animate-fadeIn">
@@ -1166,36 +1166,202 @@ export default function ChatView({
               </div>
             )}
 
-            <div className="flex items-end w-full">
-              <button
-                onClick={() => setIsFileModalOpen(true)}
-                className="p-2 text-gray-400 hover:text-white rounded-xl hover:bg-white/5 transition-colors mb-0.5"
-                title="Attach File or Code"
-              >
-                <Paperclip className="w-4 h-4" />
-              </button>
+            {/* Input Textarea */}
+            <textarea
+              ref={textareaRef}
+              value={input}
+              onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
+              placeholder={
+                isListening 
+                  ? "🎙️ Listening... Speak your prompt..." 
+                  : "Ask anything, build an app, analyze code..."
+              }
+              rows={2}
+              className="w-full bg-transparent text-sm sm:text-base text-white placeholder-gray-500 px-2 py-1 focus:outline-none resize-none leading-relaxed max-h-48 overflow-y-auto"
+            />
 
-              <textarea
-                ref={textareaRef}
-                value={input}
-                onChange={handleInputChange}
-                onKeyDown={handleKeyDown}
-                placeholder={
-                  isListening 
-                    ? "🎙️ Listening... Speak your prompt or voice command ('clear chat', 'new chat', 'stop')..." 
-                    : "Ask anything, write 'create a image of...', 'create a video of...', 'write code for...', or '/' for commands..."
-                }
-                rows={1}
-                className="flex-1 bg-transparent text-base sm:text-sm text-white placeholder-gray-500 px-3 py-1.5 focus:outline-none resize-none leading-relaxed max-h-44 overflow-y-auto"
-              />
+            {/* Bottom Inner Card Action Bar (Matches Reference Image Exactly) */}
+            <div className="flex items-center justify-between pt-2 mt-1 border-t border-white/[0.04]">
+              {/* Left Actions: + Options Button and Model Selector Chip */}
+              <div className="flex items-center gap-2 relative">
+                
+                {/* + Button with Quick Options Popover */}
+                <div className="relative" ref={plusMenuRef}>
+                  <button
+                    type="button"
+                    onClick={() => setIsPlusMenuOpen(prev => !prev)}
+                    className="p-1.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-gray-300 hover:text-white transition-colors cursor-pointer border border-white/5"
+                    title="Add attachment or options"
+                  >
+                    <Plus className="w-4 h-4 text-gray-300" />
+                  </button>
 
-              <div className="flex items-center gap-1.5 mb-0.5">
+                  {isPlusMenuOpen && (
+                    <div className="absolute bottom-full left-0 mb-2 w-64 rounded-2xl bg-[#090b14] border border-white/15 p-2 shadow-2xl z-50 space-y-1 backdrop-blur-xl animate-fadeIn text-xs">
+                      <div className="px-2 py-1 text-[10px] font-mono text-gray-400 uppercase border-b border-white/10 font-bold">
+                        Options & Tools
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsFileModalOpen(true);
+                          setIsPlusMenuOpen(false);
+                        }}
+                        className="w-full text-left p-2 rounded-xl flex items-center gap-2 hover:bg-white/5 text-gray-200 transition-colors"
+                      >
+                        <Paperclip className="w-4 h-4 text-cyan-400" />
+                        <span>Attach File or Code</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsPromptLibraryOpen(true);
+                          setIsPlusMenuOpen(false);
+                        }}
+                        className="w-full text-left p-2 rounded-xl flex items-center gap-2 hover:bg-white/5 text-gray-200 transition-colors"
+                      >
+                        <BookOpen className="w-4 h-4 text-amber-400" />
+                        <span>Prompt Library</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleToggleWebSearch(!webSearchEnabled);
+                          setIsPlusMenuOpen(false);
+                        }}
+                        className="w-full text-left p-2 rounded-xl flex items-center justify-between hover:bg-white/5 text-gray-200 transition-colors"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Globe className="w-4 h-4 text-cyan-400" />
+                          <span>Web Search Grounding</span>
+                        </div>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${webSearchEnabled ? 'bg-cyan-500/20 text-cyan-300' : 'bg-white/5 text-gray-400'}`}>
+                          {webSearchEnabled ? 'ON' : 'OFF'}
+                        </span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleToggleThinking(!useThinking);
+                          setIsPlusMenuOpen(false);
+                        }}
+                        className="w-full text-left p-2 rounded-xl flex items-center justify-between hover:bg-white/5 text-gray-200 transition-colors"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Brain className="w-4 h-4 text-purple-400" />
+                          <span>Deep Reasoning</span>
+                        </div>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${useThinking ? 'bg-purple-500/20 text-purple-300' : 'bg-white/5 text-gray-400'}`}>
+                          {useThinking ? 'ON' : 'OFF'}
+                        </span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsFreeKeyModalOpen(true);
+                          setIsPlusMenuOpen(false);
+                        }}
+                        className="w-full text-left p-2 rounded-xl flex items-center gap-2 hover:bg-white/5 text-gray-200 transition-colors"
+                      >
+                        <Key className="w-4 h-4 text-emerald-400" />
+                        <span>Connect Free Gemini Key</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Model Selector Chip: GranthMind Pro Flash ⚡ ^ => Girionix Pro Flash ⚡ ^ */}
+                <div className="relative" ref={engineDropdownRef}>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsEngineDropdownOpen(prev => !prev);
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-xs font-semibold text-cyan-300 border border-white/10 transition-all cursor-pointer select-none active:scale-95"
+                  >
+                    <span>{getModelDisplayName(activeModel, 'chat')}</span>
+                    <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${isEngineDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {isEngineDropdownOpen && (
+                    <div className="absolute bottom-full left-0 mb-2 w-72 sm:w-80 rounded-2xl bg-[#090b14] border border-white/15 p-2 shadow-2xl z-50 space-y-1 backdrop-blur-xl max-h-[70vh] flex flex-col animate-fadeIn">
+                      <div className="px-2.5 py-1 text-[10px] font-mono text-gray-400 uppercase border-b border-white/10 flex justify-between items-center shrink-0">
+                        <span>Frontier AI Models</span>
+                        <span className="text-cyan-400 font-bold flex items-center gap-1">
+                          <Zap className="w-3 h-3" />
+                          <span>Auto-Upgrade ON</span>
+                        </span>
+                      </div>
+
+                      <div className="overflow-y-auto space-y-1 flex-1 pr-0.5 max-h-64">
+                        {AI_MODELS.map((m) => {
+                          const isSelected = activeModel.id === m.id;
+                          return (
+                            <button
+                              type="button"
+                              key={m.id}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveModel(m);
+                                storage.setActiveModelId(m.id);
+                                setIsEngineDropdownOpen(false);
+                                setModelToast(`⚡ Active: ${m.name}`);
+                                setTimeout(() => setModelToast(null), 2500);
+                              }}
+                              className={`w-full text-left p-2 rounded-xl flex items-center justify-between text-xs transition-all cursor-pointer ${
+                                isSelected 
+                                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' 
+                                  : 'text-gray-300 hover:bg-white/5 border border-transparent'
+                              }`}
+                            >
+                              <div className="flex flex-col min-w-0 pr-2">
+                                <span className="font-bold text-white text-xs">{m.name}</span>
+                                <span className="text-[10px] text-gray-400 truncate">{m.tag || m.description}</span>
+                              </div>
+                              {isSelected && <Check className="w-3.5 h-3.5 text-cyan-400 shrink-0" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      <div className="pt-1.5 border-t border-white/10 shrink-0">
+                        <button
+                          type="button"
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            setIsSyncingModels(true);
+                            setSyncFeedback(null);
+                            const res = await universalApiEngine.syncLatestModels();
+                            setIsSyncingModels(false);
+                            setSyncFeedback(`✅ Synced (${res.totalModelsAvailable || 12} models)`);
+                            setTimeout(() => setSyncFeedback(null), 3000);
+                          }}
+                          disabled={isSyncingModels}
+                          className="w-full py-1.5 px-2 rounded-xl bg-white/[0.03] hover:bg-cyan-500/10 text-cyan-300 text-[11px] font-mono border border-cyan-500/20 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                        >
+                          <RefreshCw className={`w-3 h-3 ${isSyncingModels ? 'animate-spin' : ''}`} />
+                          <span>{isSyncingModels ? 'Checking Registries...' : (syncFeedback || '⚡ Sync Latest Models')}</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Right Actions: Voice Mic & Circular Send Button */}
+              <div className="flex items-center gap-2">
                 <button
+                  type="button"
                   onClick={handleToggleListening}
-                  className={`p-2 rounded-xl transition-all ${
-                    isListening
-                      ? 'bg-rose-500 text-white animate-pulse shadow-glow-rose'
-                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  className={`p-2 rounded-xl transition-all cursor-pointer ${
+                    isListening ? 'bg-rose-500 text-white animate-pulse' : 'text-gray-400 hover:text-white hover:bg-white/5'
                   }`}
                   title="Voice Input (English / Hindi)"
                 >
@@ -1203,248 +1369,41 @@ export default function ChatView({
                 </button>
 
                 <button
+                  type="button"
                   onClick={onOpenVoiceModal}
-                  className="p-2 text-gray-400 hover:text-cyan-300 rounded-xl hover:bg-white/5 transition-colors"
-                  title="Real-time Voice Conversation Orb"
+                  className="p-2 text-gray-400 hover:text-cyan-300 rounded-xl hover:bg-white/5 transition-colors cursor-pointer"
+                  title="Voice Orb"
                 >
                   <Radio className="w-4 h-4" />
                 </button>
 
                 {isStreaming ? (
                   <button
+                    type="button"
                     onClick={handleStop}
-                    className="p-2 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30 transition-colors"
-                    title="Stop generating"
+                    className="w-8 h-8 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40 flex items-center justify-center hover:bg-rose-500/30 transition-all cursor-pointer"
+                    title="Stop Generating"
                   >
-                    <Square className="w-4 h-4 fill-current" />
+                    <Square className="w-3.5 h-3.5 fill-current" />
                   </button>
                 ) : (
                   <button
+                    type="button"
                     onClick={() => handleSend()}
                     disabled={!input.trim() && !attachedFile}
-                    className="p-2 rounded-xl bg-gradient-to-r from-cyan-400 to-purple-500 text-black font-bold disabled:opacity-30 transition-all shadow-glow-cyan"
-                    title="Send message (Enter)"
+                    className="w-8 h-8 rounded-full bg-white/10 hover:bg-cyan-500 text-gray-300 hover:text-black flex items-center justify-center disabled:opacity-20 transition-all cursor-pointer shadow-md disabled:cursor-not-allowed hover:scale-105"
+                    title="Send message"
                   >
-                    <Send className="w-4 h-4" />
+                    <ArrowRight className="w-4 h-4" />
                   </button>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Quick Engine & Mode Bar below input */}
-          <div className="flex flex-wrap items-center justify-between gap-2 px-1 text-[11px] font-mono text-gray-400 py-1 w-full relative z-20">
-            <div className="flex items-center gap-1.5 sm:gap-2.5 flex-wrap shrink-0">
-              {/* Engine Selector */}
-              <div className="relative" ref={engineDropdownRef}>
-                {(() => {
-                  const isOrbit = typeof window !== 'undefined' && (
-                    window.location.search.includes('orbit') ||
-                    (document.referrer && document.referrer.includes('giri-orbit.pages.dev'))
-                  );
-                  const currentContext = isOrbit ? 'orbit' : (layoutMode === 'studio' ? 'studio' : 'chat');
-                  const currentDisplayName = getModelDisplayName(activeModel, currentContext);
-
-                  return (
-                    <>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setIsEngineDropdownOpen(prev => !prev);
-                        }}
-                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-gray-300 hover:text-white border transition-all cursor-pointer select-none bg-white/[0.04] hover:bg-white/[0.08] border-white/10 active:scale-95"
-                      >
-                        <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-                        <span className="font-bold">{currentDisplayName}</span>
-                        <ChevronDown className={`w-3 h-3 transition-transform ${isEngineDropdownOpen ? 'rotate-180' : ''}`} />
-                      </button>
-
-                      {isEngineDropdownOpen && (
-                        <div className="absolute bottom-full left-0 mb-2 w-[calc(100vw-2rem)] sm:w-84 max-w-sm rounded-2xl bg-[#070913] border border-white/15 p-2 shadow-2xl z-50 space-y-1 backdrop-blur-xl max-h-[75vh] flex flex-col animate-fadeIn">
-                          <div className="px-2.5 py-1 text-[10px] font-mono text-gray-400 uppercase border-b border-white/10 flex justify-between items-center shrink-0">
-                            <span>Frontier AI Models</span>
-                            <span className="text-cyan-400 font-bold flex items-center gap-1">
-                              <Zap className="w-3 h-3" />
-                              <span>Auto-Upgrade ON</span>
-                            </span>
-                          </div>
-
-                          <div className="overflow-y-auto space-y-1 flex-1 pr-0.5 max-h-72">
-                            {AI_MODELS.map((m) => {
-                              const displayName = getModelDisplayName(m, currentContext);
-                              const isSelected = activeModel.id === m.id;
-                              return (
-                                <button
-                                  type="button"
-                                  key={m.id}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setActiveModel(m);
-                                    storage.setActiveModelId(m.id);
-                                    setIsEngineDropdownOpen(false);
-                                    setModelToast(`⚡ Active Engine: ${displayName}`);
-                                    setTimeout(() => setModelToast(null), 2500);
-                                  }}
-                                  className={`w-full text-left p-2.5 rounded-xl flex items-center justify-between text-xs transition-all cursor-pointer ${
-                                    isSelected
-                                      ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' 
-                                      : 'text-gray-300 hover:bg-white/5 border border-transparent'
-                                  }`}
-                                >
-                                  <div className="flex flex-col space-y-0.5 min-w-0 pr-2">
-                                    <div className="flex items-center gap-1.5 flex-wrap">
-                                      <span className="font-bold text-white text-xs">{displayName}</span>
-                                      {m.isAutoUpgrade && (
-                                        <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-gradient-to-r from-cyan-500/30 to-purple-500/30 text-cyan-200 border border-cyan-400/40 font-extrabold flex items-center gap-0.5">
-                                          <Zap className="w-2.5 h-2.5 text-cyan-300 animate-pulse" />
-                                          <span>AUTO</span>
-                                        </span>
-                                      )}
-                                      {m.isPro && (
-                                        <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-0.5">
-                                          <Crown className="w-2.5 h-2.5" />
-                                          <span>PRO</span>
-                                        </span>
-                                      )}
-                                    </div>
-                                    <span className="text-[10px] text-gray-400 truncate">
-                                      {m.tag || m.description}
-                                    </span>
-                                  </div>
-                                  {isSelected && (
-                                    <Check className="w-3.5 h-3.5 shrink-0 text-cyan-400" />
-                                  )}
-                                </button>
-                              );
-                            })}
-                          </div>
-
-                          {/* Quick Sync Button */}
-                          <div className="pt-1.5 border-t border-white/10 shrink-0">
-                            <button
-                              type="button"
-                              onClick={async (e) => {
-                                e.stopPropagation();
-                                setIsSyncingModels(true);
-                                setSyncFeedback(null);
-                                const res = await universalApiEngine.syncLatestModels();
-                                setIsSyncingModels(false);
-                                const count = res.totalModelsAvailable || 12;
-                                const prov = res.provider || 'Google & OpenRouter';
-                                setSyncFeedback(`✅ Synced (${count} models)`);
-                                setModelToast(`✅ Models Synced: ${count} engines available (${prov})`);
-                                setTimeout(() => {
-                                  setSyncFeedback(null);
-                                  setModelToast(null);
-                                }, 3500);
-                              }}
-                              disabled={isSyncingModels}
-                              className="w-full py-1.5 px-2 rounded-xl bg-white/[0.03] hover:bg-cyan-500/10 text-cyan-300 hover:text-cyan-200 text-[11px] font-mono border border-cyan-500/20 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
-                            >
-                              <RefreshCw className={`w-3 h-3 ${isSyncingModels ? 'animate-spin' : ''}`} />
-                              <span>{isSyncingModels ? 'Checking Registries...' : (syncFeedback || '⚡ Sync & Check for Model Upgrades')}</span>
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </>
-                  );
-                })()}
-              </div>
-
-              {/* Web Grounding Toggle with Sliding On/Off Switch */}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleToggleWebSearch(!webSearchEnabled);
-                }}
-                className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl border transition-all cursor-pointer select-none active:scale-95 ${
-                  webSearchEnabled
-                    ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/40 shadow-glow-cyan/50'
-                    : 'bg-white/[0.04] text-gray-400 border-white/10 hover:text-white hover:bg-white/[0.08]'
-                }`}
-                title={webSearchEnabled ? "Web Search is ON (Real-time grounding active)" : "Web Search is OFF (Click to turn ON)"}
-              >
-                <div className="flex items-center gap-1.5">
-                  <Globe className={`w-3.5 h-3.5 transition-colors ${webSearchEnabled ? 'text-cyan-400' : 'text-gray-400'}`} />
-                  <span className="font-semibold text-xs">Web Search</span>
-                </div>
-
-                {/* Sliding On/Off Switch */}
-                <div className={`w-7 h-4 rounded-full p-0.5 transition-colors duration-200 ease-in-out flex items-center ${
-                  webSearchEnabled ? 'bg-cyan-400' : 'bg-white/20'
-                }`}>
-                  <div className={`w-3 h-3 rounded-full transition-transform duration-200 ease-in-out ${
-                    webSearchEnabled 
-                      ? 'translate-x-3 bg-black shadow-sm' 
-                      : 'translate-x-0 bg-gray-400'
-                  }`} />
-                </div>
-              </button>
-
-              {/* Deep Reasoning Toggle with Sliding On/Off Switch */}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleToggleThinking(!useThinking);
-                }}
-                className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl border transition-all cursor-pointer select-none active:scale-95 ${
-                  useThinking
-                    ? 'bg-purple-500/15 text-purple-300 border-purple-500/40 shadow-glow-purple/50'
-                    : 'bg-white/[0.04] text-gray-400 border-white/10 hover:text-white hover:bg-white/[0.08]'
-                }`}
-                title={useThinking ? "Deep Reasoning is ON (Step-by-step thinking active)" : "Deep Reasoning is OFF (Direct concise responses)"}
-              >
-                <div className="flex items-center gap-1.5">
-                  <Brain className={`w-3.5 h-3.5 transition-colors ${useThinking ? 'text-purple-400' : 'text-gray-400'}`} />
-                  <span className="font-semibold text-xs">Deep Reasoning</span>
-                </div>
-
-                {/* Sliding On/Off Switch */}
-                <div className={`w-7 h-4 rounded-full p-0.5 transition-colors duration-200 ease-in-out flex items-center ${
-                  useThinking ? 'bg-purple-400' : 'bg-white/20'
-                }`}>
-                  <div className={`w-3 h-3 rounded-full transition-transform duration-200 ease-in-out ${
-                    useThinking 
-                      ? 'translate-x-3 bg-black shadow-sm' 
-                      : 'translate-x-0 bg-gray-400'
-                  }`} />
-                </div>
-              </button>
-            </div>
-
-            <div className="flex items-center gap-2">
-              {hasGeminiKey ? (
-                <button
-                  type="button"
-                  onClick={() => setIsFreeKeyModalOpen(true)}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[11px] font-mono transition-all cursor-pointer shadow-sm hover:shadow-emerald-500/10"
-                  title="Google Gemini 2.5 Active via Google AI Studio. Click to manage key."
-                >
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span className="font-bold">Gemini 2.5 Active</span>
-                  <span className="text-gray-400 text-[10px] hidden sm:inline">(Free AI Studio)</span>
-                </button>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <span className="hidden sm:inline text-gray-400 text-[11px] font-mono">
-                    ⚡ Sovereign Local Core
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setIsFreeKeyModalOpen(true)}
-                    className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-gradient-to-r from-cyan-500/20 to-blue-500/20 hover:from-cyan-500/30 hover:to-blue-500/30 text-cyan-300 border border-cyan-500/40 text-[11px] font-mono transition-all cursor-pointer shadow-sm hover:shadow-cyan-500/20 active:scale-95"
-                    title="Connect Google Gemini 2.5 Pro / Flash for free without credit card"
-                  >
-                    <Key className="w-3 h-3 text-cyan-400" />
-                    <span className="font-bold">Connect Free Gemini AI</span>
-                  </button>
-                </div>
-              )}
-            </div>
+          {/* Disclaimer text below input (Matches Reference Image) */}
+          <div className="text-center pt-2 text-[11px] text-gray-500 select-none">
+            Girionix can make mistakes. Verify important info.
           </div>
         </div>
       </div>

@@ -1,81 +1,36 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Menu, 
-  Columns2, 
-  MessageSquare, 
+  Plus, 
+  Settings, 
+  Wrench, 
   User, 
   Sparkles, 
+  Globe, 
   Download, 
   Crown, 
-  Cpu, 
-  ChevronDown, 
-  Wrench, 
-  FileText, 
-  Award, 
-  Activity, 
-  RefreshCw,
-  Globe,
-  Key,
-  Zap,
-  Copy,
-  Check,
-  Share2,
-  Gamepad2,
-  BarChart3,
-  Presentation
+  Layers
 } from 'lucide-react';
-import { storage } from '../../services/storage';
 
 export default function Header({
-  layoutMode,
-  setLayoutMode,
   onOpenTools,
   onOpenSettings,
   onOpenAbout,
-  onOpenDownload,
-  onOpenProStatus,
-  onOpenScratchpad,
-  onOpenUpdates,
-  onOpenLocalEngine,
-  onOpenTitanWorkstation,
+  onNewChat,
   onToggleSidebar,
   userName,
   onChangeName,
-  isAppInstalled,
-  isTitanMode,
-  onToggleTitanMode,
-  onOpenWhySwitch,
-  onLaunchOfficeDemo,
   isOfficeMode = false,
   onImportToWorkplace
 }) {
-  const [isToolsDropdownOpen, setIsToolsDropdownOpen] = useState(false);
-  const [copiedLink, setCopiedLink] = useState(false);
-  const dropdownRef = useRef(null);
-
-  // Close dropdown on click outside
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsToolsDropdownOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
   return (
-    <header className={`h-14 border-b px-3 sm:px-5 flex items-center justify-between z-30 backdrop-blur-xl transition-colors select-none ${
-      isTitanMode 
-        ? 'bg-[#030609]/95 border-emerald-500/30' 
-        : 'bg-[#0A0C14]/95 border-white/[0.08]'
-    }`}>
+    <header className="h-14 border-b px-3 sm:px-5 flex items-center justify-between z-30 backdrop-blur-xl bg-[#090a0f]/95 border-white/[0.08] select-none">
       {/* Left: Sidebar Toggle & Official Brand Identity */}
-      <div className="flex items-center gap-2.5 sm:gap-3">
+      <div className="flex items-center gap-3">
         <button
           onClick={onToggleSidebar}
-          className="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/[0.06] transition-colors"
-          title="Toggle Sidebar (Ctrl+B)"
+          className="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
+          title="Toggle Sidebar"
         >
           <Menu className="w-5 h-5" />
         </button>
@@ -83,427 +38,77 @@ export default function Header({
         <div 
           className="flex items-center gap-2.5 cursor-pointer group" 
           onClick={onOpenAbout} 
-          title="Introducing Girionix AI • Envisioned & Built by Abhinav Giri"
+          title="Girionix AI • Envisioned & Built by Abhinav Giri"
         >
           <img
             src="/logo.png"
             alt="Girionix AI Logo"
-            className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl object-contain group-hover:scale-105 transition-transform ${
-              isTitanMode ? 'shadow-glow-emerald' : 'shadow-glow-cyan'
-            }`}
+            className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl object-contain shadow-glow-cyan group-hover:scale-105 transition-transform"
           />
           <div className="flex flex-col">
             <span className="font-extrabold text-sm sm:text-base tracking-wider text-white leading-tight flex items-center gap-1">
-              <span>GIRIONIX</span>
-              <span className={isTitanMode ? 'text-emerald-400 font-black' : 'text-cyan-400'}>
-                {isTitanMode ? 'TITAN' : 'AI'}
-              </span>
+              <span>Girionix</span>
+              <span className="text-cyan-400">AI</span>
             </span>
-            <span className={`text-[9px] font-mono tracking-widest hidden sm:inline uppercase ${
-              isTitanMode ? 'text-emerald-400/90 font-bold' : 'text-cyan-300/80'
-            }`}>
-              {isTitanMode ? '⚡ 100% On-Device Offline' : 'Think • Create • Explore'}
+            <span className="text-[9px] font-mono tracking-widest hidden sm:inline uppercase text-cyan-300/80">
+              Think • Create • Explore
             </span>
           </div>
         </div>
-
       </div>
 
-      {/* Center: Clean Layout & Studio Mode Switcher OR Dedicated Office Copilot Header */}
-      {isOfficeMode ? (
+      {/* Center: When in office mode, show office bar */}
+      {isOfficeMode && (
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-500/15 via-cyan-500/15 to-purple-500/15 border border-cyan-500/30 text-cyan-300 text-xs font-mono font-bold shadow-sm">
             <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="hidden sm:inline">Office Suite Copilot</span>
-            <span className="sm:hidden">Office AI</span>
+            <span>Office Suite Copilot</span>
           </div>
-
           {onImportToWorkplace && (
             <button
               onClick={onImportToWorkplace}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500/25 to-teal-500/25 hover:from-emerald-500/35 hover:to-teal-500/35 text-emerald-200 border border-emerald-500/50 text-xs font-bold shadow-glow-emerald transition-all hover:scale-105 cursor-pointer"
-              title="Import current response directly into your active Drift/Axis/Kinetic document"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 border border-emerald-500/40 text-xs font-bold transition-all cursor-pointer"
             >
-              <span>📥</span>
-              <span className="hidden sm:inline">Import to Workplace</span>
-              <span className="sm:hidden">Import</span>
+              <span>📥 Import</span>
             </button>
           )}
         </div>
-      ) : (
-        <>
-          {/* Desktop Mode Switcher */}
-          <div className="hidden sm:flex items-center p-0.5 rounded-xl bg-black/60 border border-white/[0.08] text-xs font-medium">
-            <button
-              onClick={() => setLayoutMode('chat')}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition-all ${
-                layoutMode === 'chat'
-                  ? isTitanMode 
-                    ? 'bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30' 
-                    : 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30 shadow-sm'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-              title="Chat Focus"
-            >
-              <MessageSquare className="w-3.5 h-3.5" />
-              <span>Chat</span>
-            </button>
-
-            <button
-              onClick={() => setLayoutMode('split')}
-              className={`hidden md:flex items-center gap-1.5 px-3 py-1 rounded-lg transition-all ${
-                layoutMode === 'split'
-                  ? isTitanMode 
-                    ? 'bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30' 
-                    : 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30 shadow-sm'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-              title="Side-by-Side Split Workspace"
-            >
-              <Columns2 className="w-3.5 h-3.5" />
-              <span>Split</span>
-            </button>
-
-            <button
-              onClick={() => setLayoutMode('studio')}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition-all ${
-                layoutMode === 'studio'
-                  ? isTitanMode 
-                    ? 'bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30' 
-                    : 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30 shadow-sm'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-              title="AI Studio (Prompt Lab, Code, Math & Media)"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Studio</span>
-            </button>
-          </div>
-
-          {/* Mobile Mode Switcher (< sm) */}
-          <div className="flex sm:hidden items-center p-0.5 rounded-xl bg-black/60 border border-white/10 text-xs font-medium">
-            <button
-              onClick={() => setLayoutMode('chat')}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all ${
-                layoutMode === 'chat'
-                  ? isTitanMode 
-                    ? 'bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30' 
-                    : 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-              title="Chat Focus"
-            >
-              <MessageSquare className="w-3.5 h-3.5" />
-              <span>Chat</span>
-            </button>
-
-            <button
-              onClick={() => setLayoutMode('studio')}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all ${
-                layoutMode === 'studio'
-                  ? isTitanMode 
-                    ? 'bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30' 
-                    : 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-cyan-300 font-bold border border-cyan-500/30'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-              title="AI Studio"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Studio</span>
-            </button>
-          </div>
-        </>
       )}
 
-      {/* Right: Clean Action Hub (Why Switch, Get App, Unified Tools Menu & User Profile) */}
-      <div className="flex items-center gap-1.5 sm:gap-2">
-        {/* Why Switch? Quick Button */}
-        {onOpenWhySwitch && (
+      {/* Right: + New chat, ⚙ Tools, User Profile (Matching Screenshot) */}
+      <div className="flex items-center gap-2 sm:gap-2.5">
+        {/* + New Chat Pill Button (Matching Reference Image) */}
+        {onNewChat && (
           <button
-            onClick={onOpenWhySwitch}
-            className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 border border-purple-500/30 text-xs font-bold transition-all hover:scale-[1.02] cursor-pointer"
-            title="Why Switch to Girionix AI? (Model Benchmarks & Comparison)"
+            onClick={onNewChat}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-gray-200 hover:text-white border border-white/10 text-xs font-medium transition-all cursor-pointer shadow-sm active:scale-95"
+            title="Start New Chat Session"
           >
-            <Crown className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-            <span className="hidden xs:inline">Why Switch?</span>
+            <Plus className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="hidden sm:inline">New chat</span>
           </button>
         )}
 
-        {/* App Status / Download App */}
-        {isAppInstalled ? (
+        {/* ⚙ Tools Pill Button (Matching Reference Image) */}
+        {onOpenTools && (
           <button
-            onClick={onOpenProStatus || onOpenDownload}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-xs font-bold shadow-sm transition-all"
-            title="Native App Active • Pro Superpowers Unlocked"
+            onClick={onOpenTools}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-gray-200 hover:text-white border border-white/10 text-xs font-medium transition-all cursor-pointer shadow-sm active:scale-95"
+            title="Open Tools & Modules"
           >
-            <Crown className="w-3.5 h-3.5 text-amber-400 flex-shrink-0 animate-pulse" />
-            <span className="hidden md:inline">Pro Active</span>
-          </button>
-        ) : (
-          onOpenDownload && (
-            <button
-              onClick={onOpenDownload}
-              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-bold shadow-glow-emerald transition-all hover:scale-[1.02]"
-              title="Download Desktop & Mobile Standalone Apps"
-            >
-              <Download className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-              <span className="hidden sm:inline">Get App</span>
-            </button>
-          )
-        )}
-
-        {/* Unified Tools & Extra Features Dropdown */}
-        <div className="relative" ref={dropdownRef}>
-          <button
-            onClick={() => setIsToolsDropdownOpen(!isToolsDropdownOpen)}
-            className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
-              isToolsDropdownOpen
-                ? 'bg-white/10 text-white border-white/25 shadow-md'
-                : 'bg-white/[0.04] hover:bg-white/[0.08] text-gray-300 hover:text-white border-white/10'
-            }`}
-            title="AI Tools, Offline Engine & Extras"
-          >
-            <Wrench className="w-3.5 h-3.5 text-cyan-400" />
+            <Wrench className="w-3.5 h-3.5 text-gray-300" />
             <span className="hidden sm:inline">Tools</span>
-            <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${isToolsDropdownOpen ? 'rotate-180' : ''}`} />
           </button>
+        )}
 
-          {isToolsDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-64 sm:w-72 rounded-2xl bg-[#090C18]/95 border border-white/15 shadow-2xl backdrop-blur-2xl p-2 z-50 animate-fadeIn space-y-1">
-              {/* Why Switch? */}
-              {onOpenWhySwitch && (
-                <button
-                  onClick={() => { setIsToolsDropdownOpen(false); onOpenWhySwitch(); }}
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left text-xs text-gray-200 hover:text-white hover:bg-purple-500/20 transition-colors border-b border-white/5 pb-2 mb-1"
-                >
-                  <div className="p-1.5 rounded-lg bg-amber-500/20 text-amber-400">
-                    <Crown className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="font-semibold text-white flex items-center gap-1">
-                      <span>Why Switch to Girionix?</span>
-                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 font-mono font-bold">Compare</span>
-                    </div>
-                    <div className="text-[10px] text-gray-400">Model benchmarks vs ChatGPT & Claude</div>
-                  </div>
-                </button>
-              )}
-
-              {/* Direct Workspace Link (/chat) */}
-              <button
-                onClick={() => {
-                  try {
-                    navigator.clipboard.writeText('https://girionix-ai.pages.dev/chat');
-                    setCopiedLink(true);
-                    setTimeout(() => setCopiedLink(false), 2000);
-                  } catch (_) {}
-                }}
-                className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left text-xs text-gray-200 hover:text-white hover:bg-cyan-500/20 transition-colors"
-                title="Copy direct page link for chat workspace"
-              >
-                <div className="p-1.5 rounded-lg bg-cyan-500/20 text-cyan-400">
-                  {copiedLink ? <Check className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4" />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-white flex items-center gap-1.5">
-                    <span>Direct Workspace Link</span>
-                    <span className="text-[9px] px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 font-mono font-bold">
-                      {copiedLink ? 'Copied!' : '/chat'}
-                    </span>
-                  </div>
-                  <div className="text-[10px] text-gray-400 truncate">https://girionix-ai.pages.dev/chat</div>
-                </div>
-              </button>
-
-              {/* Office Presentation Showcase Launcher */}
-              {onLaunchOfficeDemo && (
-                <div className="p-2 rounded-xl bg-gradient-to-br from-cyan-950/40 via-purple-950/30 to-black/60 border border-cyan-500/30 my-1 space-y-1.5">
-                  <div className="flex items-center justify-between px-1 text-[10px] font-mono text-cyan-400 font-bold uppercase tracking-wider">
-                    <span className="flex items-center gap-1">
-                      <Presentation className="w-3.5 h-3.5 text-cyan-400" />
-                      <span>Office Demo Showcase</span>
-                    </span>
-                    <span className="text-[9px] text-emerald-400">1-Click Live</span>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-1 text-[11px] font-mono">
-                    <button
-                      onClick={() => { setIsToolsDropdownOpen(false); onLaunchOfficeDemo('code-snake'); }}
-                      className="p-1.5 rounded-lg bg-white/5 hover:bg-cyan-500/20 text-gray-300 hover:text-white flex items-center gap-1.5 transition-colors text-left truncate cursor-pointer"
-                      title="Run Cyber Snake Game in Coding Studio"
-                    >
-                      <Gamepad2 className="w-3 h-3 text-emerald-400 shrink-0" />
-                      <span className="truncate">Cyber Snake</span>
-                    </button>
-
-                    <button
-                      onClick={() => { setIsToolsDropdownOpen(false); onLaunchOfficeDemo('code-dashboard'); }}
-                      className="p-1.5 rounded-lg bg-white/5 hover:bg-cyan-500/20 text-gray-300 hover:text-white flex items-center gap-1.5 transition-colors text-left truncate cursor-pointer"
-                      title="Run SaaS Analytics Dashboard in Coding Studio"
-                    >
-                      <BarChart3 className="w-3 h-3 text-cyan-400 shrink-0" />
-                      <span className="truncate">Analytics UI</span>
-                    </button>
-
-                    <button
-                      onClick={() => { setIsToolsDropdownOpen(false); onLaunchOfficeDemo('code-kanban'); }}
-                      className="p-1.5 rounded-lg bg-white/5 hover:bg-cyan-500/20 text-gray-300 hover:text-white flex items-center gap-1.5 transition-colors text-left truncate cursor-pointer"
-                      title="Run Agile Kanban Board in Coding Studio"
-                    >
-                      <Columns2 className="w-3 h-3 text-purple-400 shrink-0" />
-                      <span className="truncate">Kanban Board</span>
-                    </button>
-
-                    <button
-                      onClick={() => { setIsToolsDropdownOpen(false); onLaunchOfficeDemo('math-lab'); }}
-                      className="p-1.5 rounded-lg bg-white/5 hover:bg-cyan-500/20 text-gray-300 hover:text-white flex items-center gap-1.5 transition-colors text-left truncate cursor-pointer"
-                      title="Open Olympiad Math Lab & Surface Plotter"
-                    >
-                      <Activity className="w-3 h-3 text-amber-400 shrink-0" />
-                      <span className="truncate">Math Lab</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* 1. API & Cloud Gateway */}
-              {onOpenSettings && (
-                <button
-                  onClick={() => { setIsToolsDropdownOpen(false); onOpenSettings(); }}
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left text-xs text-gray-200 hover:text-white hover:bg-cyan-500/20 transition-colors"
-                >
-                  <div className="p-1.5 rounded-lg bg-cyan-500/20 text-cyan-400">
-                    <Key className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="font-semibold text-white flex items-center gap-1.5">
-                      <span>API & Cloud Gateway</span>
-                      <span className={`text-[9px] px-1.5 py-0.2 rounded font-mono font-bold ${
-                        storage.hasApiKey()
-                          ? 'bg-cyan-500/20 text-cyan-300'
-                          : 'bg-amber-500/20 text-amber-300'
-                      }`}>
-                        {storage.hasApiKey() ? 'Connected' : 'Configure'}
-                      </span>
-                    </div>
-                    <div className="text-[10px] text-gray-400">Gemini, OpenAI, Groq, DeepSeek & Keys</div>
-                  </div>
-                </button>
-              )}
-
-              {/* 2. Tools Hub */}
-              <button
-                onClick={() => { setIsToolsDropdownOpen(false); onOpenTools(); }}
-                className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left text-xs text-gray-200 hover:text-white hover:bg-white/10 transition-colors"
-              >
-                <div className="p-1.5 rounded-lg bg-purple-500/20 text-purple-400">
-                  <Wrench className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="font-semibold text-white">Productivity & Tools Hub</div>
-                  <div className="text-[10px] text-gray-400">Personas, Themes, Timer & Soundscapes</div>
-                </div>
-              </button>
-
-              {/* 2. 100% Offline Neural Core */}
-              {!isTitanMode && onOpenLocalEngine && (
-                <button
-                  onClick={() => { setIsToolsDropdownOpen(false); onOpenLocalEngine(); }}
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left text-xs text-gray-200 hover:text-white hover:bg-white/10 transition-colors"
-                >
-                  <div className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400">
-                    <Cpu className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="font-semibold text-white flex items-center gap-1.5">
-                      <span>Local Neural Core</span>
-                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-mono">Offline</span>
-                    </div>
-                    <div className="text-[10px] text-gray-400">Air-gapped hardware execution</div>
-                  </div>
-                </button>
-              )}
-
-              {/* 3. Scratchpad & Notes */}
-              {onOpenScratchpad && (
-                <button
-                  onClick={() => { setIsToolsDropdownOpen(false); onOpenScratchpad(); }}
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left text-xs text-gray-200 hover:text-white hover:bg-white/10 transition-colors"
-                >
-                  <div className="p-1.5 rounded-lg bg-purple-500/20 text-purple-400">
-                    <FileText className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="font-semibold text-white">Scratchpad & Notes</div>
-                    <div className="text-[10px] text-gray-400">Persistent canvas & markdown notes</div>
-                  </div>
-                </button>
-              )}
-
-              {/* 4. Intro & Creator */}
-              {onOpenAbout && (
-                <button
-                  onClick={() => { setIsToolsDropdownOpen(false); onOpenAbout(); }}
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left text-xs text-gray-200 hover:text-white hover:bg-white/10 transition-colors"
-                >
-                  <div className="p-1.5 rounded-lg bg-pink-500/20 text-pink-400">
-                    <Award className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="font-semibold text-white">Introducing Girionix AI</div>
-                    <div className="text-[10px] text-gray-400">Envisioned & Built by Abhinav Giri</div>
-                  </div>
-                </button>
-              )}
-
-              {/* 5. Updates (if app installed) */}
-              {isAppInstalled && onOpenUpdates && (
-                <button
-                  onClick={() => { setIsToolsDropdownOpen(false); onOpenUpdates(); }}
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left text-xs text-gray-200 hover:text-white hover:bg-white/10 transition-colors border-t border-white/5 pt-2"
-                >
-                  <div className="p-1.5 rounded-lg bg-blue-500/20 text-blue-400">
-                    <RefreshCw className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="font-semibold text-white">Check for Updates</div>
-                    <div className="text-[10px] text-gray-400">Standalone live sync</div>
-                  </div>
-                </button>
-              )}
-
-              {/* 6. Giri Corporation Official Portal */}
-              <a
-                href="https://giri-corporation.pages.dev/"
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => setIsToolsDropdownOpen(false)}
-                className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left text-xs text-gray-200 hover:text-white hover:bg-cyan-500/15 transition-colors border-t border-white/5 pt-2"
-                title="Visit Official Giri Corporation Website"
-              >
-                <div className="p-1.5 rounded-lg bg-black/60 border border-white/10 flex items-center justify-center">
-                  <img src="/giri-corporation-logo.png" alt="Giri Corporation" className="w-4 h-4 object-contain rounded" />
-                </div>
-                <div>
-                  <div className="font-semibold text-white flex items-center gap-1.5">
-                    <span>Giri Corporation</span>
-                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-mono font-bold">Portal</span>
-                  </div>
-                  <div className="text-[10px] text-gray-400">giri-corporation.pages.dev</div>
-                </div>
-              </a>
-            </div>
-          )}
-        </div>
-
-        {/* User Profile Pill */}
+        {/* User Profile / Home Button */}
         <button
           onClick={onChangeName}
-          className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs font-mono transition-colors cursor-pointer"
-          title="Click to view or edit your profile & personalization"
+          className="flex items-center gap-1.5 p-1.5 sm:px-3 sm:py-1.5 rounded-xl sm:rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-gray-300 hover:text-white border border-white/10 text-xs font-medium transition-colors cursor-pointer"
+          title="Personalization & Profile"
         >
-          <User className="w-3.5 h-3.5" />
-          <span className="max-w-[70px] sm:max-w-[90px] truncate">{userName || 'Profile'}</span>
+          <User className="w-3.5 h-3.5 text-cyan-400" />
+          <span className="max-w-[80px] truncate hidden md:inline font-mono">{userName || 'Profile'}</span>
         </button>
       </div>
     </header>

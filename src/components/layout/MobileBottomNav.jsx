@@ -1,83 +1,32 @@
 import React from 'react';
 import { 
   MessageSquare, 
-  Sparkles, 
   Wrench, 
   Download, 
-  Crown,
-  Cpu
+  Crown
 } from 'lucide-react';
 
 export default function MobileBottomNav({
-  layoutMode,
-  setLayoutMode,
-  mobileActivePane,
-  setMobileActivePane,
   onOpenTools,
   onOpenDownload,
   onOpenProStatus,
   isAppInstalled = false,
-  isTitanMode = false,
   isOfficeMode = false
 }) {
-  const isChatActive = layoutMode === 'chat' || (layoutMode === 'split' && mobileActivePane === 'chat');
-  const isStudioActive = layoutMode === 'studio' || (layoutMode === 'split' && mobileActivePane === 'studio');
-
-  const handleSelectChat = () => {
-    setLayoutMode('chat');
-    if (setMobileActivePane) setMobileActivePane('chat');
-  };
-
-  const handleSelectStudio = () => {
-    setLayoutMode('studio');
-    if (setMobileActivePane) setMobileActivePane('studio');
-  };
-
   return (
-    <div className="md:hidden z-40 bg-[#070914]/95 backdrop-blur-xl border-t border-white/[0.08] px-2 py-1 flex items-center justify-around select-none shrink-0 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-2xl">
+    <div className="md:hidden z-40 bg-[#070914]/95 backdrop-blur-xl border-t border-white/[0.08] px-3 py-1 flex items-center justify-around select-none shrink-0 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-2xl">
       {/* 1. Chat Tab */}
       <button
-        onClick={handleSelectChat}
-        className={`flex-1 flex flex-col items-center justify-center py-1.5 px-2 rounded-2xl transition-all cursor-pointer min-h-[44px] ${
-          isChatActive
-            ? isTitanMode 
-              ? 'text-emerald-300 font-bold bg-emerald-500/10' 
-              : 'text-cyan-300 font-bold bg-cyan-500/10'
-            : 'text-gray-400 hover:text-white'
-        }`}
+        className="flex-1 flex flex-col items-center justify-center py-1.5 px-2 rounded-2xl transition-all cursor-pointer min-h-[44px] text-cyan-300 font-bold bg-cyan-500/10"
       >
         <div className="relative">
-          <MessageSquare className={`w-5 h-5 ${isChatActive ? (isTitanMode ? 'text-emerald-400' : 'text-cyan-400') : 'text-gray-400'}`} />
-          {isChatActive && (
-            <span className={`absolute -top-1 -right-1 w-2 h-2 rounded-full ${isTitanMode ? 'bg-emerald-400 shadow-glow-emerald' : 'bg-cyan-400 shadow-glow-cyan'}`} />
-          )}
+          <MessageSquare className="w-5 h-5 text-cyan-400" />
+          <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-cyan-400 shadow-glow-cyan" />
         </div>
         <span className="text-[11px] mt-0.5 tracking-tight">Chat</span>
       </button>
 
-      {/* 2. AI Studio Tab - Hidden in Office Mode */}
-      {!isOfficeMode && (
-        <button
-          onClick={handleSelectStudio}
-          className={`flex-1 flex flex-col items-center justify-center py-1.5 px-2 rounded-2xl transition-all cursor-pointer min-h-[44px] ${
-            isStudioActive
-              ? isTitanMode 
-                ? 'text-emerald-300 font-bold bg-emerald-500/10' 
-                : 'text-purple-300 font-bold bg-purple-500/10'
-              : 'text-gray-400 hover:text-white'
-          }`}
-        >
-          <div className="relative">
-            <Sparkles className={`w-5 h-5 ${isStudioActive ? (isTitanMode ? 'text-emerald-400' : 'text-purple-400') : 'text-gray-400'}`} />
-            {isStudioActive && (
-              <span className={`absolute -top-1 -right-1 w-2 h-2 rounded-full ${isTitanMode ? 'bg-emerald-400 shadow-glow-emerald' : 'bg-purple-400 shadow-glow-purple'}`} />
-            )}
-          </div>
-          <span className="text-[11px] mt-0.5 tracking-tight">AI Studio</span>
-        </button>
-      )}
-
-      {/* 3. Tools Hub Tab */}
+      {/* 2. Tools Hub Tab */}
       <button
         onClick={onOpenTools}
         className="flex-1 flex flex-col items-center justify-center py-1.5 px-2 rounded-2xl transition-all cursor-pointer min-h-[44px] text-gray-400 hover:text-white"
@@ -86,7 +35,7 @@ export default function MobileBottomNav({
         <span className="text-[11px] mt-0.5 tracking-tight">Tools</span>
       </button>
 
-      {/* 4. Get App / Pro Active Tab - Hidden in Office Mode */}
+      {/* 3. Get App / Pro Active Tab - Hidden in Office Mode */}
       {!isOfficeMode && (
         <button
           onClick={isAppInstalled ? (onOpenProStatus || onOpenDownload) : onOpenDownload}

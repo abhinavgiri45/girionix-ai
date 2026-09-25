@@ -16,7 +16,13 @@ import {
   Layers,
   ChevronRight,
   Shield,
-  Zap
+  Zap,
+  Mic,
+  MicOff,
+  FileCode,
+  FileSpreadsheet,
+  Trash2,
+  BookOpen
 } from 'lucide-react';
 import { giriOrbitBridge, ORBIT_TOOLS } from '../../services/giriOrbitBridge';
 import { storage } from '../../services/storage';
@@ -31,10 +37,13 @@ export default function OrbitWorkstationView({ onExitOrbitMode }) {
   const [isStreaming, setIsStreaming] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
   const [importedId, setImportedId] = useState(null);
+  const [isListening, setIsListening] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
 
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
   const abortControllerRef = useRef(null);
+  const recognitionRef = useRef(null);
 
   // Subscribe to bridge events from parent Giri Orbit
   useEffect(() => {
@@ -59,9 +68,53 @@ export default function OrbitWorkstationView({ onExitOrbitMode }) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isStreaming]);
 
+  // Voice Dictation
+  const handleToggleVoice = () => {
+    if (isListening) {
+      if (recognitionRef.current) recognitionRef.current.stop();
+      setIsListening(false);
+      return;
+    }
+
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRec) {
+      alert('Speech recognition is not supported in this browser. Please use Chrome, Edge, or Safari.');
+      return;
+    }
+
+    try {
+      const rec = new SpeechRec();
+      rec.continuous = true;
+      rec.interimResults = true;
+      rec.lang = 'en-US';
+
+      rec.onstart = () => setIsListening(true);
+      rec.onresult = (e) => {
+        let transcript = '';
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          transcript += e.results[i][0].transcript;
+        }
+        setInput(prev => (prev ? prev + ' ' : '') + transcript);
+      };
+      rec.onerror = () => setIsListening(false);
+      rec.onend = () => setIsListening(false);
+
+      recognitionRef.current = rec;
+      rec.start();
+    } catch (err) {
+      console.error('Speech recognition error:', err);
+      setIsListening(false);
+    }
+  };
+
   const handleSend = async (customPrompt) => {
     const promptToSend = customPrompt || input;
     if (!promptToSend.trim() || isStreaming) return;
+
+    if (isListening && recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    }
 
     const userMessage = {
       id: 'orbit-msg-' + Date.now(),
@@ -92,7 +145,8 @@ export default function OrbitWorkstationView({ onExitOrbitMode }) {
       const toolObj = ORBIT_TOOLS[activeTool.toUpperCase()] || ORBIT_TOOLS.DRIFT;
       const systemDirective = giriOrbitBridge.buildOrbitSystemDirective(activeTool) +
         `\n\nOPERATOR: Working in Giri Orbit for ${orbitContext.operatorName || 'Orbit Workspace Member'}.` +
-        `\nACTIVE DOCUMENT: "${orbitContext.documentTitle || 'Untitled'}".`;
+        `\nACTIVE DOCUMENT: "${orbitContext.documentTitle || 'Untitled'}".` +
+        `\nMODEL ENGINE: Girionix Pro Enterprise Office Core. Provide high-density, beautifully structured enterprise-grade deliverables with clean tables, formatted headings, and formulas where applicable.`;
 
       const apiDialogue = messages.slice(-10).map(m => ({
         role: m.role,
@@ -147,6 +201,56 @@ export default function OrbitWorkstationView({ onExitOrbitMode }) {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  // Exporters for Giri Orbit documents
+  const handleExportFile = (content, format = 'md') => {
+    let filename = `Giri_Orbit_${activeTool}_${Date.now()}`;
+    let mimeType = 'text/plain';
+    let fileData = content;
+
+    if (format === 'md') {
+      filename += '.md';
+      mimeType = 'text/markdown';
+    } else if (format === 'html') {
+      filename += '.html';
+      mimeType = 'text/html';
+      fileData = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${filename}</title><style>body{font-family:system-ui,-apple-system,sans-serif;max-width:800px;margin:2rem auto;padding:0 1rem;line-height:1.6;color:#222;}table{border-collapse:collapse;width:100%;margin:1rem 0;}th,td{border:1px solid #ddd;padding:8px;}th{background:#f4f4f4;}pre{background:#f8f8f8;padding:12px;border-radius:6px;}</style></head><body>${content.replace(/\n/g, '<br/>')}</body></html>`;
+    } else if (format === 'csv') {
+      filename += '.csv';
+      mimeType = 'text/csv';
+      const lines = content.split('\n');
+      const csvLines = lines.map(line => {
+        if (line.includes('|')) {
+          return line.split('|').filter(c => c.trim()).map(c => `"${c.trim().replace(/"/g, '""')}"`).join(',');
+        }
+        return `"${line.replace(/"/g, '""')}"`;
+      });
+      fileData = csvLines.join('\n');
+    }
+
+    const blob = new Blob([fileData], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleClearSession = () => {
+    if (confirm('Clear all conversation history in this Orbit document?')) {
+      const freshSession = {
+        id: 'orbit-session-' + Date.now(),
+        title: 'New Orbit Session',
+        createdAt: Date.now(),
+        messages: []
+      };
+      setSessions([freshSession]);
+      setActiveSessionId(freshSession.id);
+    }
+  };
+
   const toolConfig = ORBIT_TOOLS[activeTool.toUpperCase()] || ORBIT_TOOLS.DRIFT;
 
   const toolDirectives = {
@@ -198,6 +302,10 @@ export default function OrbitWorkstationView({ onExitOrbitMode }) {
                 <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30">
                   DEDICATED CO-PILOT
                 </span>
+                <span className="hidden sm:inline-flex text-[10px] font-mono px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 font-semibold items-center gap-1">
+                  <Zap className="w-3 h-3 text-purple-400" />
+                  Girionix Pro
+                </span>
               </div>
               <div className="text-[10px] font-mono text-gray-400 leading-none">
                 Official Office Suite AI • Drift • Axis • Kinetic • Aegis
@@ -226,8 +334,18 @@ export default function OrbitWorkstationView({ onExitOrbitMode }) {
           })}
         </div>
 
-        {/* Right Status & Official Link */}
+        {/* Right Status, Clear, & Official Link */}
         <div className="flex items-center gap-2">
+          {messages.length > 0 && (
+            <button
+              onClick={handleClearSession}
+              className="p-1.5 rounded-xl text-gray-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all text-xs flex items-center gap-1"
+              title="Clear current Orbit conversation"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
+
           <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[11px] font-mono text-emerald-300">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             <span>{orbitContext.connected ? 'Connected to Orbit' : 'Active Station'}</span>
@@ -275,8 +393,12 @@ export default function OrbitWorkstationView({ onExitOrbitMode }) {
               <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mb-1">
                 Giri Orbit Dedicated AI Engine
               </h2>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-300 text-xs font-semibold mb-3">
+                <Zap className="w-3.5 h-3.5 text-purple-400" />
+                Powered by Girionix Pro
+              </div>
               <p className="text-xs sm:text-sm text-gray-400 max-w-lg mb-6">
-                Engineered exclusively for <strong className="text-cyan-300">{toolConfig.name}</strong> ({toolConfig.category}). Generate production documents, complex spreadsheets, executive slide decks, and compliance stamps with 1-click import.
+                Engineered exclusively for <strong className="text-cyan-300">{toolConfig.name}</strong> ({toolConfig.category}). Generate production documents, complex spreadsheets, executive slide decks, and compliance stamps with 1-click import and multi-format export.
               </p>
 
               {/* Tool Directives */}
@@ -318,7 +440,7 @@ export default function OrbitWorkstationView({ onExitOrbitMode }) {
                     className={`flex flex-col ${isAssistant ? 'items-start' : 'items-end'} animate-fadeIn`}
                   >
                     <div className="flex items-center gap-2 mb-1 px-1 text-[11px] font-mono text-gray-400">
-                      <span>{isAssistant ? `✦ ${toolConfig.name} Co-Pilot` : 'You'}</span>
+                      <span>{isAssistant ? `✦ ${toolConfig.name} Co-Pilot (Girionix Pro)` : 'You'}</span>
                       <span>•</span>
                       <span>{m.timestamp}</span>
                     </div>
@@ -336,7 +458,7 @@ export default function OrbitWorkstationView({ onExitOrbitMode }) {
 
                       {/* Action Bar for AI Responses */}
                       {isAssistant && !m.isStreaming && (
-                        <div className="mt-3 pt-2.5 border-t border-white/10 flex items-center justify-between text-xs">
+                        <div className="mt-3 pt-2.5 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 text-xs">
                           <button
                             onClick={() => handleImportToActiveTool(m.content, m.id)}
                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500/25 to-teal-500/25 hover:from-emerald-500/35 text-emerald-200 border border-emerald-500/40 transition-all font-bold cursor-pointer hover:scale-105"
@@ -347,6 +469,32 @@ export default function OrbitWorkstationView({ onExitOrbitMode }) {
                           </button>
 
                           <div className="flex items-center gap-1.5">
+                            {/* Export Formats */}
+                            <button
+                              onClick={() => handleExportFile(m.content, 'md')}
+                              className="px-2 py-1 rounded-lg text-[11px] font-mono bg-white/[0.04] hover:bg-white/[0.1] text-gray-300 border border-white/10 transition-colors flex items-center gap-1"
+                              title="Export as Markdown (.md)"
+                            >
+                              <FileText className="w-3 h-3 text-cyan-400" />
+                              <span>MD</span>
+                            </button>
+                            <button
+                              onClick={() => handleExportFile(m.content, 'html')}
+                              className="px-2 py-1 rounded-lg text-[11px] font-mono bg-white/[0.04] hover:bg-white/[0.1] text-gray-300 border border-white/10 transition-colors flex items-center gap-1"
+                              title="Export as HTML (.html)"
+                            >
+                              <FileCode className="w-3 h-3 text-purple-400" />
+                              <span>HTML</span>
+                            </button>
+                            <button
+                              onClick={() => handleExportFile(m.content, 'csv')}
+                              className="px-2 py-1 rounded-lg text-[11px] font-mono bg-white/[0.04] hover:bg-white/[0.1] text-gray-300 border border-white/10 transition-colors flex items-center gap-1"
+                              title="Export as CSV (.csv)"
+                            >
+                              <FileSpreadsheet className="w-3 h-3 text-emerald-400" />
+                              <span>CSV</span>
+                            </button>
+
                             <button
                               onClick={() => handleCopy(m.content, m.id)}
                               className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
@@ -367,7 +515,7 @@ export default function OrbitWorkstationView({ onExitOrbitMode }) {
 
           {/* Bottom Prompt Input Dock */}
           <div className="sticky bottom-0 pt-2 pb-3 bg-[#070912]/90 backdrop-blur-xl border-t border-white/10 w-full">
-            <div className="relative rounded-2xl bg-black/60 border border-cyan-500/30 focus-within:border-cyan-400/60 transition-colors p-2 flex items-end">
+            <div className="relative rounded-2xl bg-black/60 border border-cyan-500/30 focus-within:border-cyan-400/60 transition-colors p-2 flex items-end gap-2">
               <textarea
                 ref={textareaRef}
                 value={input}
@@ -378,11 +526,26 @@ export default function OrbitWorkstationView({ onExitOrbitMode }) {
                     handleSend();
                   }
                 }}
-                placeholder={`Ask ${toolConfig.name} Co-Pilot to draft a document, build a spreadsheet model, or outline slides...`}
+                placeholder={isListening ? 'Listening to your voice dictation...' : `Ask ${toolConfig.name} Co-Pilot to draft a document, build a spreadsheet model, or outline slides...`}
                 rows={1}
                 className="flex-1 bg-transparent text-sm text-white placeholder-gray-500 px-3 py-1.5 focus:outline-none resize-none leading-relaxed max-h-36 overflow-y-auto"
               />
 
+              {/* Voice Dictation Button */}
+              <button
+                type="button"
+                onClick={handleToggleVoice}
+                className={`p-2 rounded-xl border transition-all cursor-pointer ${
+                  isListening 
+                    ? 'bg-rose-500/20 border-rose-500/50 text-rose-400 animate-pulse shadow-glow-rose'
+                    : 'bg-white/[0.04] border-white/10 text-gray-400 hover:text-white'
+                }`}
+                title={isListening ? 'Stop voice dictation' : 'Start voice dictation'}
+              >
+                {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+              </button>
+
+              {/* Send Button */}
               <button
                 onClick={() => handleSend()}
                 disabled={!input.trim() || isStreaming}
@@ -394,7 +557,10 @@ export default function OrbitWorkstationView({ onExitOrbitMode }) {
             </div>
 
             <div className="flex items-center justify-between px-2 pt-1.5 text-[10px] font-mono text-gray-500">
-              <span>Giri Orbit Dedicated Workspace • Isolated Storage</span>
+              <div className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                <span>Girionix Pro Office Engine</span>
+              </div>
               <span>Press Enter ↵ to Send</span>
             </div>
           </div>

@@ -35,6 +35,7 @@ import {
 import KatexMath from '../common/KatexMath';
 import MindMapVisualizer from '../common/MindMapVisualizer';
 import CinematicVideoPlayer from '../video/CinematicVideoPlayer';
+import InChatCodeSandbox from './InChatCodeSandbox';
 import { speech } from '../../services/speech';
 import { openrouter } from '../../services/openrouter';
 import { imageGenerator, ASPECT_RATIOS, IMAGE_MODELS } from '../../services/imageGenerator';
@@ -962,195 +963,14 @@ export default function MessageItem({
         // Clean code of leading/trailing blank line
         code = code.replace(/^\n+/, '').replace(/\n+$/, '');
 
-        const isRunable = ['javascript', 'jsx', 'react', 'js', 'html', 'typescript', 'ts'].includes(language.toLowerCase());
-        const isCopied = copiedCodeIdx === index;
-        const isCleanCopied = copiedCodeIdx === index + '-clean';
-        const isExplained = explainedCodeIdx === index;
-
         return (
-          <div key={index} className="my-4 rounded-2xl overflow-hidden border border-white/[0.12] bg-[#090A14] shadow-2xl group transition-all hover:border-cyan-500/40">
-            {/* Gemini-Style Sleek Header Toolbar */}
-            <div className="flex flex-wrap items-center justify-between px-4 py-2.5 bg-[#121420] border-b border-white/[0.08] text-xs font-mono gap-2 select-none">
-              <div className="flex items-center gap-2.5">
-                <span className="px-2.5 py-0.5 rounded-lg bg-white/[0.08] text-cyan-300 font-bold uppercase text-[11px] border border-white/10 tracking-wider">
-                  {language}
-                </span>
-                <span className="text-[11px] text-gray-400 hidden sm:inline">
-                  {code.split('\n').length} lines
-                </span>
-              </div>
-
-              {/* Action Toolbar with Prominent Gemini Copy Button */}
-              <div className="flex items-center gap-2">
-                {isRunable && onOpenInCodeStudio && (
-                  <button
-                    onClick={() => onOpenInCodeStudio(code, language)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyan-500/20 to-blue-500/20 hover:from-cyan-500/30 hover:to-blue-500/30 text-cyan-300 text-xs font-bold border border-cyan-500/40 shadow-glow-cyan transition-all cursor-pointer hover:scale-105"
-                    title="Live Run in React 18 Canvas & IDE"
-                  >
-                    <Play className="w-3.5 h-3.5 fill-current text-cyan-400" />
-                    <span>Run in Canvas</span>
-                  </button>
-                )}
-
-                <button
-                  onClick={() => handleImportToWorkplace(code)}
-                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 text-[11px] font-bold transition-all cursor-pointer hover:scale-105"
-                  title="Import this code / data block directly into your active Giri Orbit workspace"
-                >
-                  <span>📥 Import</span>
-                </button>
-
-                {/* Gemini-Style Copy Code Button */}
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(code);
-                    setCopiedCodeIdx(index);
-                    setTimeout(() => setCopiedCodeIdx(null), 2000);
-                  }}
-                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm ${
-                    isCopied 
-                      ? 'bg-emerald-500/25 text-emerald-300 border border-emerald-500/50 shadow-glow-emerald' 
-                      : 'bg-white/10 hover:bg-cyan-500/20 text-gray-200 hover:text-cyan-200 border border-white/15 hover:border-cyan-500/40 hover:scale-105'
-                  }`}
-                  title="Copy full code to clipboard"
-                >
-                  {isCopied ? (
-                    <>
-                      <Check className="w-3.5 h-3.5 text-emerald-400" />
-                      <span className="text-emerald-300">Copied!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3.5 h-3.5 text-gray-300" />
-                      <span>Copy code</span>
-                    </>
-                  )}
-                </button>
-
-                <button
-                  onClick={() => handleCopyCleanCode(code, index)}
-                  className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-gray-300 hover:text-white border border-white/10 text-[11px] transition-all cursor-pointer"
-                  title="Copy Clean Code (Removes comments & docstrings)"
-                >
-                  {isCleanCopied ? <Check className="w-3 h-3 text-emerald-400" /> : <Scissors className="w-3 h-3 text-purple-400" />}
-                  <span>{isCleanCopied ? 'Clean!' : 'Clean'}</span>
-                </button>
-
-                <button
-                  onClick={() => handleDownloadCodeFile(code, language)}
-                  className="p-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-gray-300 hover:text-white border border-white/10 cursor-pointer transition-colors"
-                  title="Download File"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                </button>
-
-                <button
-                  onClick={() => setExplainedCodeIdx(isExplained ? null : index)}
-                  className="p-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-gray-300 hover:text-cyan-300 border border-white/10 cursor-pointer transition-colors"
-                  title="Explain this code step-by-step"
-                >
-                  <HelpCircle className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-
-            {/* Code Body */}
-            <pre className="p-4 text-[13px] font-mono text-cyan-100 overflow-x-auto leading-relaxed bg-[#05060A] selection:bg-cyan-500/30">
-              <code>{code}</code>
-            </pre>
-
-            {/* Gemini-Style Bottom Footer Toolbar */}
-            <div className="flex flex-wrap items-center justify-between px-4 py-2 bg-[#0E101B] border-t border-white/[0.08] text-xs font-mono gap-2 select-none">
-              <div className="flex items-center gap-2 text-gray-400 text-[11px]">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                <span className="font-bold text-gray-300 uppercase">{language}</span>
-                <span>• {code.split('\n').length} lines</span>
-              </div>
-
-              {/* Action Toolbar */}
-              <div className="flex items-center gap-2">
-                {isRunable && onOpenInCodeStudio && (
-                  <button
-                    onClick={() => onOpenInCodeStudio(code, language)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyan-500/20 to-blue-500/20 hover:from-cyan-500/30 hover:to-blue-500/30 text-cyan-300 text-xs font-bold border border-cyan-500/40 shadow-glow-cyan transition-all cursor-pointer hover:scale-105"
-                    title="Live Run in React 18 Canvas & IDE"
-                  >
-                    <Play className="w-3.5 h-3.5 fill-current text-cyan-400" />
-                    <span>Run in Canvas</span>
-                  </button>
-                )}
-
-                {/* Gemini-Style Copy Code Button */}
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(code);
-                    setCopiedCodeIdx(index);
-                    setTimeout(() => setCopiedCodeIdx(null), 2000);
-                  }}
-                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm ${
-                    isCopied 
-                      ? 'bg-emerald-500/25 text-emerald-300 border border-emerald-500/50 shadow-glow-emerald' 
-                      : 'bg-white/10 hover:bg-cyan-500/20 text-gray-200 hover:text-cyan-200 border border-white/15 hover:border-cyan-500/40 hover:scale-105'
-                  }`}
-                  title="Copy full code to clipboard"
-                >
-                  {isCopied ? (
-                    <>
-                      <Check className="w-3.5 h-3.5 text-emerald-400" />
-                      <span className="text-emerald-300">Copied!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3.5 h-3.5 text-gray-300" />
-                      <span>Copy code</span>
-                    </>
-                  )}
-                </button>
-
-                <button
-                  onClick={() => handleCopyCleanCode(code, index)}
-                  className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-gray-300 hover:text-white border border-white/10 text-[11px] transition-all cursor-pointer"
-                  title="Copy Clean Code (Removes comments & docstrings)"
-                >
-                  {isCleanCopied ? <Check className="w-3 h-3 text-emerald-400" /> : <Scissors className="w-3 h-3 text-purple-400" />}
-                  <span>{isCleanCopied ? 'Clean!' : 'Clean'}</span>
-                </button>
-
-                <button
-                  onClick={() => handleDownloadCodeFile(code, language)}
-                  className="p-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-gray-300 hover:text-white border border-white/10 cursor-pointer transition-colors"
-                  title="Download File"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                </button>
-
-                <button
-                  onClick={() => setExplainedCodeIdx(isExplained ? null : index)}
-                  className="p-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-gray-300 hover:text-cyan-300 border border-white/10 cursor-pointer transition-colors"
-                  title="Explain this code step-by-step"
-                >
-                  <HelpCircle className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-
-            {isExplained && (
-              <div className="p-3.5 bg-gradient-to-br from-indigo-950/40 via-purple-950/20 to-slate-900 border-t border-cyan-500/20 text-xs font-sans text-gray-300 space-y-1.5 animate-fadeIn">
-                <div className="flex items-center gap-2 text-cyan-300 font-mono font-bold text-[11px]">
-                  <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>Girionix AI Code Analysis:</span>
-                </div>
-                <p className="text-[11px] text-gray-300 leading-relaxed">
-                  • <strong>Architecture:</strong> Modular, modern {language} structure with strict types and memory isolation.
-                  <br />
-                  • <strong>Complexity:</strong> Time Complexity <span className="text-cyan-400 font-mono font-bold">O(N)</span> • Space Complexity <span className="text-purple-400 font-mono font-bold">O(1)</span>.
-                  <br />
-                  • <strong>Production Ready:</strong> Free of race conditions, memory leaks, and DOM reflow bottlenecks.
-                </p>
-              </div>
-            )}
-          </div>
+          <InChatCodeSandbox
+            key={index}
+            code={code}
+            language={language}
+            blockIndex={index}
+            onImportToWorkplace={handleImportToWorkplace}
+          />
         );
       }
 

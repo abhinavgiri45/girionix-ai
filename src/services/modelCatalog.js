@@ -3,33 +3,16 @@
  * Unified registry of frontier AI models with context-aware naming for AI Studios and Giri Orbit.
  */
 
-// Deprecated Titan models array kept empty for backward compatibility
+// Purged legacy models; keeping empty export for backward safety
 export const TITAN_AI_MODELS = [];
 
 export const AI_MODELS = [
   {
-    id: "gemini-2.5-pro",
-    name: "⚡ Gemini 2.5 Pro",
-    provider: "Google DeepMind Flagship",
-    category: "reasoning",
-    tag: "⚡ Frontier Reasoning • 2M Context",
-    badgeColor: "cyan",
-    description: "Google's premier frontier model. Unrivaled long-context understanding, deep step-by-step thinking, multimodal analysis, and superhuman coding.",
-    contextWindow: 2000000,
-    speed: "⚡ Fast & Analytical",
-    pricing: "Frontier",
-    supportsReasoning: true,
-    supportsVision: true,
-    isPro: true,
-    isAutoUpgrade: true,
-    recommendedFor: ["Superhuman Reasoning", "Complex Code Refactoring", "Deep Mathematical Proofs", "2M Long Document Analysis"]
-  },
-  {
     id: "gemini-2.5-flash",
-    name: "⚡ Gemini 2.5 Flash",
+    name: "⚡ Girionix Pro Flash",
     provider: "Google DeepMind Ultra-Fast",
     category: "fast",
-    tag: "Sub-Second Speed • Adaptive Thinking",
+    tag: "Sub-Second Speed • Adaptive Intelligence",
     badgeColor: "cyan",
     description: "Next-generation workhorse model with breakthrough speed, native multimodal comprehension, and dynamic latency optimization.",
     contextWindow: 1000000,
@@ -37,6 +20,7 @@ export const AI_MODELS = [
     pricing: "Free / Fast",
     supportsReasoning: true,
     supportsVision: true,
+    isPro: true,
     isLite: true,
     recommendedFor: ["Rapid Conversational Q&A", "Real-Time Streaming", "Code Debugging", "High-Volume Tasks"]
   },
@@ -56,6 +40,23 @@ export const AI_MODELS = [
     isPro: true,
     isAutoUpgrade: true,
     recommendedFor: ["Superhuman Reasoning", "Complex Coding & Architecture", "Math Olympiad Proofs", "Always-Latest Frontier Intelligence"]
+  },
+  {
+    id: "gemini-2.5-pro",
+    name: "⚡ Gemini 2.5 Pro",
+    provider: "Google DeepMind Flagship",
+    category: "reasoning",
+    tag: "⚡ Frontier Reasoning • 2M Context",
+    badgeColor: "cyan",
+    description: "Google's premier frontier model. Unrivaled long-context understanding, deep step-by-step thinking, multimodal analysis, and superhuman coding.",
+    contextWindow: 2000000,
+    speed: "⚡ Fast & Analytical",
+    pricing: "Frontier",
+    supportsReasoning: true,
+    supportsVision: true,
+    isPro: true,
+    isAutoUpgrade: true,
+    recommendedFor: ["Superhuman Reasoning", "Complex Code Refactoring", "Deep Mathematical Proofs", "2M Long Document Analysis"]
   },
   {
     id: "qwen/qwen-2.5-coder-32b-instruct",
@@ -190,14 +191,14 @@ export function getModelDisplayName(modelOrId, context = 'chat') {
   const id = typeof modelOrId === 'string' ? modelOrId : modelOrId?.id;
   if (!id) return 'Girionix AI';
 
+  if (id === 'gemini-2.5-flash') {
+    return 'Girionix Pro Flash ⚡';
+  }
   if (id === 'girionix-pro') {
-    if (context === 'studio' || context === 'code') return '⚡ Studio Architect Pro';
-    if (context === 'orbit') return '⚡ Orbit Executive Core';
+    if (context === 'orbit') return '⚡ Girionix Pro (Orbit Copilot)';
     return '⚡ Girionix Pro';
   }
   if (id === 'girionix-lite') {
-    if (context === 'studio' || context === 'code') return '🌱 Studio QuickFlow';
-    if (context === 'orbit') return '🌱 Orbit Dispatch Core';
     return '🌱 Girionix Lite';
   }
 
