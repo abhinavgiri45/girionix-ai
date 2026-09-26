@@ -9,34 +9,34 @@ export const localGenerativeEngine = {
   /**
    * Generates a complete, publication-ready markdown response for Chat
    */
-  generateResponse(prompt) {
+  generateResponse(prompt, modelName = '') {
     if (!prompt) return null;
     const p = prompt.trim();
     const lp = p.toLowerCase();
 
-    // 1. Famous Historical Figures & Biographies (e.g., Mahatma Gandhi)
+    // 1. Conversational Chit-chat, Identity & Model Queries (Prioritized)
+    const chatMatch = this.matchConversation(lp, p, modelName);
+    if (chatMatch) return chatMatch;
+
+    // 2. Famous Historical Figures & Biographies (e.g., Mahatma Gandhi)
     const bioMatch = this.matchBiography(lp, p);
     if (bioMatch) return bioMatch;
 
-    // 2. Formal Compositions & Essays (e.g., "essay on climate change", "write an essay on AI")
+    // 3. Formal Compositions & Essays (e.g., "essay on climate change", "write an essay on AI")
     const essayMatch = this.matchEssay(lp, p);
     if (essayMatch) return essayMatch;
 
-    // 3. Professional Correspondence (e.g., leave application, resignation letter, formal email)
+    // 4. Professional Correspondence (e.g., leave application, resignation letter, formal email)
     const letterMatch = this.matchLetter(lp, p);
     if (letterMatch) return letterMatch;
 
-    // 4. Conceptual Explanations & Systems (e.g., "how do airplanes fly", "what is photosynthesis")
+    // 5. Conceptual Explanations & Systems (e.g., "how do airplanes fly", "what is photosynthesis")
     const explanationMatch = this.matchExplanation(lp, p);
     if (explanationMatch) return explanationMatch;
 
-    // 5. Creative Writing (Poems, Stories, Motivation)
+    // 6. Creative Writing (Poems, Stories, Motivation)
     const creativeMatch = this.matchCreative(lp, p);
     if (creativeMatch) return creativeMatch;
-
-    // 6. Conversational Chit-chat & Identity
-    const chatMatch = this.matchConversation(lp, p);
-    if (chatMatch) return chatMatch;
 
     // 7. Universal Intelligent Analytical Synthesizer (Zero-failure fallback for any topic)
     return this.synthesizeUniversalAnalysis(p);
@@ -405,9 +405,10 @@ Take a deep breath, refocus on your goals, and step forward with confidence. You
   // =========================================================================
   // 6. CONVERSATIONAL CHIT-CHAT & IDENTITY
   // =========================================================================
-  matchConversation(lp, p) {
-    if (/\b(who\s+(are\s+you|created\s+you|made\s+you)|what\s+is\s+girionix)\b/i.test(lp)) {
-      return `I am **Girionix AI**, an omnipotent sovereign artificial intelligence workspace envisioned and engineered in India by **Abhinav Giri** under **Giri Corporation**.
+  matchConversation(lp, p, modelName = '') {
+    const activeName = modelName || 'Girionix AI';
+    if (/\b(who\s+(are\s+you|created\s+you|made\s+you)|what\s+is\s+girionix|what\s+model|which\s+model|kisne\s+banaya|aapka\s+naam|naam\s+kya\s+hai)\b/i.test(lp)) {
+      return `I am **${activeName}**, an advanced sovereign artificial intelligence model developed by **Abhinav Giri** at **Giri Corporation** (https://giri-corporation.pages.dev/).
 
 I specialize in:
 - High-level conversational reasoning and analytical synthesis

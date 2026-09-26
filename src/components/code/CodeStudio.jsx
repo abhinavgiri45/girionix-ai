@@ -56,11 +56,11 @@ export const GIRIONIX_CODING_MODELS = [
   },
   {
     id: 'qwen/qwen-2.5-coder-32b-instruct',
-    name: '⚡ Qwen 2.5 Coder 32B',
-    shortName: 'Qwen 2.5 Coder',
+    name: '⚡ Girionix CodeMaster',
+    shortName: 'Girionix CodeMaster',
     tag: 'SOTA Code Synthesis',
     badge: 'CODE MASTER',
-    description: 'Specialized 32B coder model with state-of-the-art benchmark performance on code modification.'
+    description: 'Specialized Girionix autonomous coder with state-of-the-art benchmark performance on code modification.'
   },
   {
     id: 'gemini-2.5-flash',

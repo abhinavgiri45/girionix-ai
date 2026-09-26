@@ -71,7 +71,7 @@ export default function CommandPalette({
     },
     {
       id: 'model-deepseek',
-      title: 'Switch Engine to DeepSeek R1 (Chain-of-Thought)',
+      title: 'Switch Engine to ⚡ Girionix Deep Reasoner',
       category: 'AI Engines',
       icon: <Cpu className="w-4 h-4 text-purple-400" />,
       action: () => {

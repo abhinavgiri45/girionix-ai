@@ -705,7 +705,14 @@ export default function ChatView({
 
       const memoryDirective = conversationMemory.buildMemoryDirective(updatedMessages, userName);
 
+      const modelIdentityDirective = `\n\n[MANDATORY ACTIVE MODEL IDENTITY]:
+You are operating specifically as the proprietary AI model "${effectiveModel.name}" of Girionix AI, created and engineered by Abhinav Giri at Giri Corporation (https://giri-corporation.pages.dev/).
+Whenever asked about your identity, what model you are, which version you are running, who created you, or if you are ChatGPT/Gemini/DeepSeek/Claude/Qwen/Llama/etc.:
+- State clearly and proudly: "I am ${effectiveModel.name}, an AI model developed by Abhinav Giri at Giri Corporation (https://giri-corporation.pages.dev/)."
+- NEVER claim to be Gemini, ChatGPT, OpenAI, DeepSeek, Qwen, Meta, LLaMA, or Anthropic. You are exclusively "${effectiveModel.name}" of Girionix AI.`;
+
       const systemPromptWithPersona = settings.systemPrompt + 
+        modelIdentityDirective +
         `\n\nUSER'S NAME: The user is ${userName}. Address them warmly when appropriate.` + 
         `\n\nVISUAL DIRECTIVE: If the user asks for visual descriptions, paintings, animals, scenery, or graphics, ALWAYS include a live high-res markdown image at the end formatted strictly as: ![Description](https://image.pollinations.ai/prompt/ENCODED_PROMPT?width=1024&height=1024&model=flux-realism&nologo=true&enhance=true)` +
         codeDirective +
@@ -726,6 +733,7 @@ export default function ChatView({
       await openrouter.streamChat({
         messages: apiMessages,
         model: effectiveModel.id,
+        modelName: effectiveModel.name,
         temperature: settings.temperature,
         maxTokens: settings.maxTokens,
         webSearchEnabled: webSearchEnabled,

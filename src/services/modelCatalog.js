@@ -7,7 +7,7 @@ export const AI_MODELS = [
   {
     id: "gemini-2.5-flash",
     name: "⚡ Girionix Pro Flash",
-    provider: "Google DeepMind Ultra-Fast",
+    provider: "Girionix Neural Lab",
     category: "fast",
     tag: "Sub-Second Speed • Adaptive Intelligence",
     badgeColor: "cyan",
@@ -40,12 +40,12 @@ export const AI_MODELS = [
   },
   {
     id: "gemini-2.5-pro",
-    name: "⚡ Gemini 2.5 Pro",
-    provider: "Google DeepMind Flagship",
+    name: "⚡ Girionix Ultra",
+    provider: "Girionix Deep Intelligence Lab",
     category: "reasoning",
     tag: "⚡ Frontier Reasoning • 2M Context",
     badgeColor: "cyan",
-    description: "Google's premier frontier model. Unrivaled long-context understanding, deep step-by-step thinking, multimodal analysis, and superhuman coding.",
+    description: "Girionix premier frontier model. Unrivaled 2M long-context understanding, deep step-by-step thinking, multimodal analysis, and superhuman coding.",
     contextWindow: 2000000,
     speed: "⚡ Fast & Analytical",
     pricing: "Frontier",
@@ -57,10 +57,10 @@ export const AI_MODELS = [
   },
   {
     id: "qwen/qwen-2.5-coder-32b-instruct",
-    name: "⚡ Qwen 2.5 Coder 32B",
-    provider: "Qwen / Alibaba Cloud",
+    name: "⚡ Girionix CodeMaster",
+    provider: "Girionix Autonomous Code Synthesis",
     category: "coding",
-    tag: "SOTA Open Coding Benchmark Leader",
+    tag: "SOTA Superhuman Coding & Architecture",
     badgeColor: "cyan",
     description: "World-class coding engine specializing in code generation, code modification, debugging, and multi-file fullstack implementation.",
     contextWindow: 131072,
@@ -72,10 +72,10 @@ export const AI_MODELS = [
   },
   {
     id: "deepseek/deepseek-chat",
-    name: "⚡ DeepSeek V3",
-    provider: "DeepSeek / Open Weights",
+    name: "⚡ Girionix Titan 671B",
+    provider: "Girionix MoE Neural Network",
     category: "reasoning",
-    tag: "671B MoE Frontier Reasoning",
+    tag: "671B MoE Frontier Intelligence",
     badgeColor: "purple",
     description: "State-of-the-art 671B parameter Mixture-of-Experts frontier model with supreme reasoning, coding fluency, and mathematics.",
     contextWindow: 128000,
@@ -87,10 +87,10 @@ export const AI_MODELS = [
   },
   {
     id: "openai/gpt-4o",
-    name: "⚡ GPT-4o Omni",
-    provider: "OpenAI / Girionix",
+    name: "⚡ Girionix OmniVision",
+    provider: "Girionix Omnimodal System",
     category: "multimodal",
-    tag: "Flagship Omnimodal Intelligence",
+    tag: "Flagship Omnimodal Intelligence & Vision",
     badgeColor: "blue",
     description: "High-intelligence flagship omnimodal model with supreme general fluency, vision, creative writing, and prompt synthesis.",
     contextWindow: 128000,
@@ -102,8 +102,8 @@ export const AI_MODELS = [
   },
   {
     id: "deepseek/deepseek-r1",
-    name: "⚡ DeepSeek R1",
-    provider: "DeepSeek / Open Weights",
+    name: "⚡ Girionix Deep Reasoner",
+    provider: "Girionix Olympiad Reasoning Core",
     category: "reasoning",
     tag: "Open Chain-of-Thought Olympiad Reasoning",
     badgeColor: "purple",
@@ -117,8 +117,8 @@ export const AI_MODELS = [
   },
   {
     id: "openai/o3-mini",
-    name: "⚡ OpenAI o3-mini",
-    provider: "OpenAI / Girionix",
+    name: "⚡ Girionix Logic Reasoner",
+    provider: "Girionix Algorithmic STEM Lab",
     category: "reasoning",
     tag: "High-Speed STEM & Formal Logic",
     badgeColor: "emerald",
@@ -132,23 +132,23 @@ export const AI_MODELS = [
   },
   {
     id: "meta-llama/llama-3.3-70b-instruct",
-    name: "⚡ Llama 3.3 70B",
-    provider: "Meta / Groq Cloud",
+    name: "⚡ Girionix Turbo 70B",
+    provider: "Girionix High-Speed Neural Core",
     category: "fast",
-    tag: "Ultra-Fast Open Weights 500+ tok/s",
+    tag: "Ultra-Fast Neural Processing 500+ tok/s",
     badgeColor: "teal",
-    description: "State-of-the-art open model operating at extreme speed via Groq LPUs or open cloud gateways.",
+    description: "State-of-the-art open model operating at extreme speed via high-throughput neural accelerators.",
     contextWindow: 128000,
     speed: "⚡ 500+ tok/s Ultra-Fast",
     pricing: "Free / Fast",
     supportsReasoning: false,
     supportsVision: false,
-    recommendedFor: ["Instant Real-World Q&A", "High-Velocity Parsing", "Open Weights"]
+    recommendedFor: ["Instant Real-World Q&A", "High-Velocity Parsing", "Neural Acceleration"]
   },
   {
     id: "girionix-lite",
     name: "🌱 Girionix Lite",
-    provider: "DeepMind Frontier Ultra-Fast",
+    provider: "Girionix Grounded Knowledge Engine",
     category: "fast",
     tag: "Sub-Second Ultra-Fast & Grounded Knowledge",
     badgeColor: "cyan",
@@ -174,11 +174,32 @@ export function getModelDisplayName(modelOrId, context = 'chat') {
   if (!id) return 'Girionix AI';
 
   if (id === 'gemini-2.5-flash') {
-    return 'Girionix Pro Flash ⚡';
+    return '⚡ Girionix Pro Flash';
   }
   if (id === 'girionix-pro') {
     if (context === 'orbit') return '⚡ Girionix Pro (Orbit Copilot)';
     return '⚡ Girionix Pro';
+  }
+  if (id === 'gemini-2.5-pro') {
+    return '⚡ Girionix Ultra';
+  }
+  if (id === 'qwen/qwen-2.5-coder-32b-instruct') {
+    return '⚡ Girionix CodeMaster';
+  }
+  if (id === 'deepseek/deepseek-chat') {
+    return '⚡ Girionix Titan 671B';
+  }
+  if (id === 'openai/gpt-4o') {
+    return '⚡ Girionix OmniVision';
+  }
+  if (id === 'deepseek/deepseek-r1') {
+    return '⚡ Girionix Deep Reasoner';
+  }
+  if (id === 'openai/o3-mini') {
+    return '⚡ Girionix Logic Reasoner';
+  }
+  if (id === 'meta-llama/llama-3.3-70b-instruct') {
+    return '⚡ Girionix Turbo 70B';
   }
   if (id === 'girionix-lite') {
     return '🌱 Girionix Lite';
@@ -249,11 +270,11 @@ export const STUDIO_MODES = [
 
 const AI_STUDIO_MODEL_DEF = {
   id: "gemini-2.5-pro",
-  name: "Gemini 2.5 Pro (AI Studio Flagship)",
-  provider: "DeepMind Tensor Core",
+  name: "⚡ Girionix Ultra (AI Studio Flagship)",
+  provider: "Girionix Deep Intelligence Lab",
   workDomain: "AI Studio Developer Environment",
   badgeColor: "cyan",
-  tag: "Gemini 2.5 Pro Multi-Modal Reasoning Engine",
+  tag: "Girionix Ultra Multi-Modal Reasoning Engine",
   speed: "⚡ 85-120 tok/s",
   contextWindow: 1048576,
   openRouterModel: "google/gemini-2.5-pro",
@@ -272,8 +293,8 @@ export const STUDIO_DEDICATED_MODELS = {
   'google-studio': AI_STUDIO_MODEL_DEF,
   code: {
     id: "qwen/qwen-2.5-coder-32b-instruct",
-    name: "Studio Architect Pro (Qwen 2.5 Coder 32B)",
-    provider: "Qwen / Girionix Studio Core",
+    name: "⚡ Girionix CodeMaster (Studio Architect Pro)",
+    provider: "Girionix Autonomous Code Synthesis",
     workDomain: "Fullstack Coding & Live Sandbox Execution",
     badgeColor: "cyan",
     tag: "Superhuman Fullstack Coder & AST Modification Engine",
@@ -291,8 +312,8 @@ export const STUDIO_DEDICATED_MODELS = {
   },
   math: {
     id: "deepseek/deepseek-r1",
-    name: "DeepSeek R1 Olympiad (Deep Logic)",
-    provider: "DeepSeek Quantum Symbolic Engine",
+    name: "⚡ Girionix Deep Reasoner (Olympiad Logic)",
+    provider: "Girionix Olympiad Reasoning Core",
     workDomain: "Olympiad Math & Quantum Physics Lab",
     badgeColor: "purple",
     tag: "Formal Coq/Lean Logic & KaTeX Derivations",
@@ -329,8 +350,8 @@ export const STUDIO_DEDICATED_MODELS = {
   },
   video: {
     id: "nano-banana-video-cinema",
-    name: "Nano Banana Video (MotionLab 4K/8K)",
-    provider: "Nano Banana Turbo Cinema Engine",
+    name: "⚡ Girionix MotionDirector (MotionLab 4K/8K)",
+    provider: "Girionix MotionLab Cinema Engine",
     workDomain: "Cinematic Multi-Shot 60FPS Video Generation",
     badgeColor: "amber",
     tag: "First/Last Frame Interpolation & 3D Camera Rig",
@@ -349,8 +370,8 @@ export const STUDIO_DEDICATED_MODELS = {
   },
   script: {
     id: "deepseek-scriptmaster",
-    name: "DeepSeek ScriptMaster Cinema (Screenplay & Story)",
-    provider: "DeepSeek / Screenplay & Beat Engine",
+    name: "⚡ Girionix ScriptMaster Cinema",
+    provider: "Girionix Narrative & Screenplay Core",
     workDomain: "Cinema Screenplays, YouTube Scripts & Story Architecture",
     badgeColor: "indigo",
     tag: "Industry Standard Fountain & Final Draft (.fdx) Formatting",
@@ -368,8 +389,8 @@ export const STUDIO_DEDICATED_MODELS = {
   },
   audio: {
     id: "elevenlabs-audiolab-hd",
-    name: "ElevenLabs Audio Studio (AudioLab HD)",
-    provider: "ElevenLabs V3 Neural Voice Architecture",
+    name: "⚡ Girionix AudioLab HD (Neural Voice)",
+    provider: "Girionix Neural Audio Architecture",
     workDomain: "ElevenLabs Voice Library, Instant Cloning & 5-Track Stems",
     badgeColor: "emerald",
     tag: "48kHz Lossless Voice, Cloning & Multi-Track Foley Engine",

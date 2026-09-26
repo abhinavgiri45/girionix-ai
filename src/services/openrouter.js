@@ -14,6 +14,7 @@ import { storage, GIRIONIX_SYSTEM_PROMPT } from './storage.js';
 import { localNeuralEngine } from './localNeuralEngine.js';
 import { universalApiEngine } from './universalApiEngine.js';
 import { conversationMemory } from './conversationMemory.js';
+import { getModelDisplayName } from './modelCatalog.js';
 
 export const openrouter = {
   /**
@@ -99,7 +100,8 @@ export const openrouter = {
    * Neural Gateway Handler - High-Intelligence Free Cloud LLM (ChatGPT / Gemini / Claude Parity)
    * Real-time SSE streaming with reasoning support and automatic sovereign on-device fallback.
    */
-  async streamFreeNeuralAI({ messages, webSearchEnabled = false, useThinking = true, onChunk, onReasoningChunk, signal }) {
+  async streamFreeNeuralAI({ messages, model = 'girionix-pro', modelName = '', webSearchEnabled = false, useThinking = true, onChunk, onReasoningChunk, signal }) {
+    const activeModelName = modelName || getModelDisplayName(model);
     const userPrompt = messages.filter(m => m.role !== 'system').pop()?.content || '';
 
     const payloadMessages = messages.map(m => ({
@@ -181,7 +183,7 @@ export const openrouter = {
             return {
               content: finalResult,
               reasoning: accumulatedReasoning,
-              modelUsed: 'Girionix Frontier Neural Engine'
+              modelUsed: activeModelName || '⚡ Girionix Pro'
             };
           }
         }
@@ -221,7 +223,7 @@ export const openrouter = {
             return {
               content: content2,
               reasoning: '',
-              modelUsed: 'Girionix Frontier Neural Engine'
+              modelUsed: activeModelName || '⚡ Girionix Pro'
             };
           }
         }
@@ -251,7 +253,7 @@ export const openrouter = {
             return {
               content: text3,
               reasoning: '',
-              modelUsed: 'Girionix Frontier Neural Engine'
+              modelUsed: activeModelName || '⚡ Girionix Pro'
             };
           }
         }
@@ -272,7 +274,7 @@ export const openrouter = {
       const mathAns = localNeuralEngine.tryEvaluateArithmetic(userPrompt);
       if (mathAns) {
         if (onChunk) onChunk(mathAns, mathAns);
-        return { content: mathAns, reasoning: '', modelUsed: 'Girionix Local Neural Engine' };
+        return { content: mathAns, reasoning: '', modelUsed: activeModelName || '⚡ Girionix Pro' };
       }
 
       // 2. Code query synthesis
@@ -287,7 +289,7 @@ export const openrouter = {
             if (onChunk) onChunk(word, current);
             await new Promise(r => setTimeout(r, 8));
           }
-          return { content: codeSolution, reasoning: '', modelUsed: 'Girionix Local Neural Engine' };
+          return { content: codeSolution, reasoning: '', modelUsed: activeModelName || '⚡ Girionix Pro' };
         }
       }
 
@@ -302,11 +304,11 @@ export const openrouter = {
           if (onChunk) onChunk(word, current);
           await new Promise(r => setTimeout(r, 8));
         }
-        return { content: domainAnswer, reasoning: '', modelUsed: 'Girionix Local Neural Engine' };
+        return { content: domainAnswer, reasoning: '', modelUsed: activeModelName || '⚡ Girionix Pro' };
       }
 
       // 4. Universal Generative Knowledge (Essays, Biographies, Explanations, Letters, Creative)
-      const genAnswer = localGenerativeEngine.generateResponse(userPrompt);
+      const genAnswer = localGenerativeEngine.generateResponse(userPrompt, activeModelName);
       if (genAnswer) {
         const words = genAnswer.split(/(\s+)/);
         let current = '';
@@ -316,7 +318,7 @@ export const openrouter = {
           if (onChunk) onChunk(word, current);
           await new Promise(r => setTimeout(r, 6));
         }
-        return { content: genAnswer, reasoning: '', modelUsed: 'Girionix Sovereign Generative Engine' };
+        return { content: genAnswer, reasoning: '', modelUsed: activeModelName || '⚡ Girionix Pro' };
       }
     } catch (localErr) {
       console.warn('Local intelligence fallback notice:', localErr.message);
@@ -334,6 +336,7 @@ export const openrouter = {
   async streamChat({
     messages,
     model = 'girionix-pro',
+    modelName = '',
     temperature = 0.6,
     maxTokens = 4096,
     webSearchEnabled = false,
@@ -342,6 +345,9 @@ export const openrouter = {
     onReasoningChunk,
     signal
   }) {
+    // Resolve active model display name
+    const activeModelName = modelName || getModelDisplayName(model);
+
     // 100% On-Device Physical Local Neural Engine execution
     if (model === 'girionix-local-core') {
       const userPrompt = messages.filter(m => m.role !== 'system').pop()?.content || '';
@@ -355,7 +361,7 @@ export const openrouter = {
           if (onReasoningChunk) onReasoningChunk(reasoning, reasoning);
         }
       });
-      return { content: text, reasoning: '' };
+      return { content: text, reasoning: '', modelUsed: activeModelName };
     }
 
     const config = universalApiEngine.getProviderConfig();
@@ -375,6 +381,13 @@ export const openrouter = {
     } else {
       featureDirectives += '\n\n[DIRECT CONCISE MODE]: Deep reasoning is disabled. Provide a fast, direct, and concise response without excessive internal deliberation.';
     }
+
+    // Mandatory active model self-identity directive
+    const modelIdentityDirective = `\n\n[MANDATORY ACTIVE MODEL IDENTITY]:
+You are operating specifically as the proprietary AI model "${activeModelName}" of Girionix AI, created and engineered by Abhinav Giri at Giri Corporation (https://giri-corporation.pages.dev/).
+Whenever asked about your identity, what model you are, which version you are running, who created you, or if you are ChatGPT/Gemini/DeepSeek/Claude/Qwen/Llama/etc.:
+- State clearly and proudly: "I am ${activeModelName}, an AI model developed by Abhinav Giri at Giri Corporation (https://giri-corporation.pages.dev/)."
+- NEVER claim to be Gemini, ChatGPT, OpenAI, DeepSeek, Qwen, Meta, LLaMA, or Anthropic. You are exclusively "${activeModelName}" of Girionix AI.`;
 
     // 1. Build dynamic conversation memory directive from past messages
     const memoryDirective = conversationMemory.buildMemoryDirective(messages);
@@ -400,7 +413,7 @@ export const openrouter = {
       }
     }
 
-    const finalSystemPrompt = `${GIRIONIX_SYSTEM_PROMPT}\n\n${baseSystem}${featureDirectives}${needsMemory ? memoryDirective : ''}${revisionDirective}`;
+    const finalSystemPrompt = `${GIRIONIX_SYSTEM_PROMPT}\n\n${baseSystem}${featureDirectives}${modelIdentityDirective}${needsMemory ? memoryDirective : ''}${revisionDirective}`;
 
     const enrichedMessages = [
       { role: 'system', content: finalSystemPrompt },
@@ -478,7 +491,7 @@ export const openrouter = {
 
     // Zero API Key Configured: Immediately stream via Sovereign Local Neural Engine without failed HTTP calls
     if (!userApiKey && !masterKey) {
-      return this.streamFreeNeuralAI({ messages: enrichedMessages, webSearchEnabled, useThinking, onChunk, onReasoningChunk, signal });
+      return this.streamFreeNeuralAI({ messages: enrichedMessages, model, modelName: activeModelName, webSearchEnabled, useThinking, onChunk, onReasoningChunk, signal });
     }
 
     // Build ordered candidate model list tailored to the active provider
@@ -667,7 +680,7 @@ export const openrouter = {
 
           // If streaming succeeded, return result immediately
           if (fullContent || fullReasoning) {
-            return { content: fullContent, reasoning: fullReasoning, modelUsed: candidateModel };
+            return { content: fullContent, reasoning: fullReasoning, modelUsed: activeModelName || candidateModel };
           }
 
           // Non-streaming fallback attempt if stream closed with empty body
@@ -684,7 +697,7 @@ export const openrouter = {
             const text = msg?.content || msg?.reasoning || '';
             if (text) {
               if (onChunk) onChunk(text, text);
-              return { content: text, reasoning: msg?.reasoning || '', modelUsed: candidateModel };
+              return { content: text, reasoning: msg?.reasoning || '', modelUsed: activeModelName || candidateModel };
             }
           }
         } catch (err) {
@@ -710,7 +723,7 @@ export const openrouter = {
       if (onChunk) onChunk(specificNotice + '\n\n---\n\n*Connecting to Girionix Frontier Neural Engine:*\n\n', specificNotice + '\n\n---\n\n*Connecting to Girionix Frontier Neural Engine:*\n\n');
     }
 
-    return this.streamFreeNeuralAI({ messages: enrichedMessages, onChunk, onReasoningChunk, signal });
+    return this.streamFreeNeuralAI({ messages: enrichedMessages, model, modelName: activeModelName, onChunk, onReasoningChunk, signal });
   },
 
   /**
