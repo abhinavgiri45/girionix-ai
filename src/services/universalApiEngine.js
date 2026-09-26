@@ -37,14 +37,14 @@ export const DEFAULT_MODEL_FAMILIES = {
     name: 'Frontier Flagship Intelligence (DeepSeek R1 / 671B)',
     currentId: 'deepseek/deepseek-r1',
     fallbackId: 'deepseek/deepseek-chat',
-    patterns: [/deepseek-r1/i, /deepseek-r2/i, /minimax-m3/i, /claude-3\.7/i, /o3/i, /gpt-4\.5/i],
+    patterns: [/deepseek-r1/i, /deepseek-r2/i, /minimax-m3/i, /o3/i, /gpt-4\.5/i],
     category: 'reasoning'
   },
   coding: {
-    name: 'Superhuman Coding Engine (Qwen 2.5 Coder 32B / Claude 3.7)',
+    name: 'Superhuman Coding Engine (Qwen 2.5 Coder 32B / DeepSeek)',
     currentId: 'qwen/qwen-2.5-coder-32b-instruct',
-    fallbackId: 'anthropic/claude-3.7-sonnet',
-    patterns: [/qwen-2\.5-coder/i, /deepseek-coder/i, /claude-3\.7-sonnet/i, /codestral/i],
+    fallbackId: 'deepseek/deepseek-chat',
+    patterns: [/qwen-2\.5-coder/i, /deepseek-coder/i, /codestral/i],
     category: 'coding'
   },
   math: {
@@ -58,7 +58,7 @@ export const DEFAULT_MODEL_FAMILIES = {
     name: 'Omnimodal Vision & Analysis (Gemini 2.5 Flash / MiniMax M3)',
     currentId: 'google/gemini-2.5-flash',
     fallbackId: 'google/gemini-2.0-flash-001',
-    patterns: [/minimax-m3/i, /gpt-4o/i, /gemini-2\.0/i, /claude-3\.7/i],
+    patterns: [/minimax-m3/i, /gpt-4o/i, /gemini-2\.0/i],
     category: 'multimodal'
   },
   fast: {
@@ -69,10 +69,10 @@ export const DEFAULT_MODEL_FAMILIES = {
     category: 'fast'
   },
   script: {
-    name: 'Screenplay & Narrative Cinema (DeepSeek R1 / Claude 3.7)',
+    name: 'Screenplay & Narrative Cinema (DeepSeek R1 / DeepSeek Chat)',
     currentId: 'deepseek/deepseek-r1',
     fallbackId: 'deepseek/deepseek-chat',
-    patterns: [/deepseek-r1/i, /minimax-m3/i, /claude-3\.7-sonnet/i],
+    patterns: [/deepseek-r1/i, /minimax-m3/i],
     category: 'script'
   }
 };
@@ -299,7 +299,6 @@ export const universalApiEngine = {
           'gemini-2.5-pro',
           'gemini-2.5-flash',
           'gemini-2.0-flash-thinking-exp',
-          'anthropic/claude-3.7-sonnet',
           'openai/gpt-4o',
           'deepseek/deepseek-r1',
           'meta-llama/llama-3.3-70b-instruct'
@@ -422,7 +421,7 @@ export const universalApiEngine = {
     }
 
     // Dedicated Coding Studio
-    if (requestedModelId === 'girionix-codemaster-ultra' || requestedModelId === 'anthropic/claude-3.7-sonnet') {
+    if (requestedModelId === 'girionix-codemaster-ultra') {
       return registry.coding?.currentId || 'qwen/qwen-2.5-coder-32b-instruct';
     }
 

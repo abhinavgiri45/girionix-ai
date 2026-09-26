@@ -520,7 +520,6 @@ export const openrouter = {
         'deepseek/deepseek-r1',
         'meta-llama/llama-3.3-70b-instruct',
         'qwen/qwen-2.5-coder-32b-instruct',
-        'anthropic/claude-3.7-sonnet',
         'google/gemini-2.5-pro',
         // Verified active free models on OpenRouter (processes requests even with $0 credits):
         'qwen/qwen3.8-27b:free',

@@ -86,21 +86,6 @@ export const AI_MODELS = [
     recommendedFor: ["Advanced Coding", "Mathematical Logic", "Complex Systems Analysis"]
   },
   {
-    id: "anthropic/claude-3.7-sonnet",
-    name: "⚡ Claude 3.7 Sonnet",
-    provider: "Anthropic / Girionix",
-    category: "coding",
-    tag: "Hybrid Extended Thinking & Architecture",
-    badgeColor: "cyan",
-    description: "State-of-the-art software engineering and hybrid reasoning engine with deep multi-file fullstack code synthesis.",
-    contextWindow: 200000,
-    speed: "Fast",
-    pricing: "Standard",
-    supportsReasoning: true,
-    supportsVision: true,
-    recommendedFor: ["Superhuman Coding", "Fullstack Architecture", "System Design"]
-  },
-  {
     id: "openai/gpt-4o",
     name: "⚡ GPT-4o Omni",
     provider: "OpenAI / Girionix",
@@ -363,15 +348,15 @@ export const STUDIO_DEDICATED_MODELS = {
     benchmark: "8K Cinema Grade • 100% Temporal Continuity"
   },
   script: {
-    id: "claude-3.7-scriptmaster",
-    name: "Claude 3.7 ScriptMaster Cinema (Screenplay & Story)",
-    provider: "Anthropic / Screenplay & Beat Engine",
+    id: "deepseek-scriptmaster",
+    name: "DeepSeek ScriptMaster Cinema (Screenplay & Story)",
+    provider: "DeepSeek / Screenplay & Beat Engine",
     workDomain: "Cinema Screenplays, YouTube Scripts & Story Architecture",
     badgeColor: "indigo",
     tag: "Industry Standard Fountain & Final Draft (.fdx) Formatting",
     speed: "⚡ Real-Time Scene Flow & Table-Read Audio",
-    contextWindow: 200000,
-    openRouterModel: "anthropic/claude-3.7-sonnet",
+    contextWindow: 128000,
+    openRouterModel: "deepseek/deepseek-r1",
     languages: ["Hollywood Screenplay", "YouTube Video Script", "TV Pilot & Episodic", "Theater Drama", "Podcast Narrative"],
     capabilities: [
       "Auto-Formatting for Scene Headings, Action, Dialogue & Transitions",

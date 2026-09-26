@@ -208,7 +208,7 @@ Output ONLY the screenplay scene text without markdown backticks or conversation
             { role: 'system', content: systemPrompt },
             { role: 'user', content: `Instruction: "${instruction}"\n\nCurrent Script Context:\n${scriptContent.slice(-1200)}` }
           ],
-          model: activeModel?.id || 'anthropic/claude-3.7-sonnet',
+          model: activeModel?.id || 'deepseek/deepseek-r1',
           onChunk: (chunk, acc) => { generatedScript = acc; }
         });
       }

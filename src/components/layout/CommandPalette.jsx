@@ -81,17 +81,6 @@ export default function CommandPalette({
       }
     },
     {
-      id: 'model-claude',
-      title: 'Switch Engine to Claude 3.7 Sonnet (Hybrid Coding)',
-      category: 'AI Engines',
-      icon: <Cpu className="w-4 h-4 text-cyan-400" />,
-      action: () => {
-        const m = AI_MODELS.find(x => x.id === 'anthropic/claude-3.7-sonnet');
-        if (m) setActiveModel(m);
-        onClose();
-      }
-    },
-    {
       id: 'settings-key',
       title: 'Configure Universal API & Engine Hub',
       category: 'Configuration',

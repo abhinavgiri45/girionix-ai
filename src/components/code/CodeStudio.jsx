@@ -63,14 +63,6 @@ export const GIRIONIX_CODING_MODELS = [
     description: 'Specialized 32B coder model with state-of-the-art benchmark performance on code modification.'
   },
   {
-    id: 'anthropic/claude-3.7-sonnet',
-    name: '⚡ Claude 3.7 Sonnet',
-    shortName: 'Claude 3.7 Sonnet',
-    tag: 'Hybrid Thinking',
-    badge: 'REASONING CODER',
-    description: 'Deep architectural refactoring, fullstack state management, and edge-case handling.'
-  },
-  {
     id: 'gemini-2.5-flash',
     name: '⚡ Studio Flash Coder',
     shortName: 'Studio Flash Coder',
