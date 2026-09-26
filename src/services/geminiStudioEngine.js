@@ -107,11 +107,20 @@ export const geminiStudioEngine = {
     try {
       const direct = localStorage.getItem(GEMINI_API_KEY_STORAGE);
       if (direct && direct.trim()) return direct.trim();
+
+      const customKey = localStorage.getItem('girionix_custom_api_key');
+      if (customKey && customKey.trim().startsWith('AIzaSy')) return customKey.trim();
+
       // Fallback to universal config if it's a Gemini key
       const universalCfg = universalApiEngine.getProviderConfig();
       if (universalCfg?.apiKey && universalCfg.apiKey.trim().startsWith('AIzaSy')) {
         return universalCfg.apiKey.trim();
       }
+
+      // Check Vite environment variables
+      const envKey = (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_GEMINI_API_KEY || import.meta.env?.VITE_GOOGLE_API_KEY)) || '';
+      if (envKey && envKey.trim()) return envKey.trim();
+
       return '';
     } catch (_) {
       return '';

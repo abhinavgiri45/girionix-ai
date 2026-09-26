@@ -711,15 +711,18 @@ ${lengthRule}
     const targetModel = universalApiEngine.resolveTargetModel('girionix-lite');
     if (targetModel) candidateModels.push(targetModel);
 
-    // If using OpenRouter or default gateway, add verified high-parameter free models
+    // If using OpenRouter or default gateway, add verified fast low-latency models
     if (config.providerId === 'openrouter' || !config.providerId) {
-      const freeVoiceCascade = [
+      const voiceCascade = [
+        'google/gemini-2.5-flash',
+        'meta-llama/llama-3.1-8b-instruct',
+        'meta-llama/llama-3.3-70b-instruct:free',
         'minimax/minimax-m3:free',
         'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free',
         'cohere/north-mini-code:free',
         'dots-studio/dots-3-note-preview:free'
       ];
-      freeVoiceCascade.forEach(m => {
+      voiceCascade.forEach(m => {
         if (!candidateModels.includes(m)) candidateModels.push(m);
       });
     }

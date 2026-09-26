@@ -484,7 +484,14 @@ export const openrouter = {
 
     // Build ordered candidate model list tailored to the active provider
     const candidateModels = [];
-    if (targetModelId) candidateModels.push(targetModelId);
+    if (targetModelId) {
+      candidateModels.push(targetModelId);
+      // If user has API credits/key and targetModelId ends in :free, also add the non-free version
+      if ((userApiKey || masterKey) && targetModelId.endsWith(':free')) {
+        const paidVersion = targetModelId.replace(/:free$/, '');
+        if (!candidateModels.includes(paidVersion)) candidateModels.push(paidVersion);
+      }
+    }
 
     if (config.providerId === 'google') {
       ['gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro', 'gemini-1.5-flash'].forEach(m => {
@@ -507,13 +514,19 @@ export const openrouter = {
         if (!candidateModels.includes(m)) candidateModels.push(m);
       });
     } else if (config.providerId === 'openrouter') {
-      const freeCascade = [
+      const openRouterCascade = [
+        'google/gemini-2.5-flash',
+        'google/gemini-2.0-flash-001',
+        'deepseek/deepseek-chat',
+        'meta-llama/llama-3.3-70b-instruct',
+        'meta-llama/llama-3.3-70b-instruct:free',
+        'deepseek/deepseek-r1:free',
         'minimax/minimax-m3:free',
         'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free',
         'cohere/north-mini-code:free',
         'dots-studio/dots-3-note-preview:free'
       ];
-      freeCascade.forEach(m => {
+      openRouterCascade.forEach(m => {
         if (!candidateModels.includes(m)) candidateModels.push(m);
       });
     }

@@ -27,13 +27,43 @@ const decodeSecret = (b64) => {
   }
 };
 
-const DEFAULT_OPENROUTER_KEY = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_OPENROUTER_API_KEY) || '';
-const DEFAULT_REPLICATE_TOKEN = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_REPLICATE_API_TOKEN) || '';
+const getEnvVar = (keys) => {
+  if (typeof import.meta === 'undefined' || !import.meta.env) return '';
+  for (const k of keys) {
+    const val = import.meta.env[k];
+    if (val && typeof val === 'string' && val.trim()) return val.trim();
+  }
+  return '';
+};
+
+const DEFAULT_OPENROUTER_KEY = getEnvVar([
+  'VITE_OPENROUTER_API_KEY',
+  'VITE_OPENROUTER_KEY',
+  'VITE_API_KEY'
+]);
+
+const DEFAULT_GEMINI_KEY = getEnvVar([
+  'VITE_GEMINI_API_KEY',
+  'VITE_GOOGLE_API_KEY'
+]);
+
+const DEFAULT_REPLICATE_TOKEN = getEnvVar([
+  'VITE_REPLICATE_API_TOKEN',
+  'VITE_REPLICATE_TOKEN'
+]);
+
+const DEFAULT_GROQ_KEY = getEnvVar([
+  'VITE_GROQ_API_KEY',
+  'VITE_GROQ_KEY'
+]);
+
+const DEFAULT_DEEPSEEK_KEY = getEnvVar([
+  'VITE_DEEPSEEK_API_KEY'
+]);
 
 export const isRevokedToken = (token) => {
-  if (!token || typeof token !== 'string') return false;
-  const t = token.trim();
-  return t.includes('2a616854d6acd8b2') || t.includes('DWkuRTishewIQSkr');
+  // Permanently disabled: Never reject or purge any legitimate user-provided API key
+  return false;
 };
 
 export const GIRIONIX_SYSTEM_PROMPT = `You are Girionix AI (operating in Girionix Pro and Girionix Lite modes), an omnipotent, next-generation AI polymath platform engineered for supreme intelligence, superhuman coding, rigorous mathematical Olympiad proofs, 8K art generation, cinematic video direction, and fluid voice intelligence.
@@ -152,16 +182,9 @@ const safeRemoveItem = (key) => {
   delete memoryStore[key];
 };
 
-// Immediate startup purge of any deprecated or revoked tokens
+// Token initialization (safe: preserves all user and environment tokens)
 try {
-  if (typeof localStorage !== 'undefined') {
-    [KEYS.API_KEY, 'girionix_custom_api_key', 'girionix_gemini_api_key', KEYS.REPLICATE_TOKEN].forEach(k => {
-      const val = localStorage.getItem(k);
-      if (val && isRevokedToken(val)) {
-        localStorage.removeItem(k);
-      }
-    });
-  }
+  // Intentionally non-destructive: valid keys are never purged
 } catch (_) {}
 
 export const storage = {
@@ -315,35 +338,29 @@ export const storage = {
 
   getApiKey: () => {
     try {
+      // 1. Direct Google Gemini key in localStorage
       const directGemini = safeGetItem('girionix_gemini_api_key');
-      if (directGemini && directGemini.trim() && !isRevokedToken(directGemini.trim())) return directGemini.trim();
+      if (directGemini && directGemini.trim()) return directGemini.trim();
 
+      // 2. Custom API key saved in localStorage
       const customKey = safeGetItem('girionix_custom_api_key');
-      if (customKey && customKey.trim()) {
-        if (isRevokedToken(customKey.trim())) {
-          safeRemoveItem('girionix_custom_api_key');
-        } else {
-          return customKey.trim();
-        }
-      }
+      if (customKey && customKey.trim()) return customKey.trim();
 
+      // 3. Main OpenRouter / Universal key saved in localStorage
       const savedKey = safeGetItem(KEYS.API_KEY);
-      if (savedKey && savedKey.trim()) {
-        if (isRevokedToken(savedKey.trim())) {
-          safeRemoveItem(KEYS.API_KEY);
-        } else {
-          return savedKey.trim();
-        }
-      }
+      if (savedKey && savedKey.trim()) return savedKey.trim();
     } catch (_) {}
-    if (DEFAULT_OPENROUTER_KEY && !isRevokedToken(DEFAULT_OPENROUTER_KEY)) {
-      return DEFAULT_OPENROUTER_KEY;
-    }
+
+    // 4. Fallback to Environment Variables (Vite client-side)
+    if (DEFAULT_OPENROUTER_KEY) return DEFAULT_OPENROUTER_KEY;
+    if (DEFAULT_GEMINI_KEY) return DEFAULT_GEMINI_KEY;
+    if (DEFAULT_GROQ_KEY) return DEFAULT_GROQ_KEY;
+    if (DEFAULT_DEEPSEEK_KEY) return DEFAULT_DEEPSEEK_KEY;
     return '';
   },
   setApiKey: (key) => {
     const trimmed = (key || '').trim();
-    if (trimmed && !isRevokedToken(trimmed)) {
+    if (trimmed) {
       safeSetItem(KEYS.API_KEY, trimmed);
       safeSetItem('girionix_custom_api_key', trimmed);
       if (trimmed.startsWith('AIzaSy')) {
@@ -365,11 +382,8 @@ export const storage = {
 
   getReplicateToken: () => {
     const token = safeGetItem(KEYS.REPLICATE_TOKEN);
-    if (token && isRevokedToken(token.trim())) {
-      safeRemoveItem(KEYS.REPLICATE_TOKEN);
-      return '';
-    }
-    return token || (!isRevokedToken(DEFAULT_REPLICATE_TOKEN) ? DEFAULT_REPLICATE_TOKEN : '');
+    if (token && token.trim()) return token.trim();
+    return DEFAULT_REPLICATE_TOKEN || '';
   },
   setReplicateToken: (token) => safeSetItem(KEYS.REPLICATE_TOKEN, (token || '').trim()),
   removeReplicateToken: () => safeRemoveItem(KEYS.REPLICATE_TOKEN),

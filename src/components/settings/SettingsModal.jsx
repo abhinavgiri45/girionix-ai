@@ -18,7 +18,8 @@ import {
   ArrowUpRight,
   User,
   Heart,
-  Calendar
+  Calendar,
+  Image as ImageIcon
 } from 'lucide-react';
 import { storage } from '../../services/storage';
 import { openrouter } from '../../services/openrouter';
@@ -33,7 +34,7 @@ export default function SettingsModal({ isOpen, onClose, onApiKeyUpdated }) {
   const [autoUpgradeEnabled, setAutoUpgradeEnabled] = useState(providerConfig.autoUpgradeEnabled);
 
   const [userProfile, setUserProfile] = useState(() => storage.getUserProfile());
-  const [newReplicateToken, setNewReplicateToken] = useState('');
+  const [newReplicateToken, setNewReplicateToken] = useState(() => storage.getReplicateToken() || '');
   const [settings, setSettings] = useState(storage.getSettings());
   const [verificationStatus, setVerificationStatus] = useState(null);
   const [syncStatus, setSyncStatus] = useState(null);
@@ -59,7 +60,7 @@ export default function SettingsModal({ isOpen, onClose, onApiKeyUpdated }) {
       setCustomBaseUrl(cfg.baseUrl);
       setApiKeyInput(cfg.apiKey);
       setAutoUpgradeEnabled(cfg.autoUpgradeEnabled);
-      setNewReplicateToken('');
+      setNewReplicateToken(storage.getReplicateToken() || '');
       setSettings(storage.getSettings());
       setUserProfile(storage.getUserProfile());
       setVerificationStatus(null);
@@ -146,8 +147,12 @@ export default function SettingsModal({ isOpen, onClose, onApiKeyUpdated }) {
 
     if (onApiKeyUpdated) onApiKeyUpdated(trimmed);
 
-    if (newReplicateToken.trim()) {
-      storage.setReplicateToken(newReplicateToken.trim());
+    if (newReplicateToken !== undefined) {
+      if (newReplicateToken.trim()) {
+        storage.setReplicateToken(newReplicateToken.trim());
+      } else {
+        storage.removeReplicateToken();
+      }
     }
 
     try {
@@ -401,6 +406,43 @@ export default function SettingsModal({ isOpen, onClose, onApiKeyUpdated }) {
                   <ExternalLink className="w-2.5 h-2.5 opacity-60" />
                 </a>
               </div>
+
+              {/* Environment Variables & Cloudflare Pages Guide */}
+              <div className="p-3 rounded-xl bg-black/40 border border-white/10 space-y-2 text-[11px] font-sans">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-gray-300 flex items-center gap-1.5 font-mono text-[10px]">
+                    <Lock className="w-3 h-3 text-cyan-400" />
+                    <span>ENVIRONMENT VARIABLES (.env / Cloudflare)</span>
+                  </span>
+                  <span className="text-[10px] text-cyan-400 font-mono">Vite Standard</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 font-mono text-[10px]">
+                  <div className="flex items-center justify-between p-1.5 rounded-lg bg-white/[0.03] border border-white/5">
+                    <span className="text-gray-400">VITE_OPENROUTER_API_KEY</span>
+                    <span className={typeof import.meta !== 'undefined' && (import.meta.env?.VITE_OPENROUTER_API_KEY || import.meta.env?.VITE_API_KEY) ? "text-emerald-400 font-bold" : "text-gray-600"}>
+                      {typeof import.meta !== 'undefined' && (import.meta.env?.VITE_OPENROUTER_API_KEY || import.meta.env?.VITE_API_KEY) ? "● Loaded" : "○ Not set"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between p-1.5 rounded-lg bg-white/[0.03] border border-white/5">
+                    <span className="text-gray-400">VITE_GEMINI_API_KEY</span>
+                    <span className={typeof import.meta !== 'undefined' && (import.meta.env?.VITE_GEMINI_API_KEY || import.meta.env?.VITE_GOOGLE_API_KEY) ? "text-emerald-400 font-bold" : "text-gray-600"}>
+                      {typeof import.meta !== 'undefined' && (import.meta.env?.VITE_GEMINI_API_KEY || import.meta.env?.VITE_GOOGLE_API_KEY) ? "● Loaded" : "○ Not set"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between p-1.5 rounded-lg bg-white/[0.03] border border-white/5">
+                    <span className="text-gray-400">VITE_REPLICATE_API_TOKEN</span>
+                    <span className={typeof import.meta !== 'undefined' && (import.meta.env?.VITE_REPLICATE_API_TOKEN || import.meta.env?.VITE_REPLICATE_TOKEN) ? "text-emerald-400 font-bold" : "text-gray-600"}>
+                      {typeof import.meta !== 'undefined' && (import.meta.env?.VITE_REPLICATE_API_TOKEN || import.meta.env?.VITE_REPLICATE_TOKEN) ? "● Loaded" : "○ Not set"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between p-1.5 rounded-lg bg-white/[0.03] border border-white/5">
+                    <span className="text-gray-400">VITE_GROQ_API_KEY</span>
+                    <span className={typeof import.meta !== 'undefined' && import.meta.env?.VITE_GROQ_API_KEY ? "text-emerald-400 font-bold" : "text-gray-600"}>
+                      {typeof import.meta !== 'undefined' && import.meta.env?.VITE_GROQ_API_KEY ? "● Loaded" : "○ Not set"}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Test Connection & Sync Live Models Buttons */}
@@ -456,6 +498,45 @@ export default function SettingsModal({ isOpen, onClose, onApiKeyUpdated }) {
                 )}
               </div>
             )}
+          </div>
+
+          {/* 1B. REPLICATE FLUX 8K & MEDIA TOKEN */}
+          <div className="p-5 rounded-2xl bg-gradient-to-b from-purple-950/20 to-black/60 border border-purple-500/30 space-y-3 shadow-xl">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <div className="flex items-center gap-2">
+                <ImageIcon className="w-4 h-4 text-purple-400" />
+                <span className="text-sm font-bold text-white">Replicate FLUX.1 Cinema 8K Studio</span>
+              </div>
+              <span className="text-[10px] font-mono text-purple-300 bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20">
+                FLUX.1 Schnell & Dev
+              </span>
+            </div>
+
+            <p className="text-xs text-gray-300 font-sans leading-relaxed">
+              Used for on-demand 8K ultra-realism art and cinematic storyboard video generation. Leave blank to use the built-in free image engine.
+            </p>
+
+            <div className="space-y-1.5 font-mono text-xs">
+              <div className="flex justify-between items-center">
+                <label className="text-gray-400 font-bold">Replicate API Token (r8_...):</label>
+                <a
+                  href="https://replicate.com/account/api-tokens"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[10px] text-purple-400 hover:text-purple-300 flex items-center gap-1"
+                >
+                  <span>Get Token</span>
+                  <ExternalLink className="w-2.5 h-2.5" />
+                </a>
+              </div>
+              <input
+                type="password"
+                value={newReplicateToken}
+                onChange={(e) => setNewReplicateToken(e.target.value)}
+                placeholder="r8_... or configure via VITE_REPLICATE_API_TOKEN"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-black/80 border border-white/15 text-white text-xs font-mono focus:border-purple-400 focus:outline-none"
+              />
+            </div>
           </div>
 
           {/* 2. DYNAMIC LIVE MODEL RESOLUTION STATUS */}
