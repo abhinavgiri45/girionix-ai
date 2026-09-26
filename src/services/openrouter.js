@@ -407,17 +407,16 @@ export const openrouter = {
       ...cleanDialogue
     ];
 
-    // Direct Gemini API Route (If user provided an AIzaSy key or saved one in AI Studio/Universal settings)
-    const directGeminiKey = (userApiKey?.startsWith('AIzaSy') ? userApiKey : '') ||
-      (typeof localStorage !== 'undefined' ? localStorage.getItem('girionix_gemini_api_key') : '') ||
-      (typeof localStorage !== 'undefined' ? localStorage.getItem('girionix_custom_api_key') : '') ||
-      (config.providerId === 'google' ? userApiKey : '');
+    // Direct Gemini API Route: ONLY executed when provider is explicitly Google or key is a genuine Gemini AIzaSy key (never for OpenRouter)
+    const isGeminiKey = Boolean(userApiKey?.startsWith('AIzaSy'));
+    const isGoogleProvider = config.providerId === 'google';
+    const directGeminiKey = isGeminiKey ? userApiKey : (isGoogleProvider ? ((typeof localStorage !== 'undefined' ? localStorage.getItem('girionix_gemini_api_key') : '') || userApiKey) : '');
 
-    if (config.providerId === 'google' || directGeminiKey) {
+    if ((isGoogleProvider || isGeminiKey) && config.providerId !== 'openrouter' && !userApiKey?.startsWith('sk-or-')) {
       try {
         const { geminiStudioEngine } = await import('./geminiStudioEngine.js');
         const activeKey = directGeminiKey || geminiStudioEngine.getApiKey();
-        if (activeKey) {
+        if (activeKey && activeKey.startsWith('AIzaSy')) {
           const systemMsg = finalSystemPrompt;
           const nonSystemMsgs = cleanDialogue;
           const lastMsg = nonSystemMsgs.length > 0 ? nonSystemMsgs[nonSystemMsgs.length - 1] : { content: 'Hello' };
@@ -478,18 +477,19 @@ export const openrouter = {
     }
 
     // Zero API Key Configured: Immediately stream via Sovereign Local Neural Engine without failed HTTP calls
-    if (!userApiKey && !masterKey && !directGeminiKey) {
+    if (!userApiKey && !masterKey) {
       return this.streamFreeNeuralAI({ messages: enrichedMessages, webSearchEnabled, useThinking, onChunk, onReasoningChunk, signal });
     }
 
     // Build ordered candidate model list tailored to the active provider
     const candidateModels = [];
     if (targetModelId) {
-      candidateModels.push(targetModelId);
-      // If user has API credits/key and targetModelId ends in :free, also add the non-free version
       if ((userApiKey || masterKey) && targetModelId.endsWith(':free')) {
         const paidVersion = targetModelId.replace(/:free$/, '');
-        if (!candidateModels.includes(paidVersion)) candidateModels.push(paidVersion);
+        candidateModels.push(paidVersion);
+        candidateModels.push(targetModelId);
+      } else {
+        candidateModels.push(targetModelId);
       }
     }
 
@@ -515,16 +515,16 @@ export const openrouter = {
       });
     } else if (config.providerId === 'openrouter') {
       const openRouterCascade = [
-        'google/gemini-2.5-flash',
-        'google/gemini-2.0-flash-001',
         'deepseek/deepseek-chat',
+        'google/gemini-2.5-flash',
         'meta-llama/llama-3.3-70b-instruct',
+        'anthropic/claude-3.7-sonnet',
+        'deepseek/deepseek-r1',
+        'google/gemini-2.0-flash-001',
         'meta-llama/llama-3.3-70b-instruct:free',
         'deepseek/deepseek-r1:free',
         'minimax/minimax-m3:free',
-        'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free',
-        'cohere/north-mini-code:free',
-        'dots-studio/dots-3-note-preview:free'
+        'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free'
       ];
       openRouterCascade.forEach(m => {
         if (!candidateModels.includes(m)) candidateModels.push(m);
@@ -542,7 +542,8 @@ export const openrouter = {
 
       for (const key of keysToTry) {
         try {
-          let endpoint = `${config.baseUrl}/chat/completions`;
+          const cleanBaseUrl = (config.baseUrl || 'https://openrouter.ai/api/v1').replace(/\/+$/, '');
+          let endpoint = `${cleanBaseUrl}/chat/completions`;
           const requestHeaders = {
             'Content-Type': 'application/json',
             'HTTP-Referer': typeof window !== 'undefined' ? window.location.origin : 'https://girionix-ai.pages.dev',

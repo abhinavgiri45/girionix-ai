@@ -35,43 +35,43 @@ const LEGACY_STORAGE_KEYS = {
 export const DEFAULT_MODEL_FAMILIES = {
   frontier: {
     name: 'Frontier Flagship Intelligence (DeepSeek R1 / 671B)',
-    currentId: 'deepseek/deepseek-r1:free',
-    fallbackId: 'meta-llama/llama-3.3-70b-instruct:free',
+    currentId: 'deepseek/deepseek-r1',
+    fallbackId: 'deepseek/deepseek-chat',
     patterns: [/deepseek-r1/i, /deepseek-r2/i, /minimax-m3/i, /claude-3\.7/i, /o3/i, /gpt-4\.5/i],
     category: 'reasoning'
   },
   coding: {
     name: 'Superhuman Coding Engine (Qwen 2.5 Coder 32B / Claude 3.7)',
-    currentId: 'qwen/qwen-2.5-coder-32b-instruct:free',
-    fallbackId: 'meta-llama/llama-3.3-70b-instruct:free',
+    currentId: 'qwen/qwen-2.5-coder-32b-instruct',
+    fallbackId: 'anthropic/claude-3.7-sonnet',
     patterns: [/qwen-2\.5-coder/i, /deepseek-coder/i, /claude-3\.7-sonnet/i, /codestral/i],
     category: 'coding'
   },
   math: {
     name: 'Olympiad Math & Formal Logic (DeepSeek R1 / Formal Reasoner)',
-    currentId: 'deepseek/deepseek-r1:free',
-    fallbackId: 'meta-llama/llama-3.3-70b-instruct:free',
+    currentId: 'deepseek/deepseek-r1',
+    fallbackId: 'meta-llama/llama-3.3-70b-instruct',
     patterns: [/deepseek-r1/i, /o3/i, /o1/i, /qwq-32b/i, /nemotron/i],
     category: 'reasoning'
   },
   multimodal: {
-    name: 'Omnimodal Vision & Analysis (MiniMax M3 / Gemini 2.0)',
-    currentId: 'minimax/minimax-m3:free',
-    fallbackId: 'google/gemini-2.0-flash-exp:free',
+    name: 'Omnimodal Vision & Analysis (Gemini 2.5 Flash / MiniMax M3)',
+    currentId: 'google/gemini-2.5-flash',
+    fallbackId: 'google/gemini-2.0-flash-001',
     patterns: [/minimax-m3/i, /gpt-4o/i, /gemini-2\.0/i, /claude-3\.7/i],
     category: 'multimodal'
   },
   fast: {
-    name: 'High-Speed Low Latency (Llama 3.3 70B Instant)',
-    currentId: 'meta-llama/llama-3.3-70b-instruct:free',
-    fallbackId: 'google/gemini-2.0-flash-exp:free',
+    name: 'High-Speed Low Latency (Gemini 2.5 Flash / Llama 3.3 70B)',
+    currentId: 'google/gemini-2.5-flash',
+    fallbackId: 'meta-llama/llama-3.3-70b-instruct',
     patterns: [/llama-3\.3-70b/i, /gemini-2\.0-flash/i, /minimax-m3/i, /gpt-4o-mini/i],
     category: 'fast'
   },
   script: {
-    name: 'Screenplay & Narrative Cinema (DeepSeek R1 / MiniMax M3)',
-    currentId: 'deepseek/deepseek-r1:free',
-    fallbackId: 'minimax/minimax-m3:free',
+    name: 'Screenplay & Narrative Cinema (DeepSeek R1 / Claude 3.7)',
+    currentId: 'deepseek/deepseek-r1',
+    fallbackId: 'deepseek/deepseek-chat',
     patterns: [/deepseek-r1/i, /minimax-m3/i, /claude-3\.7-sonnet/i],
     category: 'script'
   }
@@ -100,7 +100,7 @@ export const universalApiEngine = {
     if (k.startsWith('gsk_')) {
       return { providerId: 'groq', baseUrl: 'https://api.groq.com/openai/v1', name: 'Groq Cloud' };
     }
-    if (k.startsWith('sk-or-v1-')) {
+    if (k.startsWith('sk-or-') || k.startsWith('sk-or-v1-')) {
       return { providerId: 'openrouter', baseUrl: 'https://openrouter.ai/api/v1', name: 'OpenRouter' };
     }
     if (k.startsWith('sk-ant-')) {
@@ -125,9 +125,9 @@ export const universalApiEngine = {
       // Auto-detect provider if key has recognizable signature
       const detected = this.detectProviderFromKey(customApiKey);
       if (detected) {
-        if (!providerId || (providerId === 'openrouter' && detected.providerId !== 'openrouter')) {
-          providerId = detected.providerId;
-          customBaseUrl = customBaseUrl || detected.baseUrl;
+        providerId = detected.providerId;
+        if (!customBaseUrl || customBaseUrl.includes('openrouter.ai') || customBaseUrl.includes('generativelanguage.googleapis.com') || customBaseUrl.includes('api.groq.com')) {
+          customBaseUrl = detected.baseUrl;
         }
       }
 
@@ -137,7 +137,7 @@ export const universalApiEngine = {
       return {
         providerId,
         providerName: provider.name,
-        baseUrl: customBaseUrl || provider.defaultBaseUrl,
+        baseUrl: (customBaseUrl || provider.defaultBaseUrl).replace(/\/+$/, ''),
         apiKey: customApiKey,
         autoUpgradeEnabled: autoUpgrade
       };
@@ -158,7 +158,7 @@ export const universalApiEngine = {
   saveProviderConfig({ providerId, baseUrl, apiKey, autoUpgradeEnabled }) {
     try {
       let finalProviderId = providerId;
-      let finalBaseUrl = baseUrl;
+      let finalBaseUrl = baseUrl ? baseUrl.trim().replace(/\/+$/, '') : '';
 
       if (apiKey !== undefined) {
         const trimmedKey = apiKey.trim();
@@ -166,14 +166,14 @@ export const universalApiEngine = {
         storage.setApiKey(trimmedKey);
 
         const detected = this.detectProviderFromKey(trimmedKey);
-        if (detected && (!providerId || providerId === 'openrouter')) {
+        if (detected) {
           finalProviderId = detected.providerId;
           finalBaseUrl = detected.baseUrl;
         }
       }
 
       if (finalProviderId) localStorage.setItem(STORAGE_KEYS.UNIVERSAL_PROVIDER, finalProviderId);
-      if (finalBaseUrl !== undefined) localStorage.setItem(STORAGE_KEYS.CUSTOM_BASE_URL, finalBaseUrl.trim());
+      if (finalBaseUrl !== undefined) localStorage.setItem(STORAGE_KEYS.CUSTOM_BASE_URL, finalBaseUrl);
       if (autoUpgradeEnabled !== undefined) {
         localStorage.setItem(STORAGE_KEYS.AUTO_UPGRADE_ENABLED, autoUpgradeEnabled ? 'true' : 'false');
       }
@@ -398,8 +398,8 @@ export const universalApiEngine = {
     }
 
     if (!config.autoUpgradeEnabled) {
-      if (requestedModelId === 'girionix-pro') return 'deepseek/deepseek-r1:free';
-      if (requestedModelId === 'girionix-lite') return 'meta-llama/llama-3.3-70b-instruct:free';
+      if (requestedModelId === 'girionix-pro') return 'deepseek/deepseek-r1';
+      if (requestedModelId === 'girionix-lite') return 'google/gemini-2.5-flash';
       return requestedModelId;
     }
 
@@ -407,32 +407,32 @@ export const universalApiEngine = {
 
     // Auto-Frontier / Universal Flagship
     if (requestedModelId === 'girionix-universal-auto' || requestedModelId === 'girionix-pro') {
-      return registry.frontier?.currentId || 'deepseek/deepseek-r1:free';
+      return registry.frontier?.currentId || 'deepseek/deepseek-r1';
     }
 
     // High-Speed / Visual Engine
     if (requestedModelId === 'girionix-lite') {
-      return registry.fast?.currentId || 'meta-llama/llama-3.3-70b-instruct:free';
+      return registry.fast?.currentId || 'google/gemini-2.5-flash';
     }
 
     // Dedicated Coding Studio
     if (requestedModelId === 'girionix-codemaster-ultra' || requestedModelId === 'anthropic/claude-3.7-sonnet') {
-      return registry.coding?.currentId || 'qwen/qwen-2.5-coder-32b-instruct:free';
+      return registry.coding?.currentId || 'qwen/qwen-2.5-coder-32b-instruct';
     }
 
     // Math Lab Olympiad
     if (requestedModelId === 'girionix-mathx-olympiad' || requestedModelId === 'openai/o3-mini') {
-      return registry.math?.currentId || 'deepseek/deepseek-r1:free';
+      return registry.math?.currentId || 'deepseek/deepseek-r1';
     }
 
     // Screenplay & Script Studio
     if (requestedModelId === 'girionix-scriptmaster-cinema') {
-      return registry.script?.currentId || 'minimax/minimax-m3:free';
+      return registry.script?.currentId || 'deepseek/deepseek-r1';
     }
 
     // Multimodal Omni
     if (requestedModelId === 'openai/gpt-4o') {
-      return registry.multimodal?.currentId || 'minimax/minimax-m3:free';
+      return registry.multimodal?.currentId || 'google/gemini-2.5-flash';
     }
 
     return requestedModelId;

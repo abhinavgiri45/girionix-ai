@@ -709,54 +709,56 @@ ${lengthRule}
     // Build ordered candidate model list for automatic seamless cascading
     const candidateModels = [];
     const targetModel = universalApiEngine.resolveTargetModel('girionix-lite');
-    if (targetModel) candidateModels.push(targetModel);
+    if (targetModel) {
+      if (activeKey && targetModel.endsWith(':free')) {
+        candidateModels.push(targetModel.replace(/:free$/, ''));
+      }
+      candidateModels.push(targetModel);
+    }
 
     // If using OpenRouter or default gateway, add verified fast low-latency models
     if (config.providerId === 'openrouter' || !config.providerId) {
       const voiceCascade = [
+        'deepseek/deepseek-chat',
         'google/gemini-2.5-flash',
         'meta-llama/llama-3.1-8b-instruct',
-        'meta-llama/llama-3.3-70b-instruct:free',
-        'minimax/minimax-m3:free',
-        'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free',
-        'cohere/north-mini-code:free',
-        'dots-studio/dots-3-note-preview:free'
+        'meta-llama/llama-3.3-70b-instruct',
+        'minimax/minimax-m3:free'
       ];
       voiceCascade.forEach(m => {
         if (!candidateModels.includes(m)) candidateModels.push(m);
       });
     }
 
-    // Priority 1: Direct AI Studio (Gemini Flash) Voice Generation (<250ms latency)
-    const directGeminiKey = (activeKey?.startsWith('AIzaSy') ? activeKey : '') ||
-      (typeof localStorage !== 'undefined' ? localStorage.getItem('girionix_gemini_api_key') : '') ||
-      (typeof localStorage !== 'undefined' ? localStorage.getItem('girionix_custom_api_key') : '') ||
-      (config.providerId === 'google' ? activeKey : '') ||
-      (masterKey?.startsWith('AIzaSy') ? masterKey : '');
+    // Priority 1: Direct AI Studio (Gemini Flash) Voice Generation (<250ms latency) - Only when using Google Gemini
+    const isGeminiKey = Boolean(activeKey?.startsWith('AIzaSy')) || (config.providerId === 'google' && !activeKey?.startsWith('sk-or-'));
+    const directGeminiKey = isGeminiKey ? (activeKey || (typeof localStorage !== 'undefined' ? localStorage.getItem('girionix_gemini_api_key') : '')) : '';
 
-    if (directGeminiKey) {
+    if (isGeminiKey && directGeminiKey && config.providerId !== 'openrouter') {
       try {
         const { geminiStudioEngine } = await import('./geminiStudioEngine.js');
         const activeGemKey = directGeminiKey || geminiStudioEngine.getApiKey();
-        const res = await geminiStudioEngine.streamPrompt({
-          directKey: activeGemKey,
-          mode: 'chat',
-          systemInstruction: systemPrompt,
-          history: context.map(t => ({
-            role: t.role === 'assistant' ? 'model' : 'user',
-            content: t.content
-          })),
-          prompt,
-          model: 'gemini-2.5-flash',
-          temperature: 0.7,
-          maxOutputTokens: isLongFormRequested ? 800 : 350,
-          enableThinking: false,
-          enableSearchGrounding: false,
-          signal
-        });
-        if (res?.content) {
-          const cleaned = this.cleanSpokenText(res.content);
-          if (cleaned && cleaned.length > 2) return cleaned;
+        if (activeGemKey && activeGemKey.startsWith('AIzaSy')) {
+          const res = await geminiStudioEngine.streamPrompt({
+            directKey: activeGemKey,
+            mode: 'chat',
+            systemInstruction: systemPrompt,
+            history: context.map(t => ({
+              role: t.role === 'assistant' ? 'model' : 'user',
+              content: t.content
+            })),
+            prompt,
+            model: 'gemini-2.5-flash',
+            temperature: 0.7,
+            maxOutputTokens: isLongFormRequested ? 800 : 350,
+            enableThinking: false,
+            enableSearchGrounding: false,
+            signal
+          });
+          if (res?.content) {
+            const cleaned = this.cleanSpokenText(res.content);
+            if (cleaned && cleaned.length > 2) return cleaned;
+          }
         }
       } catch (gemErr) {
         console.warn('AI Studio Voice stream fallback:', gemErr?.message);
@@ -769,7 +771,8 @@ ${lengthRule}
         if (signal?.aborted) break;
 
         try {
-          const endpoint = `${config.baseUrl}/chat/completions`;
+          const cleanBaseUrl = (config.baseUrl || 'https://openrouter.ai/api/v1').replace(/\/+$/, '');
+          const endpoint = `${cleanBaseUrl}/chat/completions`;
           const requestBody = {
             model: candidateModel,
             messages,
@@ -789,14 +792,18 @@ ${lengthRule}
             return ctrl.signal;
           };
 
+          const requestHeaders = {
+            'Content-Type': 'application/json',
+            'HTTP-Referer': typeof window !== 'undefined' ? window.location.origin : 'https://girionix-ai.pages.dev',
+            'X-Title': 'Girionix Real-time Voice AI'
+          };
+          if (activeKey && activeKey.trim()) {
+            requestHeaders['Authorization'] = `Bearer ${activeKey.trim()}`;
+          }
+
           const response = await fetch(endpoint, {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': activeKey ? `Bearer ${activeKey}` : undefined,
-              'HTTP-Referer': typeof window !== 'undefined' ? window.location.origin : 'https://girionix-ai.pages.dev',
-              'X-Title': 'Girionix Real-time Voice AI'
-            },
+            headers: requestHeaders,
             body: JSON.stringify(requestBody),
             signal: signal || createTimeout(isLongFormRequested ? 8000 : 4500)
           });

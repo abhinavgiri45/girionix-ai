@@ -338,17 +338,17 @@ export const storage = {
 
   getApiKey: () => {
     try {
-      // 1. Direct Google Gemini key in localStorage
-      const directGemini = safeGetItem('girionix_gemini_api_key');
-      if (directGemini && directGemini.trim()) return directGemini.trim();
-
-      // 2. Custom API key saved in localStorage
+      // 1. Custom API key saved in localStorage (highest priority - user's explicit setting)
       const customKey = safeGetItem('girionix_custom_api_key');
       if (customKey && customKey.trim()) return customKey.trim();
 
-      // 3. Main OpenRouter / Universal key saved in localStorage
+      // 2. Main OpenRouter / Universal key saved in localStorage
       const savedKey = safeGetItem(KEYS.API_KEY);
       if (savedKey && savedKey.trim()) return savedKey.trim();
+
+      // 3. Direct Google Gemini key in localStorage (only if specifically configured)
+      const directGemini = safeGetItem('girionix_gemini_api_key');
+      if (directGemini && directGemini.trim()) return directGemini.trim();
     } catch (_) {}
 
     // 4. Fallback to Environment Variables (Vite client-side)
@@ -366,6 +366,19 @@ export const storage = {
       if (trimmed.startsWith('AIzaSy')) {
         safeSetItem('girionix_gemini_api_key', trimmed);
         safeSetItem('girionix_universal_provider', 'google');
+      } else {
+        // If user configured OpenRouter or other provider, clear obsolete Gemini direct key so it never hijacks routing
+        safeRemoveItem('girionix_gemini_api_key');
+        if (trimmed.startsWith('sk-or-')) {
+          safeSetItem('girionix_universal_provider', 'openrouter');
+          safeSetItem('girionix_custom_base_url', 'https://openrouter.ai/api/v1');
+        } else if (trimmed.startsWith('gsk_')) {
+          safeSetItem('girionix_universal_provider', 'groq');
+          safeSetItem('girionix_custom_base_url', 'https://api.groq.com/openai/v1');
+        } else if (trimmed.startsWith('sk-ant-')) {
+          safeSetItem('girionix_universal_provider', 'anthropic');
+          safeSetItem('girionix_custom_base_url', 'https://api.anthropic.com/v1');
+        }
       }
     } else {
       safeRemoveItem(KEYS.API_KEY);
