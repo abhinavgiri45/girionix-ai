@@ -105,6 +105,9 @@ export const geminiStudioEngine = {
    */
   getApiKey() {
     try {
+      const storageKey = storage.getGeminiKey?.();
+      if (storageKey && storageKey.trim()) return storageKey.trim();
+
       const direct = localStorage.getItem(GEMINI_API_KEY_STORAGE);
       if (direct && direct.trim()) return direct.trim();
 
@@ -117,8 +120,9 @@ export const geminiStudioEngine = {
         return universalCfg.apiKey.trim();
       }
 
-      // Check Vite environment variables
-      const envKey = (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_GEMINI_API_KEY || import.meta.env?.VITE_GOOGLE_API_KEY)) || '';
+      // Check Vite & process environment variables
+      const envKey = (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_GEMINI_API_KEY || import.meta.env?.GEMINI_API_KEY || import.meta.env?.VITE_GOOGLE_API_KEY || import.meta.env?.GOOGLE_API_KEY)) || 
+                     (typeof process !== 'undefined' && (process.env?.VITE_GEMINI_API_KEY || process.env?.GEMINI_API_KEY || process.env?.VITE_GOOGLE_API_KEY || process.env?.GOOGLE_API_KEY)) || '';
       if (envKey && envKey.trim()) return envKey.trim();
 
       return '';

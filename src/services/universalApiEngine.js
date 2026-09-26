@@ -95,7 +95,7 @@ export const universalApiEngine = {
     if (!key || typeof key !== 'string') return null;
     const k = key.trim();
     if (k.startsWith('AIzaSy')) {
-      return { providerId: 'google', baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai', name: 'AI Studio Direct (Gemini)' };
+      return { providerId: 'google', baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai', name: 'Google AI Studio (Gemini)' };
     }
     if (k.startsWith('gsk_')) {
       return { providerId: 'groq', baseUrl: 'https://api.groq.com/openai/v1', name: 'Groq Cloud' };
@@ -103,11 +103,17 @@ export const universalApiEngine = {
     if (k.startsWith('sk-or-') || k.startsWith('sk-or-v1-')) {
       return { providerId: 'openrouter', baseUrl: 'https://openrouter.ai/api/v1', name: 'OpenRouter' };
     }
+    if (k.startsWith('r8_')) {
+      return { providerId: 'replicate', baseUrl: 'https://api.replicate.com/v1', name: 'Replicate (FLUX)' };
+    }
     if (k.startsWith('sk-ant-')) {
       return { providerId: 'anthropic', baseUrl: 'https://api.anthropic.com/v1', name: 'Anthropic Direct' };
     }
-    if (k.startsWith('sk-proj-') || (k.startsWith('sk-') && !k.startsWith('sk-or-') && !k.startsWith('sk-ant-'))) {
+    if (k.startsWith('sk-proj-')) {
       return { providerId: 'openai', baseUrl: 'https://api.openai.com/v1', name: 'OpenAI Direct' };
+    }
+    if (k.startsWith('sk-') && !k.startsWith('sk-or-') && !k.startsWith('sk-ant-')) {
+      return { providerId: 'deepseek', baseUrl: 'https://api.deepseek.com/v1', name: 'DeepSeek / OpenAI Compatible' };
     }
     return null;
   },

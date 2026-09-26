@@ -721,9 +721,9 @@ ${lengthRule}
       const voiceCascade = [
         'deepseek/deepseek-chat',
         'google/gemini-2.5-flash',
-        'meta-llama/llama-3.1-8b-instruct',
         'meta-llama/llama-3.3-70b-instruct',
-        'minimax/minimax-m3:free'
+        'qwen/qwen3.8-27b:free',
+        'google/gemma-4-26b-a4b-it:free'
       ];
       voiceCascade.forEach(m => {
         if (!candidateModels.includes(m)) candidateModels.push(m);

@@ -517,19 +517,25 @@ export const openrouter = {
       const openRouterCascade = [
         'deepseek/deepseek-chat',
         'google/gemini-2.5-flash',
-        'meta-llama/llama-3.3-70b-instruct',
-        'anthropic/claude-3.7-sonnet',
         'deepseek/deepseek-r1',
-        'google/gemini-2.0-flash-001',
-        'meta-llama/llama-3.3-70b-instruct:free',
-        'deepseek/deepseek-r1:free',
-        'minimax/minimax-m3:free',
+        'meta-llama/llama-3.3-70b-instruct',
+        'qwen/qwen-2.5-coder-32b-instruct',
+        'anthropic/claude-3.7-sonnet',
+        'google/gemini-2.5-pro',
+        // Verified active free models on OpenRouter (processes requests even with $0 credits):
+        'qwen/qwen3.8-27b:free',
+        'google/gemma-4-26b-a4b-it:free',
+        'google/gemma-4-31b-it:free',
+        'nvidia/nemotron-3.5-lightning:free',
         'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free'
       ];
       openRouterCascade.forEach(m => {
         if (!candidateModels.includes(m)) candidateModels.push(m);
       });
     }
+
+    let lastCloudError = null;
+    let lastHttpStatus = null;
 
     for (const candidateModel of candidateModels) {
       if (signal?.aborted) break;
@@ -585,8 +591,9 @@ export const openrouter = {
               requestBody.plugins = [{ id: 'web', max_results: 5 }];
             }
 
-            // Pass reasoning parameters if Deep Reasoning is enabled (only on supported providers)
-            if (useThinking && (config.providerId === 'openrouter' || config.providerId === 'deepseek')) {
+            // ONLY pass reasoning parameter to models that natively support reasoning (prevents 400 Bad Request on standard models)
+            const isReasoningModel = /r1|reason|o1|o3|thinking|qwq/i.test(candidateModel);
+            if (useThinking && isReasoningModel && (config.providerId === 'openrouter' || config.providerId === 'deepseek')) {
               requestBody.reasoning = {
                 max_tokens: 2048,
                 effort: 'high'
@@ -604,6 +611,8 @@ export const openrouter = {
           if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             const errMsg = errorData.error?.message || errorData.message || `Status ${response.status}`;
+            lastCloudError = errMsg;
+            lastHttpStatus = response.status;
             console.warn(`Candidate model ${candidateModel} returned ${response.status} (${errMsg})`);
             if (response.status === 401 || response.status === 403) {
               continue; // Try next key
@@ -686,10 +695,20 @@ export const openrouter = {
       }
     }
 
-    // Fallback: If user had an active key configured but cloud endpoints failed, notify user
+    // Fallback: If user had an active key configured but cloud endpoints returned an error, notify user with exact error detail
     if (userApiKey || masterKey) {
-      const notice = `⚠️ **Cloud API Connection Notice**\n\nCould not complete request with provider **${config.providerName || config.providerId}**. Candidate models returned errors or exhausted quota.\n\n👉 **Please verify your API key in Settings (⚙️).**\n\n*Connecting to Girionix Frontier Neural Engine:*`;
-      if (onChunk) onChunk(notice + '\n\n', notice + '\n\n');
+      let specificNotice = '';
+      if (lastHttpStatus === 401) {
+        specificNotice = `⚠️ **API Key Authentication Failed (HTTP 401)**\n\nThe provided API key was rejected by **${config.providerName || config.providerId}**.\n*Detail: ${lastCloudError || 'Invalid API Key'}*\n\n👉 **Please update your API key in Settings (⚙️).**`;
+      } else if (lastHttpStatus === 402) {
+        specificNotice = `⚠️ **Insufficient Balance / Credits (HTTP 402)**\n\nYour account on **${config.providerName || config.providerId}** has 0 credits or has reached its spend limit.\n*Detail: ${lastCloudError || 'Payment required'}*\n\n👉 **Top up your balance on [OpenRouter](https://openrouter.ai/credits) or switch to a free model.**`;
+      } else if (lastHttpStatus === 429) {
+        specificNotice = `⚠️ **Rate Limit Exceeded (HTTP 429)**\n\nToo many requests to **${config.providerName || config.providerId}**.\n*Detail: ${lastCloudError || 'Rate limit reached'}*`;
+      } else {
+        specificNotice = `⚠️ **Cloud API Notice (${config.providerName || config.providerId})**\n\n*${lastCloudError || 'Unable to complete cloud inference request with candidate models.'}*\n\n👉 **Check your API key in Settings (⚙️).**`;
+      }
+
+      if (onChunk) onChunk(specificNotice + '\n\n---\n\n*Connecting to Girionix Frontier Neural Engine:*\n\n', specificNotice + '\n\n---\n\n*Connecting to Girionix Frontier Neural Engine:*\n\n');
     }
 
     return this.streamFreeNeuralAI({ messages: enrichedMessages, onChunk, onReasoningChunk, signal });

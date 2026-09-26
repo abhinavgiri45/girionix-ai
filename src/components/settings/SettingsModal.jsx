@@ -327,13 +327,28 @@ export default function SettingsModal({ isOpen, onClose, onApiKeyUpdated }) {
 
             {/* Verification Result Feedback */}
             {verificationStatus && (
-              <div className={`p-3 rounded-xl text-xs font-mono flex items-center gap-2 ${
+              <div className={`p-3.5 rounded-xl text-xs font-mono space-y-1.5 ${
                 verificationStatus.valid 
                   ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' 
                   : 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
               }`}>
-                {verificationStatus.valid ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
-                <span>{verificationStatus.valid ? `✅ ${verificationStatus.label || 'Connection Valid'} — Ready for inference` : `⚠️ ${verificationStatus.message}`}</span>
+                <div className="flex items-center gap-2 font-bold">
+                  {verificationStatus.valid ? <Check className="w-4 h-4 text-emerald-400" /> : <X className="w-4 h-4 text-rose-400" />}
+                  <span>{verificationStatus.valid ? `✅ ${verificationStatus.label || 'Connection Valid'} — Ready for inference` : `⚠️ ${verificationStatus.message}`}</span>
+                </div>
+                {verificationStatus.valid && (verificationStatus.usage !== undefined || verificationStatus.limit !== undefined) && (
+                  <div className="text-[11px] text-gray-300 font-sans pl-6 space-y-0.5 pt-1 border-t border-emerald-500/20">
+                    {verificationStatus.usage !== undefined && (
+                      <div>Usage on key: <span className="font-mono text-emerald-300 font-bold">${typeof verificationStatus.usage === 'number' ? verificationStatus.usage.toFixed(4) : verificationStatus.usage}</span></div>
+                    )}
+                    {verificationStatus.limit && (
+                      <div>Credit limit: <span className="font-mono text-cyan-300 font-bold">${verificationStatus.limit}</span></div>
+                    )}
+                    {verificationStatus.isFreeTier && (
+                      <div className="text-amber-300 font-medium">Account Tier: Free Tier (Use :free models if credit is $0)</div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>

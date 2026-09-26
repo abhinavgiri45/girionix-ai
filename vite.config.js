@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import fs from 'fs'
 import path from 'path'
@@ -72,27 +72,58 @@ const downloadsMiddlewarePlugin = () => ({
 });
 
 // https://vite.dev/config/
-export default defineConfig({
-  plugins: [react(), downloadsMiddlewarePlugin()],
-  build: {
-    emptyOutDir: false,
-    chunkSizeWarningLimit: 2500
-  },
-  server: {
-    port: 3000,
-    open: false,
-    watch: {
-      ignored: ['**/public/downloads/**', '**/dist/**', '**/*.TMP']
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+
+  const openrouterKey = env.VITE_OPENROUTER_API_KEY || env.OPENROUTER_API_KEY || env.VITE_OPENROUTER_KEY || env.OPENROUTER_KEY || '';
+  const geminiKey = env.VITE_GEMINI_API_KEY || env.GEMINI_API_KEY || env.VITE_GOOGLE_API_KEY || env.GOOGLE_API_KEY || '';
+  const replicateToken = env.VITE_REPLICATE_API_TOKEN || env.REPLICATE_API_TOKEN || env.VITE_REPLICATE_TOKEN || env.REPLICATE_TOKEN || env.REPLICATE_API_KEY || '';
+  const groqKey = env.VITE_GROQ_API_KEY || env.GROQ_API_KEY || env.VITE_GROQ_KEY || env.GROQ_KEY || '';
+  const deepseekKey = env.VITE_DEEPSEEK_API_KEY || env.DEEPSEEK_API_KEY || '';
+  const openaiKey = env.VITE_OPENAI_API_KEY || env.OPENAI_API_KEY || '';
+  const anthropicKey = env.VITE_ANTHROPIC_API_KEY || env.ANTHROPIC_API_KEY || '';
+
+  return {
+    plugins: [react(), downloadsMiddlewarePlugin()],
+    envPrefix: ['VITE_', 'OPENROUTER_', 'GEMINI_', 'GOOGLE_', 'REPLICATE_', 'GROQ_', 'DEEPSEEK_', 'OPENAI_', 'ANTHROPIC_'],
+    define: {
+      'process.env.VITE_OPENROUTER_API_KEY': JSON.stringify(openrouterKey),
+      'process.env.OPENROUTER_API_KEY': JSON.stringify(openrouterKey),
+      'process.env.VITE_GEMINI_API_KEY': JSON.stringify(geminiKey),
+      'process.env.GEMINI_API_KEY': JSON.stringify(geminiKey),
+      'process.env.VITE_GOOGLE_API_KEY': JSON.stringify(geminiKey),
+      'process.env.GOOGLE_API_KEY': JSON.stringify(geminiKey),
+      'process.env.VITE_REPLICATE_API_TOKEN': JSON.stringify(replicateToken),
+      'process.env.REPLICATE_API_TOKEN': JSON.stringify(replicateToken),
+      'process.env.VITE_GROQ_API_KEY': JSON.stringify(groqKey),
+      'process.env.GROQ_API_KEY': JSON.stringify(groqKey),
+      'process.env.VITE_DEEPSEEK_API_KEY': JSON.stringify(deepseekKey),
+      'process.env.DEEPSEEK_API_KEY': JSON.stringify(deepseekKey),
+      'process.env.VITE_OPENAI_API_KEY': JSON.stringify(openaiKey),
+      'process.env.OPENAI_API_KEY': JSON.stringify(openaiKey),
+      'process.env.VITE_ANTHROPIC_API_KEY': JSON.stringify(anthropicKey),
+      'process.env.ANTHROPIC_API_KEY': JSON.stringify(anthropicKey),
     },
-    proxy: {
-      '/api/replicate': {
-        target: 'https://api.replicate.com/v1',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/replicate/, ''),
-        headers: {
-          'Origin': 'https://api.replicate.com'
+    build: {
+      emptyOutDir: false,
+      chunkSizeWarningLimit: 2500
+    },
+    server: {
+      port: 3000,
+      open: false,
+      watch: {
+        ignored: ['**/public/downloads/**', '**/dist/**', '**/*.TMP']
+      },
+      proxy: {
+        '/api/replicate': {
+          target: 'https://api.replicate.com/v1',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api\/replicate/, ''),
+          headers: {
+            'Origin': 'https://api.replicate.com'
+          }
         }
       }
     }
-  }
+  };
 })

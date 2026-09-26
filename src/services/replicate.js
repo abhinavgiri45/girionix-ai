@@ -5,7 +5,9 @@ export const replicate = {
    * Get configured Replicate token
    */
   getToken() {
-    return storage.getReplicateToken() || import.meta.env.VITE_REPLICATE_API_TOKEN || '';
+    return storage.getReplicateToken() || 
+           (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_REPLICATE_API_TOKEN || import.meta.env?.REPLICATE_API_TOKEN || import.meta.env?.REPLICATE_API_KEY)) ||
+           (typeof process !== 'undefined' && (process.env?.VITE_REPLICATE_API_TOKEN || process.env?.REPLICATE_API_TOKEN || process.env?.REPLICATE_API_KEY)) || '';
   },
 
   /**

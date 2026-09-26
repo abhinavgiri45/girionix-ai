@@ -28,37 +28,74 @@ const decodeSecret = (b64) => {
 };
 
 const getEnvVar = (keys) => {
-  if (typeof import.meta === 'undefined' || !import.meta.env) return '';
-  for (const k of keys) {
-    const val = import.meta.env[k];
-    if (val && typeof val === 'string' && val.trim()) return val.trim();
+  if (typeof import.meta !== 'undefined' && import.meta.env) {
+    for (const k of keys) {
+      const val = import.meta.env[k];
+      if (val && typeof val === 'string' && val.trim()) return val.trim();
+    }
+  }
+  if (typeof process !== 'undefined' && process.env) {
+    for (const k of keys) {
+      const val = process.env[k];
+      if (val && typeof val === 'string' && val.trim()) return val.trim();
+    }
   }
   return '';
 };
 
 const DEFAULT_OPENROUTER_KEY = getEnvVar([
   'VITE_OPENROUTER_API_KEY',
+  'OPENROUTER_API_KEY',
   'VITE_OPENROUTER_KEY',
-  'VITE_API_KEY'
+  'OPENROUTER_KEY',
+  'VITE_API_KEY',
+  'API_KEY'
 ]);
 
 const DEFAULT_GEMINI_KEY = getEnvVar([
   'VITE_GEMINI_API_KEY',
-  'VITE_GOOGLE_API_KEY'
+  'GEMINI_API_KEY',
+  'VITE_GOOGLE_API_KEY',
+  'GOOGLE_API_KEY',
+  'VITE_GEMINI_KEY',
+  'GEMINI_KEY'
 ]);
 
 const DEFAULT_REPLICATE_TOKEN = getEnvVar([
   'VITE_REPLICATE_API_TOKEN',
-  'VITE_REPLICATE_TOKEN'
+  'REPLICATE_API_TOKEN',
+  'VITE_REPLICATE_TOKEN',
+  'REPLICATE_TOKEN',
+  'VITE_REPLICATE_API_KEY',
+  'REPLICATE_API_KEY'
 ]);
 
 const DEFAULT_GROQ_KEY = getEnvVar([
   'VITE_GROQ_API_KEY',
-  'VITE_GROQ_KEY'
+  'GROQ_API_KEY',
+  'VITE_GROQ_KEY',
+  'GROQ_KEY'
 ]);
 
 const DEFAULT_DEEPSEEK_KEY = getEnvVar([
-  'VITE_DEEPSEEK_API_KEY'
+  'VITE_DEEPSEEK_API_KEY',
+  'DEEPSEEK_API_KEY',
+  'VITE_DEEPSEEK_KEY',
+  'DEEPSEEK_KEY'
+]);
+
+const DEFAULT_OPENAI_KEY = getEnvVar([
+  'VITE_OPENAI_API_KEY',
+  'OPENAI_API_KEY',
+  'VITE_OPENAI_KEY',
+  'OPENAI_KEY'
+]);
+
+const DEFAULT_ANTHROPIC_KEY = getEnvVar([
+  'VITE_ANTHROPIC_API_KEY',
+  'ANTHROPIC_API_KEY',
+  'VITE_ANTHROPIC_KEY',
+  'ANTHROPIC_KEY'
 ]);
 
 export const isRevokedToken = (token) => {
@@ -356,8 +393,47 @@ export const storage = {
     if (DEFAULT_GEMINI_KEY) return DEFAULT_GEMINI_KEY;
     if (DEFAULT_GROQ_KEY) return DEFAULT_GROQ_KEY;
     if (DEFAULT_DEEPSEEK_KEY) return DEFAULT_DEEPSEEK_KEY;
+    if (DEFAULT_OPENAI_KEY) return DEFAULT_OPENAI_KEY;
+    if (DEFAULT_ANTHROPIC_KEY) return DEFAULT_ANTHROPIC_KEY;
     return '';
   },
+
+  getOpenRouterKey: () => {
+    try {
+      const customKey = safeGetItem('girionix_custom_api_key');
+      if (customKey && (customKey.startsWith('sk-or-') || customKey.trim())) return customKey.trim();
+      const savedKey = safeGetItem(KEYS.API_KEY);
+      if (savedKey && savedKey.trim()) return savedKey.trim();
+    } catch (_) {}
+    return DEFAULT_OPENROUTER_KEY || '';
+  },
+
+  getGeminiKey: () => {
+    try {
+      const direct = safeGetItem('girionix_gemini_api_key');
+      if (direct && direct.trim()) return direct.trim();
+      const custom = safeGetItem('girionix_custom_api_key');
+      if (custom && custom.startsWith('AIzaSy')) return custom.trim();
+    } catch (_) {}
+    return DEFAULT_GEMINI_KEY || '';
+  },
+
+  getGroqKey: () => {
+    try {
+      const custom = safeGetItem('girionix_custom_api_key');
+      if (custom && custom.startsWith('gsk_')) return custom.trim();
+    } catch (_) {}
+    return DEFAULT_GROQ_KEY || '';
+  },
+
+  getDeepSeekKey: () => {
+    try {
+      const custom = safeGetItem('girionix_custom_api_key');
+      if (custom && (custom.startsWith('sk-') && !custom.startsWith('sk-or-') && !custom.startsWith('sk-ant-') && !custom.startsWith('sk-proj-'))) return custom.trim();
+    } catch (_) {}
+    return DEFAULT_DEEPSEEK_KEY || '';
+  },
+
   setApiKey: (key) => {
     const trimmed = (key || '').trim();
     if (trimmed) {
