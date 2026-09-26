@@ -715,7 +715,8 @@ export default function MessageItem({
   const [copiedCodeIdx, setCopiedCodeIdx] = useState(null);
   const [copied, setCopied] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [showReasoning, setShowReasoning] = useState(true);
+  const [showReasoning, setShowReasoning] = useState(false);
+  const [userManuallyToggled, setUserManuallyToggled] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(message.content);
@@ -723,6 +724,15 @@ export default function MessageItem({
   const [upscaleStatus, setUpscaleStatus] = useState(null);
   const [explainedCodeIdx, setExplainedCodeIdx] = useState(null);
   const [imported, setImported] = useState(false);
+
+  // Automatically collapse thinking process when streaming ends or content arrives
+  useEffect(() => {
+    if (!message.isStreaming || message.content) {
+      if (!userManuallyToggled) {
+        setShowReasoning(false);
+      }
+    }
+  }, [message.isStreaming, message.content, userManuallyToggled]);
 
   const handleImportToWorkplace = (customText = null) => {
     const textToImport = customText || translatedText || message.content;
@@ -1117,16 +1127,23 @@ export default function MessageItem({
           {message.reasoning && (
             <div className="w-full my-2">
               <button
-                onClick={() => setShowReasoning(!showReasoning)}
+                onClick={() => {
+                  setUserManuallyToggled(true);
+                  setShowReasoning(!showReasoning);
+                }}
                 className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-xs font-sans text-purple-300 hover:text-purple-200 transition-all cursor-pointer shadow-sm"
               >
-                <Sparkles className="w-3 h-3 text-purple-400 animate-pulse" />
-                <span>{showReasoning ? 'Hide thinking process' : 'Thought for a few seconds'}</span>
+                <Sparkles className={`w-3 h-3 text-purple-400 ${message.isThinking ? 'animate-pulse' : ''}`} />
+                <span>
+                  {showReasoning 
+                    ? 'Hide thinking process' 
+                    : (message.isThinking && !message.content ? 'Thinking...' : 'Thought for a few seconds')}
+                </span>
                 {showReasoning ? <ChevronUp className="w-3 h-3 text-gray-400" /> : <ChevronDown className="w-3 h-3 text-gray-400" />}
               </button>
 
               {showReasoning && (
-                <div className="mt-2.5 p-4 rounded-2xl bg-white/[0.02] border-l-2 border-purple-400/50 text-xs font-mono text-gray-300 leading-relaxed max-h-64 overflow-y-auto whitespace-pre-wrap">
+                <div className="mt-2.5 p-4 rounded-2xl bg-white/[0.02] border-l-2 border-purple-400/50 text-xs font-mono text-gray-300 leading-relaxed max-h-64 overflow-y-auto whitespace-pre-wrap animate-fadeIn">
                   {message.reasoning}
                 </div>
               )}

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Sparkles, ChevronDown, ChevronUp, Brain, CheckCircle2 } from 'lucide-react';
 
 export default function ReasoningTrace({ reasoning, isThinking = false }) {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   if (!reasoning && !isThinking) return null;
 
