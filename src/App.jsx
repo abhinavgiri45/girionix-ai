@@ -241,7 +241,7 @@ export default function App() {
     return () => clearInterval(updateInterval);
   }, [isOfficeMode]);
 
-  // Deep URL & Route Synchronization for dedicated /chat, /orbit, /office links
+  // Deep URL & Route Synchronization for dedicated /chat, /intro, /orbit links
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const currentPath = window.location.pathname.toLowerCase().replace(/\/+$/, '');
@@ -249,20 +249,23 @@ export default function App() {
     if (isOrbitWorkstationActive) {
       if (currentPath !== '/orbit' && currentPath !== '/office') {
         const targetPath = '/orbit';
-        window.history.pushState({ path: targetPath }, '', targetPath + window.location.search);
+        window.history.replaceState({ path: targetPath }, '', targetPath + window.location.search);
       }
+      document.title = "Giri Orbit — Dedicated AI Copilot Workstation";
       return;
     }
 
     if (!isAboutOpen) {
       const targetPath = '/chat';
       if (currentPath !== targetPath && (currentPath === '' || currentPath === '/' || currentPath === '/intro' || currentPath === '/about' || currentPath === '/orbit' || currentPath === '/office')) {
-        window.history.pushState({ path: targetPath }, '', targetPath + window.location.search);
+        window.history.replaceState({ path: targetPath }, '', targetPath + window.location.search);
       }
+      document.title = "Girionix AI — Sovereign AI Polymath Workspace & Chat";
     } else {
-      if (currentPath === '/chat' || currentPath === '/workspace' || currentPath === '/orbit' || currentPath === '/office') {
-        window.history.pushState({ path: '/intro' }, '', '/intro' + window.location.search);
+      if (currentPath !== '/intro' && currentPath !== '/about') {
+        window.history.replaceState({ path: '/intro' }, '', '/intro' + window.location.search);
       }
+      document.title = "Introducing Girionix AI — Official Website & Architecture | By Abhinav Giri";
     }
   }, [isAboutOpen, isOrbitWorkstationActive]);
 
@@ -272,15 +275,17 @@ export default function App() {
     const handlePopState = () => {
       const path = window.location.pathname.toLowerCase().replace(/\/+$/, '');
       const params = new URLSearchParams(window.location.search);
-      if (path === '/orbit' || path === '/office' || params.get('mode') === 'orbit' || params.get('mode') === 'office' || params.get('portal') === 'orbit' || params.get('embed') === 'orbit' || params.get('embed') === 'office') {
-        setIsOrbitWorkstationActive(true);
-        return;
-      }
-      setIsOrbitWorkstationActive(false);
+      
+      const isOrbit = path === '/orbit' || path === '/office' || params.get('mode') === 'orbit' || params.get('mode') === 'office';
+      setIsOrbitWorkstationActive(isOrbit);
+      if (isOrbit) return;
+
       if (path === '/chat' || path === '/workspace' || path === '/app') {
         setIsAboutOpen(false);
-      } else if (path === '' || path === '/' || path === '/intro' || path === '/about') {
+      } else if (path === '/intro' || path === '/about' || params.get('page') === 'intro') {
         setIsAboutOpen(true);
+      } else {
+        setIsAboutOpen(false);
       }
     };
     window.addEventListener('popstate', handlePopState);

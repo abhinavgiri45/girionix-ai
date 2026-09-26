@@ -95,24 +95,32 @@ class GiriOrbitBridgeService {
       const path = window.location.pathname.toLowerCase().replace(/\/+$/, '');
       const params = new URLSearchParams(window.location.search);
       
+      // 1. Explicit dedicated Orbit route
       const isExplicitPath = path === '/orbit' || path.startsWith('/orbit/') || 
-                              path === '/office' || path.startsWith('/office/');
+                             path === '/office' || path.startsWith('/office/');
+      if (isExplicitPath) return true;
+
+      // 2. Explicit dedicated Orbit query parameter
       const isExplicitParam = params.get('mode') === 'orbit' || 
                               params.get('mode') === 'office' || 
                               params.get('source') === 'orbit' || 
                               params.get('portal') === 'orbit' ||
                               params.get('embed') === 'orbit' ||
-                              params.get('embed') === 'office' ||
-                              params.has('tool') ||
-                              params.has('lockTool') ||
-                              params.has('officeTool') ||
-                              (params.get('embed') === 'true' && (params.get('name') === 'Orbit User' || params.has('tool') || params.has('lockTool')));
-      const isOrbitReferrer = typeof document !== 'undefined' && 
-                              document.referrer && 
-                              document.referrer.includes('giri-orbit.pages.dev');
-      const isIframeFromOrbit = (window.self !== window.top) && (isOrbitReferrer || params.has('orbit') || params.has('office') || params.has('tool') || params.has('lockTool') || params.get('embed') === 'true');
+                              params.get('embed') === 'office';
+      if (isExplicitParam) return true;
 
-      return Boolean(isExplicitPath || isExplicitParam || isIframeFromOrbit);
+      // 3. True iframe embedding from Giri Orbit parent
+      const isIframe = window.self !== window.top;
+      if (isIframe) {
+        const isOrbitReferrer = typeof document !== 'undefined' && 
+                                document.referrer && 
+                                document.referrer.includes('giri-orbit.pages.dev');
+        if (isOrbitReferrer || params.get('embed') === 'true' || params.has('orbit') || params.has('office')) {
+          return true;
+        }
+      }
+
+      return false;
     } catch (_) {
       return false;
     }
