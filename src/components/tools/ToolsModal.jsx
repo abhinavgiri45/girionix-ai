@@ -76,8 +76,7 @@ export default function ToolsModal({
   onSelectPersona,
   pinnedItems = [],
   onRemovePinned,
-  onOpenLocalEngine,
-  onLaunchOrbitStation
+  onOpenLocalEngine
 }) {
   // Tabs: 'utilities' | 'personas' | 'focus' | 'themes' | 'backup' | 'pinned' | 'download' | 'updates' | 'certificate'
   const [activeTab, setActiveTab] = useState('utilities');

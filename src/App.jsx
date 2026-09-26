@@ -337,29 +337,8 @@ export default function App() {
     }
   };
 
-  const handleLaunchOrbitStation = () => {
-    setIsOrbitWorkstationActive(true);
-    if (typeof window !== 'undefined') {
-      window.history.pushState({ path: '/orbit' }, '', '/orbit' + window.location.search);
-    }
-  };
-
   if (isOrbitWorkstationActive) {
-    return (
-      <OrbitWorkstationView
-        onExitOrbitMode={() => {
-          setIsOrbitWorkstationActive(false);
-          const url = new URL(window.location.href);
-          url.searchParams.delete('mode');
-          url.searchParams.delete('source');
-          url.searchParams.delete('portal');
-          url.searchParams.delete('embed');
-          url.searchParams.delete('tool');
-          const targetPath = (url.pathname === '/orbit' || url.pathname === '/office') ? '/chat' : url.pathname;
-          window.history.pushState({}, '', targetPath + (url.search ? url.search : ''));
-        }}
-      />
-    );
+    return <OrbitWorkstationView />;
   }
 
   return (
@@ -384,7 +363,6 @@ export default function App() {
         onOpenProStatus={() => setIsProStatusOpen(true)}
         isAppInstalled={isAppInstalled}
         isOfficeMode={isOfficeMode}
-        onLaunchOrbitStation={handleLaunchOrbitStation}
       />
 
       {/* Main Workspace Area */}
@@ -462,7 +440,6 @@ export default function App() {
           storage.savePinnedItems(updated);
         }}
         onOpenLocalEngine={() => setIsLocalModalOpen(true)}
-        onLaunchOrbitStation={handleLaunchOrbitStation}
       />
 
       {/* Introducing Girionix AI Landing & Announcement Page */}

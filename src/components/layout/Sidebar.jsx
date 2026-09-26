@@ -6,6 +6,7 @@ import {
   Settings, 
   ChevronRight, 
   Sparkles, 
+  SquarePen,
   Lock, 
   Search, 
   Award, 
@@ -29,8 +30,7 @@ export default function Sidebar({
   onOpenProStatus,
   isAppInstalled,
   onOpenWhySwitch,
-  isOfficeMode = false,
-  onLaunchOrbitStation
+  isOfficeMode = false
 }) {
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -55,21 +55,11 @@ export default function Sidebar({
             className="p-3 rounded-2xl bg-gradient-to-tr from-cyan-400 via-purple-500 to-blue-500 text-white font-bold shadow-glow-cyan hover:scale-105 transition-all cursor-pointer"
             title="New Session"
           >
-            <Sparkles className="w-5 h-5 text-yellow-300" />
+            <SquarePen className="w-5 h-5 text-white" />
           </button>
         </div>
 
         <div className="flex flex-col items-center space-y-2">
-          {onLaunchOrbitStation && (
-            <button
-              onClick={onLaunchOrbitStation}
-              className="p-2.5 rounded-xl text-cyan-400 hover:text-white hover:bg-cyan-500/20 transition-colors cursor-pointer"
-              title="Giri Orbit Dedicated AI Station"
-            >
-              <span className="text-sm">🌐</span>
-            </button>
-          )}
-
           <a
             href="https://giri-corporation.pages.dev/"
             target="_blank"
@@ -116,23 +106,23 @@ export default function Sidebar({
       <aside className="fixed md:relative inset-y-0 left-0 w-72 sm:w-64 h-full border-r border-white/[0.06] bg-[#07080f] p-3 flex flex-col justify-between z-50 select-none shadow-2xl animate-slideRight md:animate-none">
         <div className="flex flex-col h-full overflow-hidden space-y-3">
           
-          {/* Top Big Gradient Button (Matching GranthMind Screenshot) */}
+          {/* Top Modern Action Bar */}
           <div className="flex items-center gap-1.5">
             <button
               onClick={handleMobileNewChat}
-              className="flex-1 py-3 px-3.5 rounded-2xl bg-gradient-to-r from-[#4d82f3] via-[#7b61ff] to-[#38bdf8] hover:opacity-95 text-white font-bold text-xs sm:text-sm shadow-lg hover:shadow-cyan-500/20 transition-all cursor-pointer flex items-center justify-center gap-2 group active:scale-[0.98]"
+              className="flex-1 py-2.5 px-3.5 rounded-2xl bg-gradient-to-r from-[#4d82f3] via-[#7b61ff] to-[#38bdf8] hover:opacity-95 text-white font-bold text-xs sm:text-sm shadow-lg hover:shadow-cyan-500/20 transition-all cursor-pointer flex items-center justify-center gap-2 group active:scale-[0.98]"
+              title="New Session"
             >
-              <Sparkles className="w-4 h-4 text-yellow-300 fill-yellow-300 group-hover:rotate-12 transition-transform shrink-0" />
-              <span className="truncate">New Girionix Session</span>
+              <SquarePen className="w-4 h-4 text-white group-hover:scale-110 transition-transform shrink-0" />
+              <Sparkles className="w-3.5 h-3.5 text-yellow-300 fill-yellow-300 group-hover:rotate-12 transition-transform shrink-0" />
             </button>
 
             <button
               onClick={() => setIsCollapsed(true)}
-              className="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/[0.05] transition-colors cursor-pointer"
-              title="Collapse Sidebar"
+              className="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/[0.05] transition-colors cursor-pointer md:hidden"
+              title="Close Sidebar"
             >
-              <X className="w-4 h-4 md:hidden" />
-              <ChevronRight className="w-4 h-4 hidden md:block rotate-180" />
+              <X className="w-4 h-4" />
             </button>
           </div>
 

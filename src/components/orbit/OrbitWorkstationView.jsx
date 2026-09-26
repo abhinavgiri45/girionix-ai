@@ -11,7 +11,6 @@ import {
   Copy, 
   Share2, 
   ExternalLink, 
-  ArrowLeft,
   RefreshCw,
   Layers,
   ChevronRight,
@@ -28,7 +27,7 @@ import { giriOrbitBridge, ORBIT_TOOLS, detectToolFromPrompt, normalizeToolName }
 import { storage } from '../../services/storage';
 import { openrouter } from '../../services/openrouter';
 
-export default function OrbitWorkstationView({ onExitOrbitMode }) {
+export default function OrbitWorkstationView() {
   const [activeTool, setActiveTool] = useState(() => {
     try {
       if (typeof window !== 'undefined') {
@@ -361,17 +360,6 @@ export default function OrbitWorkstationView({ onExitOrbitMode }) {
       {/* Top Dedicated Giri Orbit Navigation Header */}
       <header className="h-14 bg-[#090C19] border-b border-cyan-500/20 px-3 sm:px-6 flex items-center justify-between shrink-0 shadow-md z-30">
         <div className="flex items-center gap-3">
-          {onExitOrbitMode && (
-            <button
-              onClick={onExitOrbitMode}
-              className="p-1.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all flex items-center gap-1.5 text-xs font-mono"
-              title="Return to standard Girionix AI"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span className="hidden md:inline">Girionix Standard</span>
-            </button>
-          )}
-
           <div className="flex items-center gap-2">
             <div className="p-1.5 rounded-xl bg-gradient-to-tr from-cyan-500/20 to-blue-500/20 border border-cyan-500/40 shadow-glow-cyan">
               <Layers className="w-4 h-4 text-cyan-400" />
