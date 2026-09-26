@@ -14,14 +14,14 @@ export const localDomainKnowledge = {
    * Primary entry point to match domain-specific inquiries.
    * Returns a deeply reasoned, structured markdown response or null if unhandled.
    */
-  matchDomainKnowledge(query, tag = '⚡ Sovereign Neural Engine') {
+  matchDomainKnowledge(query) {
     if (!query) return null;
     const p = query.trim();
     const lp = p.toLowerCase();
 
     for (const entry of DOMAIN_TOPICS) {
       if (entry.pattern.test(lp)) {
-        return entry.render(p, tag);
+        return entry.render(p);
       }
     }
     return null;
@@ -34,7 +34,7 @@ const DOMAIN_TOPICS = [
   // =========================================================================
   {
     pattern: /\b(quantum\s+mechanics|quantum\s+physics|schrodinger|wavefunction|uncertainty\s+principle|quantum\s+tunneling|heisenberg)\b/i,
-    render: (q, tag) => `### ⚛️ Quantum Mechanics: Foundational Principles & Wave Mechanics (${tag})
+    render: (q) => `### Quantum Mechanics: Foundational Principles & Wave Mechanics
 
 Quantum mechanics describes the fundamental behavior of matter and energy at atomic and subatomic scales ($< 10^{-9}\\text{ m}$), where classical Newtonian mechanics ceases to hold.
 
@@ -73,7 +73,7 @@ This non-zero transmission probability powers:
   // =========================================================================
   {
     pattern: /\b(thermodynamics|laws?\s+of\s+thermodynamics|entropy|carnot\s+cycle|gibbs\s+free\s+energy|enthalpy)\b/i,
-    render: (q, tag) => `### 🌡️ Thermodynamics & Statistical Mechanics (${tag})
+    render: (q) => `### Thermodynamics & Statistical Mechanics
 
 Thermodynamics is the branch of physics governing energy transformation, heat transfer, entropy, and the spontaneous direction of macroscopic systems.
 
@@ -112,7 +112,7 @@ $$\\Delta G = \\Delta H - T\\Delta S$$
   // =========================================================================
   {
     pattern: /\b(maxwell'?s?\s+equations|electromagnetism|lorentz\s+force|faraday'?s?\s+law|ampere'?s?\s+law|gauss'?s?\s+law)\b/i,
-    render: (q, tag) => `### ⚡ Electromagnetism: Maxwell's Unified Equations (${tag})
+    render: (q) => `### Electromagnetism: Maxwell's Unified Equations
 
 James Clerk Maxwell unified electricity, magnetism, and optics into four coupled partial differential equations in 1865, revealing that light itself is a self-propagating electromagnetic wave.
 
@@ -149,7 +149,7 @@ $$\\mathbf{F} = q(\\mathbf{E} + \\mathbf{v} \\times \\mathbf{B})$$`
   // =========================================================================
   {
     pattern: /\b(special\s+relativity|general\s+relativity|time\s+dilation|lorentz\s+transformation|spacetime|einstein\s+field\s+equations)\b/i,
-    render: (q, tag) => `### 🌌 Einstein's Theory of Relativity (${tag})
+    render: (q) => `### Einstein's Theory of Relativity
 
 Albert Einstein revolutionized our understanding of space, time, and gravity through two monumental formulations: **Special Relativity (1905)** and **General Relativity (1915)**.
 
@@ -185,7 +185,7 @@ $$G_{\\mu\\nu} + \\Lambda g_{\\mu\\nu} = \\frac{8\\pi G}{c^4} T_{\\mu\\nu}$$
   // =========================================================================
   {
     pattern: /\b(chemical\s+equilibrium|le\s+chatelier|periodic\s+table|electronegativity|acid\s+base|ph\s+scale|redox|oxidation\s+reduction|covalent\s+bond|ionic\s+bond)\b/i,
-    render: (q, tag) => `### 🧪 Chemical Dynamics, Equilibrium & Periodic Architecture (${tag})
+    render: (q) => `### Chemical Dynamics, Equilibrium & Periodic Architecture
 
 Chemistry explains the interactions, electronic transitions, and bond reorganizations that govern material transformations.
 
@@ -219,7 +219,7 @@ $$\\text{pH} = \\text{p}K_a + \\log_{10}\\left(\\frac{[\\text{A}^-]}{[\\text{HA}
   // =========================================================================
   {
     pattern: /\b(crispr|gene\s+editing|cas9|cellular\s+respiration|glycolysis|krebs\s+cycle|action\s+potential|neuroscience|immunology|antibodies|synapse)\b/i,
-    render: (q, tag) => `### 🧬 Molecular Biomedicine, Genetics & Neurobiology (${tag})
+    render: (q) => `### Molecular Biomedicine, Genetics & Neurobiology
 
 Modern biosciences explain how macromolecular machines, ionic gradients, and genetic codes coordinate living organisms.
 
@@ -253,7 +253,7 @@ Information travels along axons via rapid voltage-gated ionic flux:
   // =========================================================================
   {
     pattern: /\b(linear\s+algebra|eigenvalues?|eigenvectors?|matrix\s+multiplications?|svd|singular\s+value\s+decomposition|determinants?|vector\s+spaces?)\b/i,
-    render: (q, tag) => `### 📐 Linear Algebra & Matrix Spectral Decomposition (${tag})
+    render: (q) => `### Linear Algebra & Matrix Spectral Decomposition
 
 Linear algebra forms the structural foundation of computer graphics, quantum mechanics, econometrics, and modern artificial intelligence.
 
@@ -293,7 +293,7 @@ $$A = U \\Sigma V^T$$
   // =========================================================================
   {
     pattern: /\b(calculus|fundamental\s+theorem\s+of\s+calculus|fourier\s+transform|differential\s+equations?|taylor\s+series|gradient\s+descent)\b/i,
-    render: (q, tag) => `### 📐 Advanced Calculus, Differential Equations & Harmonic Analysis (${tag})
+    render: (q) => `### Advanced Calculus, Differential Equations & Harmonic Analysis
 
 Calculus provides the rigorous mathematical language for describing continuous change, dynamic optimization, and wave decomposition.
 
@@ -325,7 +325,7 @@ $$\\hat{f}(\\omega) = \\int_{-\\infty}^{+\\infty} f(t) e^{-i\\omega t} \\, dt, \
   // =========================================================================
   {
     pattern: /\b(bayes'?\s+theorem|conditional\s+probability|normal\s+distribution|central\s+limit\s+theorem|hypothesis\s+testing|p-value|markov\s+chain)\b/i,
-    render: (q, tag) => `### 📊 Probability Theory, Bayesian Inference & Statistics (${tag})
+    render: (q) => `### Probability Theory, Bayesian Inference & Statistics
 
 Probability and statistical inference provide the mathematical framework for reasoning under conditions of uncertainty and noisy empirical data.
 
@@ -360,7 +360,7 @@ $$f(x) = \\frac{1}{\\sigma \\sqrt{2\\pi}} \\exp\\left( -\\frac{(x - \\mu)^2}{2\\
   // =========================================================================
   {
     pattern: /\b(cap\s+theorem|distributed\s+systems?|microservices|load\s+balanc|consistent\s+hashing|lru\s+cache|caching\s+strateg)\b/i,
-    render: (q, tag) => `### 🖥️ Distributed Systems Architecture & The CAP Theorem (${tag})
+    render: (q) => `### Distributed Systems Architecture & The CAP Theorem
 
 Distributed systems coordinate multiple independent nodes over a network to operate as a cohesive, fault-tolerant infrastructure.
 
@@ -392,7 +392,7 @@ Distributes keys across a dynamic cluster of $N$ nodes arranged in a logical $2^
   // =========================================================================
   {
     pattern: /\b(acid\s+properties|b-tree|lsm-tree|sql\s+vs\s+nosql|database\s+indexing|sharding|database\s+normalization)\b/i,
-    render: (q, tag) => `### 🗄️ Database Internals: ACID, Indexing & Storage Engines (${tag})
+    render: (q) => `### Database Internals: ACID, Indexing & Storage Engines
 
 Databases guarantee data persistence, durability, and low-latency retrieval through specialized disk-oriented and memory-mapped data structures.
 
@@ -422,7 +422,7 @@ Databases guarantee data persistence, durability, and low-latency retrieval thro
   // =========================================================================
   {
     pattern: /\b(cryptography|public\s+key|rsa(\s+algorithm|\s+encryption)?|diffie\s+hellman|aes|sha-256|zero\s+trust|owasp|sql\s+injection|xss|csrf)\b/i,
-    render: (q, tag) => `### 🔒 Cryptography, Information Security & Zero Trust (${tag})
+    render: (q) => `### Cryptography, Information Security & Zero Trust
 
 Modern cybersecurity protects data confidentiality, integrity, authenticity, and non-repudiation across hostile network perimeters.
 
@@ -460,7 +460,7 @@ $$K = B^a \\pmod p = (g^b)^a = g^{ab} = (g^a)^b = A^b \\pmod p$$
   // =========================================================================
   {
     pattern: /\b(transformer\s+architecture|self\s+attention|backpropagation|neural\s+networks?|llm|large\s+language\s+model|gradient\s+descent)\b/i,
-    render: (q, tag) => `### 🤖 Deep Learning: Transformer Architecture & Backpropagation (${tag})
+    render: (q) => `### Deep Learning: Transformer Architecture & Backpropagation
 
 Transformers (introduced in *Attention Is All You Need*, Vaswani et al., 2017) revolutionized machine learning by discarding sequential recurrence (RNNs/LSTMs) in favor of parallelized multi-head self-attention.
 
@@ -498,7 +498,7 @@ $$\\frac{\\partial \\mathcal{L}}{\\partial w_{ij}^{(l)}} = \\frac{\\partial \\ma
   // =========================================================================
   {
     pattern: /\b(dcf|discounted\s+cash\s+flow|valuation|wacc|npv|net\s+present\s+value|irr|internal\s+rate\s+of\s+return|financial\s+statements?)\b/i,
-    render: (q, tag) => `### 💼 Corporate Finance: Valuation & Discounted Cash Flow (DCF) (${tag})
+    render: (q) => `### Corporate Finance: Valuation & Discounted Cash Flow (DCF)
 
 Corporate valuation establishes the intrinsic economic worth of an enterprise based on the present value of its future cash-generating capability.
 
@@ -532,7 +532,7 @@ $$\\text{Terminal Value} = \\frac{\\text{UFCF}_{N+1}}{\\text{WACC} - g}$$`
   // =========================================================================
   {
     pattern: /\b(macroeconomics|inflation|interest\s+rates|gdp|central\s+bank|monetary\s+policy|fiscal\s+policy|phillips\s+curve)\b/i,
-    render: (q, tag) => `### 📈 Macroeconomics, Monetary Policy & Price Dynamics (${tag})
+    render: (q) => `### Macroeconomics, Monetary Policy & Price Dynamics
 
 Macroeconomics examines aggregate economic behavior, analyzing output, employment, price levels, and international capital flows.
 
@@ -570,7 +570,7 @@ Central banks (e.g., Federal Reserve, RBI, ECB) stabilize purchasing power using
   // =========================================================================
   {
     pattern: /\b(unit\s+economics|cac|ltv|product-market\s+fit|porter'?s?\s+five\s+forces|network\s+effects|economic\s+moat)\b/i,
-    render: (q, tag) => `### 🚀 Venture Strategy, Unit Economics & Competitive Moats (${tag})
+    render: (q) => `### Venture Strategy, Unit Economics & Competitive Moats
 
 Sustainable competitive advantage requires defensible moats, product-market validation, and accretive unit economics.
 
@@ -603,7 +603,7 @@ Michael Porter identified five competitive forces that shape industry profitabil
   // =========================================================================
   {
     pattern: /\b(stoicism|marcus\s+aurelius|epictetus|seneca|utilitarianism|deontology|immanuel\s+kant|categorical\s+imperative|virtue\s+ethics|existentialism)\b/i,
-    render: (q, tag) => `### 🏛️ Philosophy, Ethics & Moral Reason (${tag})
+    render: (q) => `### Philosophy, Ethics & Moral Reason
 
 Philosophy provides structured methods for examining human purpose, epistemic truth, and ethical decision-making.
 
@@ -634,7 +634,7 @@ Founded in Athens by Zeno of Citium and elevated in Rome by **Epictetus**, **Sen
   // =========================================================================
   {
     pattern: /\b(industrial\s+revolution|world\s+war\s+1|world\s+war\s+2|wwi|wwii|renaissance|scientific\s+revolution|cold\s+war)\b/i,
-    render: (q, tag) => `### 📜 World History: Turning Points & Civilizational Shifts (${tag})
+    render: (q) => `### World History: Turning Points & Civilizational Shifts
 
 Historical pivots illustrate how technological breakthroughs, institutional structures, and geopolitical incentives reshape human civilization.
 
@@ -663,7 +663,7 @@ Historical pivots illustrate how technological breakthroughs, institutional stru
   // =========================================================================
   {
     pattern: /\b(system\s+1|system\s+2|daniel\s+kahneman|thinking\s+fast\s+and\s+slow|cognitive\s+bias|confirmation\s+bias|anchoring\s+bias)\b/i,
-    render: (q, tag) => `### 🧠 Cognitive Psychology: Dual-Process Theory & Biases (${tag})
+    render: (q) => `### Cognitive Psychology: Dual-Process Theory & Biases
 
 Nobel laureate Daniel Kahneman and Amos Tversky (*Thinking, Fast and Slow*) demonstrated that human judgment is governed by two interacting modes of thought:
 
@@ -689,7 +689,7 @@ Nobel laureate Daniel Kahneman and Amos Tversky (*Thinking, Fast and Slow*) demo
   // =========================================================================
   {
     pattern: /\b(negotiation|batna|persuasion|rhetoric|ethos\s+pathos\s+logos|minto\s+pyramid|executive\s+communication)\b/i,
-    render: (q, tag) => `### 🎙️ Strategic Communication, Rhetoric & Negotiation Principles (${tag})
+    render: (q) => `### Strategic Communication, Rhetoric & Negotiation Principles
 
 Effective communication converts complex technical insights into clear, actionable understanding that drives consensus and decisions.
 

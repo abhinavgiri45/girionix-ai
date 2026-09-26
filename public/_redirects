@@ -9,6 +9,8 @@
 /downloads/Girionix_AI_Titan_iOS.mobileconfig /downloads/Girionix_AI_iOS.mobileconfig 302
 /downloads/Girionix_AI_Titan_Lite_iOS.mobileconfig /downloads/Girionix_AI_iOS.mobileconfig 302
 /chat  /index.html  200
+/orbit  /index.html  200
+/office  /index.html  200
 /workspace  /index.html  200
 /app  /index.html  200
 /code  /index.html  200
@@ -19,4 +21,7 @@
 /video  /index.html  200
 /audio  /index.html  200
 /intro  /index.html  200
+/pro  /index.html  200
+/download  /index.html  200
+/about  /index.html  200
 /*  /index.html  200

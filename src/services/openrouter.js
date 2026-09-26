@@ -117,7 +117,7 @@ export const openrouter = {
           },
           body: JSON.stringify({
             messages: payloadMessages,
-            model: 'openai',
+            model: 'openai-fast',
             stream: true,
             temperature: 0.7
           }),
@@ -175,23 +175,24 @@ export const openrouter = {
 
       // Tier 2: Direct High-Speed Neural Gateway Fallback (Non-streaming POST with simulated fluid token stream)
       try {
-        const response2 = await fetch('https://text.pollinations.ai/', {
+        const response2 = await fetch('https://text.pollinations.ai/openai', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
             messages: payloadMessages,
-            model: 'openai',
-            jsonMode: false
+            model: 'openai-fast',
+            stream: false
           }),
           signal
         });
 
         if (response2.ok) {
-          const fullText = await response2.text();
-          if (fullText && fullText.trim()) {
-            const words = fullText.split(/(\s+)/);
+          const data2 = await response2.json();
+          const content2 = data2.choices?.[0]?.message?.content;
+          if (content2 && content2.trim()) {
+            const words = content2.split(/(\s+)/);
             let current = '';
             for (const word of words) {
               if (signal?.aborted) break;
@@ -200,7 +201,7 @@ export const openrouter = {
               await new Promise(r => setTimeout(r, 10));
             }
             return {
-              content: fullText,
+              content: content2,
               reasoning: '',
               modelUsed: 'Girionix Frontier Neural Engine'
             };
@@ -211,24 +212,17 @@ export const openrouter = {
         console.warn('Tier 2 direct neural fallback notice:', err2.message);
       }
 
-      // Tier 3: Secondary Model Fallback (Mistral Large)
+      // Tier 3: Resilient GET Neural Gateway Fallback (Bypasses POST restrictions & disk errors)
       try {
-        const response3 = await fetch('https://text.pollinations.ai/openai', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            messages: payloadMessages,
-            model: 'mistral',
-            stream: false
-          }),
+        const promptForGet = userPrompt || payloadMessages[payloadMessages.length - 1]?.content || 'Hello';
+        const response3 = await fetch(`https://text.pollinations.ai/${encodeURIComponent(promptForGet)}?model=openai-fast`, {
           signal
         });
 
         if (response3.ok) {
-          const data3 = await response3.json();
-          const content3 = data3.choices?.[0]?.message?.content;
-          if (content3 && content3.trim()) {
-            const words = content3.split(/(\s+)/);
+          const text3 = await response3.text();
+          if (text3 && text3.trim() && !text3.includes('"error":')) {
+            const words = text3.split(/(\s+)/);
             let current = '';
             for (const word of words) {
               if (signal?.aborted) break;
@@ -237,16 +231,62 @@ export const openrouter = {
               await new Promise(r => setTimeout(r, 10));
             }
             return {
-              content: content3,
+              content: text3,
               reasoning: '',
-              modelUsed: 'Girionix Frontier Neural Engine (Mistral)'
+              modelUsed: 'Girionix Frontier Neural Engine'
             };
           }
         }
       } catch (err3) {
         if (signal?.aborted) throw err3;
-        console.warn('Tier 3 neural fallback notice:', err3.message);
+        console.warn('Tier 3 GET neural fallback notice:', err3.message);
       }
+    }
+
+    // Tier 4: Sovereign Local Intelligence & Algorithmic Synthesis (Instant, Offline & Zero-failure)
+    try {
+      const { localCodeSynthesizer } = await import('./localCodeSynthesizer.js');
+      const { localDomainKnowledge } = await import('./localDomainKnowledge.js');
+      const { localNeuralEngine } = await import('./localNeuralEngine.js');
+
+      // 1. Math evaluation
+      const mathAns = localNeuralEngine.tryEvaluateArithmetic(userPrompt);
+      if (mathAns) {
+        if (onChunk) onChunk(mathAns, mathAns);
+        return { content: mathAns, reasoning: '', modelUsed: 'Girionix Local Neural Engine' };
+      }
+
+      // 2. Code query synthesis
+      if (localCodeSynthesizer.isCodeQuery(userPrompt)) {
+        const codeSolution = localCodeSynthesizer.synthesizeCode(userPrompt);
+        if (codeSolution) {
+          const words = codeSolution.split(/(\s+)/);
+          let current = '';
+          for (const word of words) {
+            if (signal?.aborted) break;
+            current += word;
+            if (onChunk) onChunk(word, current);
+            await new Promise(r => setTimeout(r, 8));
+          }
+          return { content: codeSolution, reasoning: '', modelUsed: 'Girionix Local Neural Engine' };
+        }
+      }
+
+      // 3. Domain deep knowledge
+      const domainAnswer = localDomainKnowledge.matchDomainKnowledge(userPrompt);
+      if (domainAnswer) {
+        const words = domainAnswer.split(/(\s+)/);
+        let current = '';
+        for (const word of words) {
+          if (signal?.aborted) break;
+          current += word;
+          if (onChunk) onChunk(word, current);
+          await new Promise(r => setTimeout(r, 8));
+        }
+        return { content: domainAnswer, reasoning: '', modelUsed: 'Girionix Local Neural Engine' };
+      }
+    } catch (localErr) {
+      console.warn('Local intelligence fallback notice:', localErr.message);
     }
 
     // Clean, natural offline communication (Zero fake templates)

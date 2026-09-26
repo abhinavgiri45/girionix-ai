@@ -5,7 +5,7 @@
  * SQL queries, backend microservices, and adaptive custom code blocks.
  */
 
-import { matchAdvancedSkill, ADVANCED_SKILLS_CATALOG } from './advancedCodingSkills';
+import { matchAdvancedSkill, ADVANCED_SKILLS_CATALOG } from './advancedCodingSkills.js';
 
 export const localCodeSynthesizer = {
   /**
@@ -40,14 +40,14 @@ export const localCodeSynthesizer = {
   /**
    * Primary code synthesis dispatcher
    */
-  synthesizeCode(prompt, tag = '⚡ Sovereign Neural Engine') {
+  synthesizeCode(prompt) {
     const p = prompt.trim();
     const lp = p.toLowerCase();
 
     // 00. ADVANCED LEVEL ENGINEERING SKILLS (Algorithms, DSP, Physics, AI, Fintech, Distributed Systems)
     const advancedSkill = matchAdvancedSkill(p);
     if (advancedSkill) {
-      return `### ⚡ \${advancedSkill.name} (\${tag}) [\${advancedSkill.complexity}]
+      return `### \${advancedSkill.name} (\${tag}) [\${advancedSkill.complexity}]
 
 \${advancedSkill.description}
 
@@ -242,7 +242,7 @@ export const localCodeSynthesizer = {
   // =========================================================================
 
   renderTodoApp(prompt, tag) {
-    return `### ⚡ Production React 18 Todo List App (${tag})
+    return `### Production React 18 Todo List App
 
 Here is a complete, fully functional, production-ready **Todo & Task Manager** engineered in React 18 with Tailwind CSS. It supports adding tasks, toggling completion, filtering by status, priority tagging, and task statistics.
 
@@ -429,7 +429,7 @@ export default function TodoApp() {
   },
 
   renderCalculatorApp(prompt, tag) {
-    return `### ⚡ Production React 18 Scientific Calculator (${tag})
+    return `### Production React 18 Scientific Calculator
 
 Here is an elegant, fully responsive **Scientific Calculator** engineered in React 18 with Tailwind CSS. It supports standard arithmetic (+, -, ×, ÷), decimal points, percentage calculations, sign toggling, and continuous calculations.
 
@@ -591,7 +591,7 @@ export default function Calculator() {
   },
 
   renderWeatherApp(prompt, tag) {
-    return `### ⚡ Production React 18 Weather Application (${tag})
+    return `### Production React 18 Weather Application
 
 Here is a full **Weather Forecast Dashboard** in React 18 with Tailwind CSS. It features city search, current temperature, atmospheric metrics (humidity, wind, pressure), condition icons, and a 5-day forecast.
 
@@ -715,7 +715,7 @@ export default function WeatherDashboard() {
   },
 
   renderAuthForm(prompt, tag) {
-    return `### ⚡ Production Glassmorphic Auth Modal (${tag})
+    return `### Production Glassmorphic Auth Modal
 
 \`\`\`jsx
 import React, { useState } from 'react';
@@ -873,7 +873,7 @@ export default function AuthModal() {
   },
 
   renderNavbar(prompt, tag) {
-    return `### ⚡ Production Responsive Navigation Bar (${tag})
+    return `### Production Responsive Navigation Bar
 
 \`\`\`jsx
 import React, { useState } from 'react';
@@ -964,7 +964,7 @@ export default function ResponsiveNavbar() {
   },
 
   renderCounter(prompt, tag) {
-    return `### ⚡ Production Interactive Counter Component (${tag})
+    return `### Production Interactive Counter Component
 
 \`\`\`jsx
 import React, { useState } from 'react';
@@ -1040,7 +1040,7 @@ export default function InteractiveCounter() {
   },
 
   renderStopwatch(prompt, tag) {
-    return `### ⚡ High-Precision Stopwatch & Lap Timer (${tag})
+    return `### High-Precision Stopwatch & Lap Timer
 
 \`\`\`jsx
 import React, { useState, useEffect } from 'react';
@@ -1136,7 +1136,7 @@ export default function PrecisionStopwatch() {
   },
 
   renderModalDialog(prompt, tag) {
-    return `### ⚡ Accessible React 18 Modal Dialog (${tag})
+    return `### Accessible React 18 Modal Dialog
 
 \`\`\`jsx
 import React, { useState, useEffect } from 'react';
@@ -1203,7 +1203,7 @@ export default function ModalDemo() {
   },
 
   renderDataTable(prompt, tag) {
-    return `### ⚡ Interactive Data Table with Sorting & Search (${tag})
+    return `### Interactive Data Table with Sorting & Search
 
 \`\`\`jsx
 import React, { useState, useMemo } from 'react';
@@ -1303,7 +1303,7 @@ export default function DataTable() {
   },
 
   renderProductCard(prompt, tag) {
-    return `### ⚡ Production E-Commerce Showcase Card (${tag})
+    return `### Production E-Commerce Showcase Card
 
 \`\`\`jsx
 import React, { useState } from 'react';
@@ -1367,7 +1367,7 @@ export default function ProductCard() {
   },
 
   renderChatUI(prompt, tag) {
-    return `### ⚡ Production Chat & Messaging UI Component (${tag})
+    return `### Production Chat & Messaging UI Component
 
 \`\`\`jsx
 import React, { useState } from 'react';
@@ -1450,7 +1450,7 @@ export default function ChatView() {
   },
 
   renderAccordionFAQ(prompt, tag) {
-    return `### ⚡ Collapsible Accordion & FAQ (${tag})
+    return `### Collapsible Accordion & FAQ
 
 \`\`\`jsx
 import React, { useState } from 'react';
@@ -1494,7 +1494,7 @@ export default function FAQAccordion() {
   },
 
   renderTabs(prompt, tag) {
-    return `### ⚡ Dynamic Tab Navigation Component (${tag})
+    return `### Dynamic Tab Navigation Component
 
 \`\`\`jsx
 import React, { useState } from 'react';
@@ -1528,7 +1528,7 @@ export default function TabbedNavigation() {
   },
 
   renderCarousel(prompt, tag) {
-    return `### ⚡ Animated Image Carousel / Slider (${tag})
+    return `### Animated Image Carousel / Slider
 
 \`\`\`jsx
 import React, { useState } from 'react';
@@ -1573,7 +1573,7 @@ export default function Carousel() {
   },
 
   renderPythonSnake(tag) {
-    return `### 🐍 On-Device Python Snake Game (${tag})
+    return `### On-Device Python Snake Game
 
 Here is the complete, standalone Python Snake Game code using Python's standard \`turtle\` module—requiring **zero external packages**:
 
@@ -1700,7 +1700,7 @@ while True:
   },
 
   renderReactSnake(tag) {
-    return `### 🕹️ On-Device Standalone Snake Game (${tag})
+    return `### On-Device Standalone Snake Game
 
 \`\`\`jsx
 import React, { useState, useEffect, useCallback } from 'react';
@@ -1822,7 +1822,7 @@ export default function StandaloneSnakeGame() {
   },
 
   renderTwoSum(prompt, tag) {
-    return `### ⚡ Two Sum Algorithm: Optimal $O(n)$ Solution (${tag})
+    return `### Two Sum Algorithm: Optimal $O(n)$ Solution
 
 Given an array of integers \`nums\` and an integer \`target\`, return the indices of the two numbers such that they add up to \`target\`.
 
@@ -1875,7 +1875,7 @@ function twoSum(nums, target) {
   },
 
   renderBinarySearch(prompt, tag) {
-    return `### ⚡ Binary Search Algorithm (${tag})
+    return `### Binary Search Algorithm
 
 Binary search is an optimal $O(\\log n)$ search algorithm operating on a sorted contiguous array.
 
@@ -1915,7 +1915,7 @@ if __name__ == "__main__":
   },
 
   renderSorting(prompt, tag) {
-    return `### ⚡ QuickSort In-Place Algorithm (${tag})
+    return `### QuickSort In-Place Algorithm
 
 \`\`\`python
 from typing import List
@@ -1953,7 +1953,7 @@ if __name__ == "__main__":
   },
 
   renderReversePalindrome(prompt, tag) {
-    return `### ⚡ String & Array Reversal / Palindrome Verification (${tag})
+    return `### String & Array Reversal / Palindrome Verification
 
 \`\`\`python
 def is_palindrome(s: str) -> bool:
@@ -1983,7 +1983,7 @@ if __name__ == "__main__":
   },
 
   renderLinkedList(prompt, tag) {
-    return `### ⚡ Singly Linked List with Reverse & Cycle Detection (${tag})
+    return `### Singly Linked List with Reverse & Cycle Detection
 
 \`\`\`python
 from typing import Optional
@@ -2017,7 +2017,7 @@ def has_cycle(head: Optional[ListNode]) -> bool:
   },
 
   renderBST(prompt, tag) {
-    return `### ⚡ Binary Search Tree (BST) Implementation (${tag})
+    return `### Binary Search Tree (BST) Implementation
 
 \`\`\`python
 from typing import Optional, List
@@ -2062,7 +2062,7 @@ class BST:
   },
 
   renderGraphTraversal(prompt, tag) {
-    return `### ⚡ Graph Traversal: BFS and DFS (${tag})
+    return `### Graph Traversal: BFS and DFS
 
 \`\`\`python
 from collections import deque
@@ -2101,7 +2101,7 @@ def dfs(graph: Dict[str, List[str]], start: str) -> List[str]:
   },
 
   renderLRUCache(tag) {
-    return `### ⚡ Production LRU Cache: $O(1)$ Operations (${tag})
+    return `### Production LRU Cache: $O(1)$ Operations
 
 \`\`\`python
 class Node:
@@ -2152,7 +2152,7 @@ class LRUCache:
   },
 
   renderDebounceThrottle(tag) {
-    return `### ⚡ Production JavaScript Debounce & Throttle (${tag})
+    return `### Production JavaScript Debounce & Throttle
 
 \`\`\`javascript
 /**
@@ -2196,7 +2196,7 @@ export function throttle(func, limitMs = 300) {
   },
 
   renderFibonacci(prompt, tag) {
-    return `### ⚡ Fibonacci Implementations (${tag})
+    return `### Fibonacci Implementations
 
 \`\`\`python
 # 1. Iterative O(n) Time, O(1) Space (Optimal)
@@ -2222,7 +2222,7 @@ if __name__ == "__main__":
   },
 
   renderSQLQueries(prompt, tag) {
-    return `### ⚡ Production SQL Queries & Architecture (${tag})
+    return `### Production SQL Queries & Architecture
 
 \`\`\`sql
 -- 1. Find Highest Salary per Department using Window Functions
@@ -2264,7 +2264,7 @@ LIMIT 10;
   },
 
   renderPythonScraper(prompt, tag) {
-    return `### ⚡ Production Python Web Fetcher & Scraper (${tag})
+    return `### Production Python Web Fetcher & Scraper
 
 \`\`\`python
 #!/usr/bin/env python3
@@ -2306,7 +2306,7 @@ if __name__ == "__main__":
   },
 
   renderPythonFileAutomation(prompt, tag) {
-    return `### ⚡ Production Python File & Directory Automation (${tag})
+    return `### Production Python File & Directory Automation
 
 \`\`\`python
 #!/usr/bin/env python3
@@ -2338,7 +2338,7 @@ if __name__ == "__main__":
   },
 
   renderFastAPIApp(prompt, tag) {
-    return `### ⚡ Production Python FastAPI CRUD Microservice (${tag})
+    return `### Production Python FastAPI CRUD Microservice
 
 \`\`\`python
 from fastapi import FastAPI, HTTPException, status
@@ -2381,7 +2381,7 @@ if __name__ == "__main__":
   },
 
   renderExpressAPI(prompt, tag) {
-    return `### ⚡ Production Node.js Express API (${tag})
+    return `### Production Node.js Express API
 
 \`\`\`javascript
 const express = require('express');
@@ -2414,7 +2414,7 @@ app.listen(PORT, () => {
   },
 
   renderHTMLLandingPage(prompt, tag) {
-    return `### ⚡ Responsive HTML5 & Tailwind CSS Landing Page (${tag})
+    return `### Responsive HTML5 & Tailwind CSS Landing Page
 
 \`\`\`html
 <!DOCTYPE html>
@@ -2469,7 +2469,7 @@ app.listen(PORT, () => {
 
     // 1. Prime Numbers / Sieve of Eratosthenes
     if (/\b(prime|primes|sieve)\b/i.test(lp)) {
-      return `### ⚡ Production Python: Prime Numbers & Sieve of Eratosthenes (${tag})
+      return `### Production Python: Prime Numbers & Sieve of Eratosthenes
 
 Here is an optimized, production-grade Python implementation of primality testing using $O(\\sqrt{n})$ wheel factorization and the Sieve of Eratosthenes ($O(n \\log \\log n)$):
 
@@ -2534,7 +2534,7 @@ if __name__ == "__main__":
 
     // 2. Palindrome Checker (Strings, Numbers, Sentences)
     if (/\b(palindrome)\b/i.test(lp)) {
-      return `### ⚡ Production Python: Comprehensive Palindrome Checker (${tag})
+      return `### Production Python: Comprehensive Palindrome Checker
 
 Here is a two-pointer palindrome validation function supporting strings, integers, and sentences (ignoring punctuation and case):
 
@@ -2593,7 +2593,7 @@ if __name__ == "__main__":
 
     // 3. Fibonacci Sequence
     if (/\b(fibonacci|fib)\b/i.test(lp)) {
-      return `### ⚡ Production Python: Fibonacci Sequence Generator (${tag})
+      return `### Production Python: Fibonacci Sequence Generator
 
 Here is an optimized Fibonacci suite with $O(n)$ time and $O(1)$ space, plus a generator for infinite streaming:
 
@@ -2628,7 +2628,7 @@ if __name__ == "__main__":
 
     // 4. Factorial
     if (/\b(factorial)\b/i.test(lp)) {
-      return `### ⚡ Production Python: Factorial Computation (${tag})
+      return `### Production Python: Factorial Computation
 
 \`\`\`python
 #!/usr/bin/env python3
@@ -2650,7 +2650,7 @@ if __name__ == "__main__":
     }
 
     // 5. General Idiomatic Python Solution
-    return `### ⚡ Production Python Solution (${tag})
+    return `### Production Python Solution
 
 Here is the clean, modular Python 3 implementation for: **"${prompt}"**
 
@@ -2659,7 +2659,6 @@ Here is the clean, modular Python 3 implementation for: **"${prompt}"**
 """
 Girionix AI — Production Python Implementation
 Task: ${cleanSubject}
-Execution Tier: ${tag}
 """
 
 import sys
@@ -2704,7 +2703,7 @@ if __name__ == "__main__":
 
     // 1. C++ Solution
     if (/\b(c\+\+|cpp)\b/i.test(lp)) {
-      return `### ⚡ Modern C++20 Solution (${tag})
+      return `### Modern C++20 Solution
 
 Here is the complete, high-performance C++20 implementation for: **"${p}"**
 
@@ -2756,7 +2755,7 @@ g++ -std=c++20 -O3 -Wall main.cpp -o app && ./app
     // 2. Java Solution
     if (/\b(java)\b/i.test(lp)) {
       const className = cleanTitle.replace(/\s+/g, '') || 'Main';
-      return `### ⚡ Production Java Solution (${tag})
+      return `### Production Java Solution
 
 Here is the clean, type-safe Java implementation for: **"${p}"**
 
@@ -2783,7 +2782,7 @@ javac ${className}.java && java ${className}
 
     // 3. SQL Query
     if (/\b(sql|query|database|table|select|join)\b/i.test(lp)) {
-      return `### ⚡ Production SQL Implementation (${tag})
+      return `### Production SQL Implementation
 
 Here is the clean, optimized SQL query for: **"${p}"**
 
@@ -2825,7 +2824,7 @@ ORDER BY category, rank_in_cat;
 
     // 4. Rust Solution
     if (/\b(rust)\b/i.test(lp)) {
-      return `### ⚡ Production Rust Solution (${tag})
+      return `### Production Rust Solution
 
 \`\`\`rust
 fn main() {
@@ -2842,7 +2841,7 @@ fn main() {
 
     // 5. Go Solution
     if (/\b(go|golang)\b/i.test(lp)) {
-      return `### ⚡ Production Go Solution (${tag})
+      return `### Production Go Solution
 
 \`\`\`go
 package main
@@ -2866,7 +2865,7 @@ func main() {
     // 6. Interactive React 18 UI Component (Default)
     const componentName = cleanTitle.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('').replace(/[^a-zA-Z0-9]/g, '') || 'AppFeature';
 
-    return `### ⚡ Production React 18 Component (${tag})
+    return `### Production React 18 Component
 
 Here is a complete, fully implemented React 18 component with Tailwind CSS tailored for: **"${p}"**
 
@@ -2978,7 +2977,7 @@ export default function ${componentName}() {
   },
 
   renderBasicStarterCode(prompt, tag) {
-    return `### ⚡ Girionix Basic Starter App (${tag})
+    return `### Girionix Basic Starter App
 
 Here is a clean, interactive starter React 18 application with state counters, accent themes, and responsive Tailwind styling.
 
@@ -3072,7 +3071,7 @@ export default function StarterApp() {
   },
 
   renderDrawingCanvas(prompt, tag) {
-    return `### 🎨 Creative Drawing Canvas (${tag})
+    return `### Creative Drawing Canvas
 
 \`\`\`jsx
 import React, { useState, useRef, useEffect } from 'react';
@@ -3262,8 +3261,8 @@ export default function DrawingCanvas() {
   /**
    * Synthesize code and immediately extract pure, runnable executable code
    */
-  synthesizePureCode(prompt, tag = '⚡ Sovereign Neural Engine') {
-    const raw = this.synthesizeCode(prompt, tag);
+  synthesizePureCode(prompt) {
+    const raw = this.synthesizeCode(prompt);
     return this.extractPureCode(raw);
   },
 

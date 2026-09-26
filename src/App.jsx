@@ -61,6 +61,21 @@ export default function App() {
     return () => window.removeEventListener('girionix:model-sync', handleModelSync);
   }, [activeModel]);
 
+  // Restore deep link URL cleanly if redirected via 404 handler
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const routed = params.get('route');
+        if (routed) {
+          params.delete('route');
+          const newSearch = params.toString() ? `?${params.toString()}` : '';
+          window.history.replaceState(null, '', `${routed}${newSearch}${window.location.hash}`);
+        }
+      } catch (_) {}
+    }
+  }, []);
+
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isToolsOpen, setIsToolsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);

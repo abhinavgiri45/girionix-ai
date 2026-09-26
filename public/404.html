@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Girionix AI Workspace</title>
+  <script>
+    (function() {
+      var path = window.location.pathname;
+      var search = window.location.search;
+      var hash = window.location.hash;
+      var sep = search ? '&' : '?';
+      var target = '/' + (search || '') + sep + 'route=' + encodeURIComponent(path) + (hash || '');
+      window.location.replace(target);
+    })();
+  </script>
+</head>
+<body style="background-color: #07080E; color: white; display: flex; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif;">
+  <p>Connecting to Girionix AI Workspace...</p>
+</body>
+</html>
