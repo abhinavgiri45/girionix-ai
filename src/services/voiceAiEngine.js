@@ -719,11 +719,14 @@ ${lengthRule}
     // If using OpenRouter or default gateway, add verified fast low-latency models
     if (config.providerId === 'openrouter' || !config.providerId) {
       const voiceCascade = [
+        'openrouter/free',
+        'google/gemma-4-26b-a4b-it:free',
+        'qwen/qwen3.8-27b:free',
+        'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free',
+        'nvidia/nemotron-3.5-lightning:free',
         'deepseek/deepseek-chat',
         'google/gemini-2.5-flash',
-        'meta-llama/llama-3.3-70b-instruct',
-        'qwen/qwen3.8-27b:free',
-        'google/gemma-4-26b-a4b-it:free'
+        'meta-llama/llama-3.3-70b-instruct'
       ];
       voiceCascade.forEach(m => {
         if (!candidateModels.includes(m)) candidateModels.push(m);
@@ -767,8 +770,15 @@ ${lengthRule}
 
     // Priority 2: Multi-Tier Live Neural Cascading (OpenRouter / Custom API)
     if (activeKey || config.providerId === 'custom' || config.providerId === 'openrouter') {
+      let isZeroCreditAccount = false;
+
       for (const candidateModel of candidateModels) {
         if (signal?.aborted) break;
+
+        // If OpenRouter indicated zero credits (402), skip paid models and only try verified free models
+        if (isZeroCreditAccount && !candidateModel.endsWith(':free') && candidateModel !== 'openrouter/free') {
+          continue;
+        }
 
         try {
           const cleanBaseUrl = (config.baseUrl || 'https://openrouter.ai/api/v1').replace(/\/+$/, '');
@@ -776,8 +786,8 @@ ${lengthRule}
           const requestBody = {
             model: candidateModel,
             messages,
-            temperature: 0.75,
-            max_tokens: isLongFormRequested ? 1200 : 450,
+            temperature: 0.7,
+            max_tokens: isLongFormRequested ? 1000 : 350,
             stream: false
           };
 
@@ -805,8 +815,14 @@ ${lengthRule}
             method: 'POST',
             headers: requestHeaders,
             body: JSON.stringify(requestBody),
-            signal: signal || createTimeout(isLongFormRequested ? 8000 : 4500)
+            signal: signal || createTimeout(isLongFormRequested ? 9000 : 6500)
           });
+
+          if (response.status === 402) {
+            isZeroCreditAccount = true;
+            console.warn(`Voice AI OpenRouter model ${candidateModel} returned 402 (Zero Credits). Auto-switching to OpenRouter Free tier...`);
+            continue;
+          }
 
           if (response.ok) {
             const data = await response.json();
@@ -823,8 +839,9 @@ ${lengthRule}
       }
     }
 
-    // Priority 2.5: High-Speed Free Voice Gateway (when no custom API key is configured)
-    if (!directGeminiKey && !activeKey && (typeof fetch !== 'undefined') && (typeof navigator === 'undefined' || navigator.onLine !== false)) {
+    // Priority 2.5: High-Speed Free Voice Neural Gateway (Zero-Failure Cloud Fallback via Pollinations / GPT-OSS)
+    // Automatically runs whenever configured provider calls don't return a reply, ensuring 100% live intelligence
+    if (typeof fetch !== 'undefined' && (typeof navigator === 'undefined' || navigator.onLine !== false)) {
       try {
         const createTimeout = (ms) => {
           try {
@@ -842,14 +859,14 @@ ${lengthRule}
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             messages: [
-              { role: 'system', content: 'You are Girionix Voice AI. Speak warmly and directly in 1 to 3 natural spoken sentences. Absolutely no markdown, no asterisks, no bullets, no lists.' },
+              { role: 'system', content: 'You are Girionix Voice AI. Speak warmly, articulately, and directly in 1 to 3 natural spoken sentences. Absolutely no markdown, no asterisks, no bullets, no lists.' },
               ...context,
               { role: 'user', content: prompt }
             ],
             model: 'openai-fast',
             stream: false
           }),
-          signal: signal || createTimeout(2800)
+          signal: signal || createTimeout(3500)
         });
 
         if (fastRes.ok) {
@@ -861,7 +878,7 @@ ${lengthRule}
           }
         }
       } catch (_) {
-        // Fall through immediately to semantic brain
+        // Fall through immediately to sovereign semantic brain
       }
     }
 

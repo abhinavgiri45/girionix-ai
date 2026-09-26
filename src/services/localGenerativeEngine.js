@@ -82,6 +82,30 @@ export const localGenerativeEngine = {
       return "Photosynthesis is the biological process where green plants transform sunlight, carbon dioxide, and water into chemical energy and oxygen.";
     }
 
+    // Check if localGenerativeEngine can generate a rich topical response
+    try {
+      const richResponse = this.generateResponse(prompt, 'Girionix Voice AI');
+      if (richResponse && typeof richResponse === 'string') {
+        const clean = richResponse
+          .replace(/```[\s\S]*?```/g, '')
+          .replace(/^#{1,6}\s+[^\n]+/gm, '')
+          .replace(/\*\*([^*]+)\*\*/g, '$1')
+          .replace(/[*_~>#|]/g, '')
+          .replace(/^[-*+•]\s+/gm, '')
+          .replace(/^\d+\.\s+/gm, '')
+          .replace(/\s+/g, ' ')
+          .trim();
+
+        // Extract first 2-3 substantive sentences
+        const sentences = clean.match(/[^.!?]+[.!?]+/g);
+        if (sentences && sentences.length > 0) {
+          const spoken = sentences.slice(0, 3).join(' ').trim();
+          if (spoken.length > 20) return spoken;
+        }
+        if (clean.length > 20) return clean.slice(0, 260) + '.';
+      }
+    } catch (_) {}
+
     // Dynamic extraction for "what is X" or "tell me about X"
     const subjectMatch = p.match(/(?:what is|explain|tell me about|who was|who is|describe)\s+([^?.,]+)/i);
     if (subjectMatch && subjectMatch[1]) {
@@ -89,7 +113,9 @@ export const localGenerativeEngine = {
       return `${subject.charAt(0).toUpperCase() + subject.slice(1)} is a significant concept. It encompasses foundational principles that shape our understanding of the world, with broad applications across science, culture, and technology.`;
     }
 
-    return "I understand your question. Let's explore the key ideas and practical insights behind it step by step.";
+    if (isHindi) return "मैं आपके सवाल को अच्छी तरह समझ रहा हूँ। इस विषय पर कई महत्वपूर्ण पहलू हैं जिन पर हम विस्तार से चर्चा कर सकते हैं।";
+    if (isHinglish) return "Main aapka sawaal samajh gaya. Is baare mein kaafi interesting facts hain jo hum explore kar sakte hain.";
+    return "That's an interesting question. Let's explore the key ideas and practical insights behind it together.";
   },
 
   // =========================================================================

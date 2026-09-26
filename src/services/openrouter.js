@@ -535,6 +535,7 @@ Whenever asked about your identity, what model you are, which version you are ru
         'qwen/qwen-2.5-coder-32b-instruct',
         'google/gemini-2.5-pro',
         // Verified active free models on OpenRouter (processes requests even with $0 credits):
+        'openrouter/free',
         'qwen/qwen3.8-27b:free',
         'google/gemma-4-26b-a4b-it:free',
         'google/gemma-4-31b-it:free',
@@ -548,9 +549,15 @@ Whenever asked about your identity, what model you are, which version you are ru
 
     let lastCloudError = null;
     let lastHttpStatus = null;
+    let isZeroCreditAccount = false;
 
     for (const candidateModel of candidateModels) {
       if (signal?.aborted) break;
+
+      // If OpenRouter reported 402 (Payment Required / Zero credits), immediately skip paid models and route through free models
+      if (isZeroCreditAccount && !candidateModel.endsWith(':free') && candidateModel !== 'openrouter/free') {
+        continue;
+      }
 
       // Try with user key, and if 401/403, fallback to master key
       const keysToTry = [userApiKey];
@@ -638,8 +645,11 @@ Whenever asked about your identity, what model you are, which version you are ru
             const errorData = await response.json().catch(() => ({}));
             const errMsg = errorData.error?.message || errorData.message || `Status ${response.status}`;
             lastCloudError = errMsg;
-            lastHttpStatus = response.status;
-            console.warn(`Candidate model ${candidateModel} returned ${response.status} (${errMsg})`);
+            if (response.status === 402) {
+              isZeroCreditAccount = true;
+              console.warn(`OpenRouter model ${candidateModel} returned 402 (Zero Credits). Auto-switching to OpenRouter Free tier...`);
+              break;
+            }
             if (response.status === 401 || response.status === 403) {
               continue; // Try next key
             }
