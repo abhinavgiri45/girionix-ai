@@ -1051,173 +1051,181 @@ export default function MessageItem({
   };
 
   return (
-    <div className={`flex gap-3 text-xs leading-relaxed animate-fadeIn ${
-      isUser ? 'justify-end' : 'justify-start'
-    }`}>
-      {!isUser && (
-        <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-cyan-400 via-purple-500 to-rose-500 p-0.5 flex-shrink-0 shadow-glow-cyan">
-          <div className="w-full h-full bg-[#07080F] rounded-[10px] flex items-center justify-center overflow-hidden p-1">
-            <img src="/logo.png" alt="Girionix AI" className="w-full h-full object-contain" />
+    <>
+      {isUser ? (
+        <div className="flex justify-end w-full animate-fadeIn group my-2">
+          <div className="flex flex-col items-end max-w-[85%] sm:max-w-2xl">
+            <div className="px-5 py-3 rounded-[24px] bg-[#1e202f] hover:bg-[#232638] border border-white/[0.08] text-white text-[14.5px] sm:text-[15px] font-sans leading-relaxed shadow-sm transition-colors">
+              {isEditing ? (
+                <div className="space-y-2 min-w-[240px]">
+                  <textarea
+                    value={editText}
+                    onChange={(e) => setEditText(e.target.value)}
+                    className="w-full p-2.5 rounded-xl bg-black/60 text-white text-xs border border-white/20 focus:outline-none"
+                    rows={3}
+                  />
+                  <div className="flex justify-end gap-1.5">
+                    <button onClick={() => setIsEditing(false)} className="px-2.5 py-1 rounded text-[11px] text-gray-400 hover:text-white">Cancel</button>
+                    <button onClick={handleSaveEdit} className="px-3.5 py-1 rounded-lg bg-cyan-400 text-black font-bold text-[11px]">Save & Resend</button>
+                  </div>
+                </div>
+              ) : (
+                <div className="whitespace-pre-wrap break-words">
+                  {translatedText || message.content}
+                </div>
+              )}
+            </div>
+
+            {/* User subtle action bar */}
+            <div className="flex items-center gap-1.5 mt-1.5 mr-1 text-[11px] text-gray-500 opacity-60 group-hover:opacity-100 transition-opacity">
+              <span className="text-[10px] font-mono mr-1">{message.timestamp}</span>
+              <button
+                onClick={handleCopy}
+                className="p-1 rounded-md hover:bg-white/10 hover:text-white transition-colors"
+                title="Copy prompt"
+              >
+                {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+              </button>
+              <button
+                onClick={() => setIsEditing(!isEditing)}
+                className="p-1 rounded-md hover:bg-white/10 hover:text-white transition-colors"
+                title="Edit & Resend"
+              >
+                <Edit2 className="w-3 h-3" />
+              </button>
+            </div>
           </div>
         </div>
-      )}
-
-      <div className={`flex flex-col space-y-1.5 ${
-        isUser ? 'max-w-2xl items-end' : 'max-w-3xl sm:max-w-4xl w-full items-start'
-      }`}>
-        {/* Author / Model Name */}
-        <div className="flex items-center gap-2 px-1 text-[11px] text-gray-400 font-mono">
-          <span className="font-semibold text-gray-300">{isUser ? 'You' : message.modelName || activeModel.name}</span>
-          <span>•</span>
-          <span>{message.timestamp}</span>
-        </div>
-
-        {/* Chain of Thought Reasoning Trace */}
-        {!isUser && message.reasoning && (
-          <div className="w-full rounded-2xl bg-purple-950/20 border border-purple-500/30 overflow-hidden shadow-inner my-1">
-            <button
-              onClick={() => setShowReasoning(!showReasoning)}
-              className="w-full px-3.5 py-1.5 flex items-center justify-between text-[11px] font-mono text-purple-300 hover:bg-purple-500/10 transition-colors"
-            >
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
-                <span className="font-semibold">Reasoning Chain (Deep Thinking)...</span>
+      ) : (
+        <div className="flex flex-col w-full max-w-4xl items-start animate-fadeIn my-2 text-gray-100 font-sans">
+          {/* Gemini Header */}
+          <div className="flex items-center gap-2.5 mb-2 select-none">
+            <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-purple-500 p-[1.5px] flex items-center justify-center shadow-glow-cyan/40">
+              <div className="w-full h-full bg-[#080914] rounded-full flex items-center justify-center">
+                <Sparkles className="w-3.5 h-3.5 text-cyan-300" />
               </div>
-              {showReasoning ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-            </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-[13.5px] text-gray-200 tracking-wide font-sans">
+                {message.modelName || activeModel.name}
+              </span>
+              <span className="text-[11px] text-gray-500 font-mono">• {message.timestamp}</span>
+            </div>
+          </div>
 
-            {showReasoning && (
-              <div className="p-3.5 border-t border-purple-500/20 text-xs font-mono text-purple-200 leading-relaxed max-h-56 overflow-y-auto whitespace-pre-wrap bg-purple-950/10">
-                {message.reasoning}
+          {/* Chain of Thought Reasoning Trace (Gemini 2.0 Thinking style) */}
+          {message.reasoning && (
+            <div className="w-full my-2">
+              <button
+                onClick={() => setShowReasoning(!showReasoning)}
+                className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-xs font-sans text-purple-300 hover:text-purple-200 transition-all cursor-pointer shadow-sm"
+              >
+                <Sparkles className="w-3 h-3 text-purple-400 animate-pulse" />
+                <span>{showReasoning ? 'Hide thinking process' : 'Thought for a few seconds'}</span>
+                {showReasoning ? <ChevronUp className="w-3 h-3 text-gray-400" /> : <ChevronDown className="w-3 h-3 text-gray-400" />}
+              </button>
+
+              {showReasoning && (
+                <div className="mt-2.5 p-4 rounded-2xl bg-white/[0.02] border-l-2 border-purple-400/50 text-xs font-mono text-gray-300 leading-relaxed max-h-64 overflow-y-auto whitespace-pre-wrap">
+                  {message.reasoning}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Main Content Area - Unboxed Open Canvas */}
+          <div className="w-full text-gray-100 text-[14.5px] sm:text-[15.5px] leading-[1.8] font-sans selection:bg-cyan-500/30">
+            <div className="space-y-3.5">
+              {renderContent(translatedText || message.content)}
+            </div>
+
+            {/* Interactive Mind Map Component */}
+            {isMindMapMessage && (
+              <div className="mt-4">
+                <MindMapVisualizer topic={message.mindMapTopic || "Artificial Intelligence"} />
+              </div>
+            )}
+
+            {/* Interactive Cinematic 60 FPS Video Player */}
+            {isVideoMessage && (
+              <div className="mt-4">
+                <CinematicVideoPlayer 
+                  videoData={message.generatedVideo} 
+                  title={message.generatedVideo?.title || 'Cinematic 60 FPS Scene'} 
+                />
+              </div>
+            )}
+
+            {/* Interactive Pro App Download Callout Button */}
+            {(message.isProGated || message.content?.includes('MotionLab 60 FPS Video Studio is an Girionix Pro Feature') || (message.content?.includes('Download App') && !isUser)) && onOpenDownload && (
+              <div className="mt-4 pt-3 border-t border-white/10 flex flex-wrap items-center gap-3">
+                <button
+                  onClick={onOpenDownload}
+                  className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 text-black font-extrabold text-xs shadow-glow-emerald hover:opacity-90 transition-all flex items-center gap-2 hover:scale-105 cursor-pointer"
+                >
+                  <Download className="w-4 h-4 text-black" />
+                  <span>Download Girionix AI Native App Suite (Windows, Android, macOS, Linux, iOS)</span>
+                </button>
               </div>
             )}
           </div>
-        )}
 
-        {/* Main Message Card */}
-        <div className={`p-4 sm:p-5 rounded-3xl text-xs sm:text-[13.5px] leading-relaxed ${
-          isUser
-            ? 'bg-gradient-to-r from-cyan-600/90 to-purple-600/90 text-white rounded-tr-none shadow-lg'
-            : 'bg-[#0D0F1B] border border-white/[0.08] text-gray-100 rounded-tl-none shadow-xl w-full'
-        }`}>
-          {isEditing ? (
-            <div className="space-y-2">
-              <textarea
-                value={editText}
-                onChange={(e) => setEditText(e.target.value)}
-                className="w-full p-2 rounded-xl bg-black/60 text-white text-xs border border-white/20 focus:outline-none"
-                rows={3}
-              />
-              <div className="flex justify-end gap-1.5">
-                <button onClick={() => setIsEditing(false)} className="px-2 py-1 rounded text-[10px] text-gray-400">Cancel</button>
-                <button onClick={handleSaveEdit} className="px-3 py-1 rounded bg-cyan-400 text-black font-bold text-[10px]">Fork & Resend</button>
-              </div>
-            </div>
-          ) : (
-            <div className="font-sans leading-relaxed space-y-2">
-              {renderContent(translatedText || message.content)}
-            </div>
-          )}
-
-          {/* Interactive Mind Map Component */}
-          {isMindMapMessage && (
-            <MindMapVisualizer topic={message.mindMapTopic || "Artificial Intelligence"} />
-          )}
-
-          {/* Interactive Cinematic 60 FPS Video Player */}
-          {isVideoMessage && (
-            <div className="mt-3">
-              <CinematicVideoPlayer 
-                videoData={message.generatedVideo} 
-                title={message.generatedVideo?.title || 'Cinematic 60 FPS Scene'} 
-              />
-            </div>
-          )}
-
-          {/* Interactive Pro App Download Callout Button */}
-          {(message.isProGated || message.content?.includes('MotionLab 60 FPS Video Studio is an Girionix Pro Feature') || (message.content?.includes('Download App') && !isUser)) && onOpenDownload && (
-            <div className="mt-4 pt-3 border-t border-white/10 flex flex-wrap items-center gap-3">
-              <button
-                onClick={onOpenDownload}
-                className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 text-black font-extrabold text-xs shadow-glow-emerald hover:opacity-90 transition-all flex items-center gap-2 hover:scale-105 cursor-pointer"
-              >
-                <Download className="w-4 h-4 text-black" />
-                <span>Download Girionix AI Native App Suite (Windows, Android, macOS, Linux, iOS)</span>
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Action Toolbar */}
-        <div className="flex items-center gap-1.5 px-1 text-[11px] text-gray-500 relative">
-
-          <button
-            onClick={handleCopy}
-            className="p-1 rounded-md hover:text-white transition-colors"
-            title="Copy content"
-          >
-            {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-          </button>
-
-          {!isUser && (
-            <>
-              <button
-                onClick={handleToggleSpeak}
-                className={`p-1 rounded-md transition-colors ${
-                  isSpeaking ? 'text-rose-400 animate-pulse' : 'hover:text-white'
-                }`}
-                title="Read aloud"
-              >
-                {isSpeaking ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}
-              </button>
-
-              <div className="relative">
-                <button
-                  onClick={() => setShowLangMenu(!showLangMenu)}
-                  className="p-1 rounded-md hover:text-white transition-colors"
-                  title="Translate to another language"
-                >
-                  <Languages className="w-3 h-3" />
-                </button>
-
-                {showLangMenu && (
-                  <div className="absolute bottom-full left-0 mb-1 w-36 rounded-xl bg-[#090B16] border border-white/10 p-1 shadow-2xl z-40 text-xs font-mono">
-                    {['Hindi', 'Spanish', 'French', 'German', 'Japanese', 'Russian', 'Arabic', 'English'].map(lang => (
-                      <button
-                        key={lang}
-                        onClick={() => handleTranslate(lang)}
-                        className="w-full text-left px-2 py-1 rounded-lg hover:bg-white/10 text-gray-300 hover:text-white"
-                      >
-                        {lang}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </>
-          )}
-
-          <button
-            onClick={handleTogglePin}
-            className={`p-1 rounded-md transition-colors ${
-              isPinned ? 'text-amber-400' : 'hover:text-white'
-            }`}
-            title="Pin snippet"
-          >
-            <Bookmark className="w-3 h-3" />
-          </button>
-
-          {isUser && (
+          {/* Gemini Style Action Toolbar */}
+          <div className="flex items-center gap-1 mt-3.5 pt-1 text-gray-500 text-xs opacity-70 hover:opacity-100 transition-opacity">
             <button
-              onClick={() => setIsEditing(!isEditing)}
-              className="p-1 rounded-md hover:text-white transition-colors"
-              title="Edit & Fork"
+              onClick={handleCopy}
+              className="p-1.5 rounded-lg hover:bg-white/[0.08] hover:text-white transition-colors"
+              title="Copy response"
             >
-              <Edit2 className="w-3 h-3" />
+              {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
             </button>
-          )}
+
+            <button
+              onClick={handleToggleSpeak}
+              className={`p-1.5 rounded-lg hover:bg-white/[0.08] transition-colors ${
+                isSpeaking ? 'text-rose-400 animate-pulse' : 'hover:text-white'
+              }`}
+              title="Read aloud"
+            >
+              {isSpeaking ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+            </button>
+
+            <div className="relative">
+              <button
+                onClick={() => setShowLangMenu(!showLangMenu)}
+                className="p-1.5 rounded-lg hover:bg-white/[0.08] hover:text-white transition-colors"
+                title="Translate to another language"
+              >
+                <Languages className="w-3.5 h-3.5" />
+              </button>
+
+              {showLangMenu && (
+                <div className="absolute bottom-full left-0 mb-1 w-36 rounded-xl bg-[#090B16] border border-white/10 p-1 shadow-2xl z-40 text-xs font-mono">
+                  {['Hindi', 'Spanish', 'French', 'German', 'Japanese', 'Russian', 'Arabic', 'English'].map(lang => (
+                    <button
+                      key={lang}
+                      onClick={() => handleTranslate(lang)}
+                      className="w-full text-left px-2 py-1 rounded-lg hover:bg-white/10 text-gray-300 hover:text-white"
+                    >
+                      {lang}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={handleTogglePin}
+              className={`p-1.5 rounded-lg hover:bg-white/[0.08] transition-colors ${
+                isPinned ? 'text-amber-400' : 'hover:text-white'
+              }`}
+              title="Bookmark snippet"
+            >
+              <Bookmark className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Fullscreen Image Lightbox */}
       {selectedImage && (
@@ -1263,6 +1271,6 @@ export default function MessageItem({
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

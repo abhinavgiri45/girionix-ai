@@ -859,7 +859,7 @@ export default function ChatView({
             />
           </div>
         ) : (
-          <div className="max-w-4xl w-full mx-auto space-y-5">
+          <div className="max-w-4xl w-full mx-auto space-y-8 sm:space-y-10">
             {messages.map((message) => (
               <MessageItem
                 key={message.id}
