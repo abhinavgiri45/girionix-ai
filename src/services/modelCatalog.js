@@ -5,6 +5,23 @@
 
 export const AI_MODELS = [
   {
+    id: "girionix-pro",
+    name: "⚡ Girionix Pro",
+    provider: "Girionix Dynamic Neural Core",
+    category: "reasoning",
+    tag: "⚡ Flagship Frontier Intelligence",
+    badgeColor: "cyan",
+    description: "Flagship intelligence engine combining deep chain-of-thought reasoning, Olympiad mathematics, and superhuman code architecture.",
+    contextWindow: 2000000,
+    speed: "⚡ Dynamic Peak Velocity",
+    pricing: "Universal Flagship",
+    supportsReasoning: true,
+    supportsVision: true,
+    isPro: true,
+    isAutoUpgrade: true,
+    recommendedFor: ["Superhuman Reasoning", "Complex Coding & Architecture", "Math Olympiad Proofs", "Always-Latest Frontier Intelligence", "Giri Orbit Co-Pilot"]
+  },
+  {
     id: "gemini-2.5-flash",
     name: "⚡ Girionix Pro Flash",
     provider: "Girionix Neural Lab",
@@ -20,23 +37,6 @@ export const AI_MODELS = [
     isPro: true,
     isLite: true,
     recommendedFor: ["Rapid Conversational Q&A", "Real-Time Streaming", "Code Debugging", "High-Volume Tasks"]
-  },
-  {
-    id: "girionix-pro",
-    name: "⚡ Girionix Pro",
-    provider: "Girionix Dynamic Neural Core",
-    category: "reasoning",
-    tag: "⚡ Flagship Frontier Intelligence",
-    badgeColor: "cyan",
-    description: "Flagship intelligence engine combining deep chain-of-thought reasoning, Olympiad mathematics, and superhuman code architecture.",
-    contextWindow: 2000000,
-    speed: "⚡ Dynamic Peak Velocity",
-    pricing: "Universal Flagship",
-    supportsReasoning: true,
-    supportsVision: true,
-    isPro: true,
-    isAutoUpgrade: true,
-    recommendedFor: ["Superhuman Reasoning", "Complex Coding & Architecture", "Math Olympiad Proofs", "Always-Latest Frontier Intelligence"]
   },
   {
     id: "gemini-2.5-pro",

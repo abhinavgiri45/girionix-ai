@@ -33,6 +33,10 @@ export default function App() {
 
   const [isAppInstalled, setIsAppInstalled] = useState(() => storage.isAppInstalled());
   const [activeModel, setActiveModel] = useState(() => {
+    if (giriOrbitBridge.isOrbitMode()) {
+      const proModel = AI_MODELS.find(m => m.id === 'girionix-pro');
+      if (proModel) return proModel;
+    }
     const savedModelId = storage.getActiveModelId();
     const found = AI_MODELS.find(m => m.id === savedModelId);
     return found || AI_MODELS[0];

@@ -437,11 +437,11 @@ Whenever asked about your identity, what model you are, which version you are ru
 
           let resolvedModel = 'gemini-2.5-flash';
           const lowerM = (model || '').toLowerCase();
-          if (lowerM.includes('flash-thinking') || lowerM.includes('thinking-exp') || lowerM.includes('r1') || lowerM.includes('o3-mini') || lowerM.includes('math-x')) {
+          if (lowerM.includes('flash-thinking') || lowerM.includes('thinking-exp') || lowerM.includes('r1') || lowerM.includes('o3-mini') || lowerM.includes('math')) {
             resolvedModel = 'gemini-2.0-flash-thinking-exp';
-          } else if (lowerM.includes('2.5-pro') || lowerM === 'girionix-pro' || lowerM.includes('claude') || lowerM.includes('gpt-4o')) {
+          } else if (lowerM.includes('2.5-pro') || lowerM === 'girionix-pro' || lowerM.includes('ultra') || lowerM.includes('coder') || lowerM.includes('qwen') || lowerM.includes('gpt-4o')) {
             resolvedModel = 'gemini-2.5-pro';
-          } else if (lowerM.includes('2.5-flash') || lowerM === 'girionix-lite' || lowerM.includes('lite') || lowerM.includes('llama')) {
+          } else if (lowerM.includes('2.5-flash') || lowerM === 'girionix-lite' || lowerM.includes('lite') || lowerM.includes('llama') || lowerM.includes('turbo')) {
             resolvedModel = 'gemini-2.5-flash';
           } else if (lowerM.includes('2.0-flash')) {
             resolvedModel = 'gemini-2.0-flash';

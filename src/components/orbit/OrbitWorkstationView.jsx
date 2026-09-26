@@ -209,6 +209,7 @@ export default function OrbitWorkstationView() {
       autoDetected: Boolean(shouldAutoSwitch && detected.confidence !== 'none' && detected.confidence !== 'neutral'),
       detectionReason: detected.reason,
       content: '',
+      reasoning: '',
       isStreaming: true,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
@@ -225,7 +226,7 @@ export default function OrbitWorkstationView() {
       const systemDirective = giriOrbitBridge.buildOrbitSystemDirective(targetTool, shouldAutoSwitch) +
         `\n\nOPERATOR: Working in Giri Orbit for ${orbitContext.operatorName || 'Orbit Workspace Member'}.` +
         `\nACTIVE DOCUMENT: "${orbitContext.documentTitle || 'Untitled'}".` +
-        `\nMODEL ENGINE: Girionix Pro Enterprise Office Core. Provide high-density, beautifully structured enterprise-grade deliverables with clean tables, formatted headings, and formulas where applicable.`;
+        `\nMODEL ENGINE: Girionix Pro Enterprise Office Core (⚡ Girionix Pro). Provide high-density, beautifully structured enterprise-grade deliverables with clean tables, formatted headings, and formulas where applicable.`;
 
       const apiDialogue = messages.slice(-10).map(m => ({
         role: m.role,
@@ -239,12 +240,20 @@ export default function OrbitWorkstationView() {
           { role: 'user', content: promptToSend.trim() }
         ],
         model: 'girionix-pro',
+        modelName: '⚡ Girionix Pro',
         temperature: 0.5,
+        useThinking: false,
         signal: abortControllerRef.current.signal,
         onChunk: (chunk, fullContent) => {
           setSessions(prev => prev.map(s => s.id === activeSessionId ? {
             ...s,
             messages: s.messages.map(m => m.id === assistantId ? { ...m, content: fullContent, isStreaming: false } : m)
+          } : s));
+        },
+        onReasoningChunk: (reasoningChunk, fullReasoning) => {
+          setSessions(prev => prev.map(s => s.id === activeSessionId ? {
+            ...s,
+            messages: s.messages.map(m => m.id === assistantId ? { ...m, reasoning: fullReasoning } : m)
           } : s));
         }
       });
@@ -577,6 +586,14 @@ export default function OrbitWorkstationView() {
                           : 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-medium shadow-sm'
                       }`}
                     >
+                      {/* Active Crafting Indicator for Girionix Pro */}
+                      {isAssistant && m.isStreaming && !m.content && (
+                        <div className="flex items-center gap-2 text-cyan-400 font-mono text-xs py-1 animate-pulse">
+                          <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                          <span>Girionix Pro is crafting your {msgTool.name} deliverable...</span>
+                        </div>
+                      )}
+
                       <div className="whitespace-pre-wrap font-sans text-xs sm:text-sm">
                         {m.content}
                       </div>
