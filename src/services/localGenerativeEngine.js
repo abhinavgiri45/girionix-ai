@@ -9,10 +9,14 @@ export const localGenerativeEngine = {
   /**
    * Generates a complete, publication-ready markdown response for Chat
    */
-  generateResponse(prompt, modelName = '') {
+  generateResponse(prompt, modelName = '', messages = []) {
     if (!prompt) return null;
     const p = prompt.trim();
     const lp = p.toLowerCase();
+
+    // 0. Conversational Follow-Up & Previous Response Recall (when user asks "what is it related to", "what did you say earlier", etc.)
+    const followUpMatch = this.matchFollowUpOrRecall(lp, p, messages, modelName);
+    if (followUpMatch) return followUpMatch;
 
     // 1. Conversational Chit-chat, Identity & Model Queries (Prioritized)
     const chatMatch = this.matchConversation(lp, p, modelName);
@@ -403,7 +407,56 @@ Take a deep breath, refocus on your goals, and step forward with confidence. You
   },
 
   // =========================================================================
-  // 6. CONVERSATIONAL CHIT-CHAT & IDENTITY
+  // 6. CONVERSATIONAL CONTINUITY & PREVIOUS RESPONSE RECALL
+  // =========================================================================
+  matchFollowUpOrRecall(lp, p, messages = [], modelName = '') {
+    if (!Array.isArray(messages) || messages.length === 0) return null;
+
+    // Filter dialogue turns (excluding system prompt)
+    const dialogue = messages.filter(m => m && m.role !== 'system');
+    let lastAssistantText = '';
+    let previousUserText = '';
+
+    for (let i = dialogue.length - 1; i >= 0; i--) {
+      const msg = dialogue[i];
+      if (!lastAssistantText && (msg.role === 'assistant' || msg.role === 'model')) {
+        let txt = (msg.content || '').trim();
+        // Clean any transient error banners
+        if (txt.includes('---')) txt = txt.split('---').pop().trim();
+        if (txt.startsWith('*Connecting to')) txt = txt.replace(/^\*[^\n]*\*\s*/, '').trim();
+        if (txt.length > 5) lastAssistantText = txt;
+      } else if (lastAssistantText && !previousUserText && msg.role === 'user') {
+        const uText = (msg.content || '').trim();
+        if (uText.length > 1) previousUserText = uText;
+      }
+      if (lastAssistantText && previousUserText) break;
+    }
+
+    // Question asking about previous response / what was said:
+    const isRecallQuery = /\b(what (did you|was your|was the|were you)|tell me (about|what)|repeat (your|the)|can you repeat|what did you say|what was your previous (response|answer|message)|previous (response|answer|message))\b/i.test(lp) ||
+      /\b(last (response|answer|message|thing)|earlier (response|answer|message)|pehle kya bola|kya kaha tha|kya bola tha)\b/i.test(lp);
+
+    // Relational follow-up (e.g. "what is it related to", "what is this related to", "what are you referring to", "how is that related"):
+    const isRelationalQuery = /\b(what is (it|this|that) related to|how is (it|this|that) related|related to what|what do you mean by that|referring to|context of this|kis se related hai|kisse related hai)\b/i.test(lp);
+
+    // Simple pronoun follow-up
+    const isPronounFollowUp = /^(what is it|why is it|how does it work|explain it|elaborate on it|tell me more|more details)\??$/i.test(p);
+
+    if (isRecallQuery || isRelationalQuery || isPronounFollowUp) {
+      if (lastAssistantText) {
+        if (isRelationalQuery) {
+          return `Our discussion is directly related to **${previousUserText ? `"${previousUserText}"` : 'our previous topic'}**.\n\nIn my previous response, I explained:\n\n> ${lastAssistantText.slice(0, 600).replace(/\n/g, '\n> ')}${lastAssistantText.length > 600 ? '...' : ''}\n\nFeel free to ask any specific question or let me know what aspect you'd like to explore further!`;
+        }
+
+        return `In my previous response regarding **${previousUserText ? `"${previousUserText}"` : 'your query'}**, here is what we discussed:\n\n${lastAssistantText}\n\nHow would you like to build on this?`;
+      }
+    }
+
+    return null;
+  },
+
+  // =========================================================================
+  // 7. CONVERSATIONAL CHIT-CHAT & IDENTITY
   // =========================================================================
   matchConversation(lp, p, modelName = '') {
     const activeName = modelName || 'Girionix AI';

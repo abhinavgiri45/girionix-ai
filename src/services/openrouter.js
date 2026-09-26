@@ -308,7 +308,7 @@ export const openrouter = {
       }
 
       // 4. Universal Generative Knowledge (Essays, Biographies, Explanations, Letters, Creative)
-      const genAnswer = localGenerativeEngine.generateResponse(userPrompt, activeModelName);
+      const genAnswer = localGenerativeEngine.generateResponse(userPrompt, activeModelName, messages);
       if (genAnswer) {
         const words = genAnswer.split(/(\s+)/);
         let current = '';
@@ -606,19 +606,33 @@ Whenever asked about your identity, what model you are, which version you are ru
             // ONLY pass reasoning parameter to models that natively support reasoning (prevents 400 Bad Request on standard models)
             const isReasoningModel = /r1|reason|o1|o3|thinking|qwq/i.test(candidateModel);
             if (useThinking && isReasoningModel && (config.providerId === 'openrouter' || config.providerId === 'deepseek')) {
+              // OpenRouter requirement: ONLY ONE of effort or max_tokens can be specified
               requestBody.reasoning = {
-                max_tokens: 2048,
-                effort: 'high'
+                effort: 'medium'
               };
             }
           }
 
-          const response = await fetch(endpoint, {
+          let response = await fetch(endpoint, {
             method: 'POST',
             headers: requestHeaders,
             body: JSON.stringify(requestBody),
             signal
           });
+
+          // If rejected with 400 due to reasoning parameter format, auto-retry immediately without reasoning
+          if (!response.ok && response.status === 400 && requestBody.reasoning) {
+            delete requestBody.reasoning;
+            const retryRes = await fetch(endpoint, {
+              method: 'POST',
+              headers: requestHeaders,
+              body: JSON.stringify(requestBody),
+              signal
+            }).catch(() => null);
+            if (retryRes && retryRes.ok) {
+              response = retryRes;
+            }
+          }
 
           if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));

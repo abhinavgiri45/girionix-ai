@@ -27,9 +27,25 @@ export const conversationMemory = {
     if (!content || typeof content !== 'string') return '';
     let cleaned = content.trim();
 
-    // Strip transient system error notices
-    if (cleaned.startsWith('⚠️') && (cleaned.includes('Notice') || cleaned.includes('Status') || cleaned.includes('Tools (🔧)'))) {
-      return '';
+    // Strip transient system error notices and extract actual content if present
+    if (cleaned.startsWith('⚠️') && (cleaned.includes('Notice') || cleaned.includes('Status') || cleaned.includes('Tools (🔧)') || cleaned.includes('API'))) {
+      const splitMarkers = [
+        '*Connecting to Girionix Frontier Neural Engine:*',
+        '*Connecting to sovereign local intelligence:*',
+        '---'
+      ];
+      let extracted = '';
+      for (const marker of splitMarkers) {
+        const idx = cleaned.indexOf(marker);
+        if (idx !== -1) {
+          const candidate = cleaned.slice(idx + marker.length).trim();
+          if (candidate && !candidate.startsWith('⚠️')) {
+            extracted = candidate;
+            break;
+          }
+        }
+      }
+      return extracted;
     }
 
     return cleaned;
@@ -116,7 +132,7 @@ export const conversationMemory = {
         chronology.push({
           turn: chronology.length + 1,
           userPrompt: t.content,
-          assistantSummary: asstResp ? (asstResp.slice(0, 160).replace(/\n/g, ' ') + (asstResp.length > 160 ? '...' : '')) : 'In progress'
+          assistantSummary: asstResp ? (asstResp.slice(0, 600).replace(/\n/g, ' ') + (asstResp.length > 600 ? '...' : '')) : 'In progress'
         });
       }
     }
@@ -458,10 +474,28 @@ You possess complete, persistent knowledge of the user you are currently talking
         directive += `\n   [Turn ${p.order}]: "${p.content.slice(0, 140).replace(/\n/g, ' ')}"`;
       });
     }
+
+    // Previous Assistant Response & Multi-Turn Exchanges
+    const lastAsstTurn = turns.filter(t => t.role === 'assistant').pop();
+    if (lastAsstTurn && lastAsstTurn.content) {
+      directive += `\n- YOUR EXACT PREVIOUS RESPONSE (What you told the user right before this):`;
+      directive += `\n"""\n${lastAsstTurn.content.slice(0, 3000)}\n"""`;
+    }
+
+    if (memory.fullChronology.length > 0) {
+      directive += `\n- COMPLETE MULTI-TURN CHAT EXCHANGE HISTORY (Questions & Your Answers):`;
+      memory.fullChronology.slice(-8).forEach(c => {
+        directive += `\n   [Exchange ${c.turn}]:`;
+        directive += `\n     User: "${c.userPrompt.slice(0, 200).replace(/\n/g, ' ')}"`;
+        directive += `\n     You answered: "${c.assistantSummary.slice(0, 600).replace(/\n/g, ' ')}"`;
+      });
+    }
+
     directive += `\n- STRICT CONTINUITY & RECALL PROTOCOL:`;
     directive += `\n  1. You have complete recall of this entire session from the very first question at the beginning.`;
     directive += `\n  2. If the user asks what they asked earlier, at the beginning, before, or requests a recap, cite the exact questions and details from the chronological log above with 100% precision.`;
-    directive += `\n  3. Resolve all pronouns ("it", "that", "the previous code", "the last point") and conversational acknowledgments ("nice", "cool", "great", "ok") seamlessly without losing context or starting an unrelated topic.`;
+    directive += `\n  3. If the user asks about your previous response, what you said earlier, what it is related to, or asks you to repeat/clarify/expand on what you just said: directly reference and explain the contents of YOUR EXACT PREVIOUS RESPONSE and the history above. You remember your previous response completely!`;
+    directive += `\n  4. Resolve all pronouns ("it", "that", "the previous code", "the last point", "what is it related to") and conversational follow-ups seamlessly without losing context or starting an unrelated topic.`;
 
     // Active Revision & Transformation Injection
     const lastAssistant = this.getLastAssistantMessage(messages);
