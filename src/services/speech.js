@@ -192,7 +192,7 @@ class SpeechService {
     if (typeof window === 'undefined') return;
 
     this.activeCallbacks = callbacks;
-    const { onResult, onEnd, onError, onSpeechFinalized, lang, onVolumeChange, silenceTimeoutMs = 1200 } = callbacks;
+    const { onResult, onEnd, onError, onSpeechFinalized, lang, onVolumeChange, silenceTimeoutMs = 2200 } = callbacks;
 
     if (this.isListening) {
       // Already actively listening
@@ -285,7 +285,7 @@ class SpeechService {
               onSpeechFinalized(finalized);
             }
           }
-        }, silenceTimeoutMs || 1200);
+        }, silenceTimeoutMs || 2200);
       }
     };
 

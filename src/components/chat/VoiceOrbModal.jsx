@@ -26,7 +26,7 @@ export default function VoiceOrbModal({ isOpen, onClose, onExportToChat }) {
   const [voiceProfile, setVoiceProfile] = useState('nova');
   const [voicePersona, setVoicePersona] = useState('companion');
   const [voiceSpeed, setVoiceSpeed] = useState(1.02);
-  const [silenceMode, setSilenceMode] = useState(1200); // 1200ms natural human silence threshold
+  const [silenceMode, setSilenceMode] = useState(2200); // 2200ms natural human breath pause
   const [showSettings, setShowSettings] = useState(false);
   const [audioVolume, setAudioVolume] = useState(0);
   const [chatTurns, setChatTurns] = useState([]); // [{ role: 'user'|'assistant', text: string }]
@@ -271,6 +271,28 @@ export default function VoiceOrbModal({ isOpen, onClose, onExportToChat }) {
     startListeningTurn(voiceLang);
   };
 
+  // Interactive Orb Click Handler: Tap to interrupt, tap to send spoken text immediately, or tap to toggle
+  const handleOrbClick = () => {
+    if (connectionStatus === 'speaking') {
+      handleInterrupt();
+    } else if (connectionStatus === 'thinking') {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      startListeningTurn(voiceLang);
+    } else if (connectionStatus === 'listening') {
+      if (transcript && transcript.trim()) {
+        speech.stopListening(false);
+        processSpokenPrompt(transcript.trim(), voiceLang);
+      } else {
+        speech.stopListening();
+        setConnectionStatus('ready');
+      }
+    } else {
+      startListeningTurn(voiceLang);
+    }
+  };
+
   // Lifecycle
   useEffect(() => {
     isMountedRef.current = true;
@@ -466,7 +488,7 @@ export default function VoiceOrbModal({ isOpen, onClose, onExportToChat }) {
 
           {/* Core Interactive Glowing ChatGPT-Style Fluid Morphing Sphere */}
           <div 
-            onClick={connectionStatus === 'speaking' ? handleInterrupt : () => startListeningTurn(voiceLang)}
+            onClick={handleOrbClick}
             className={`w-36 h-36 sm:w-40 sm:h-40 rounded-full flex flex-col items-center justify-center cursor-pointer transition-all duration-300 shadow-2xl relative select-none overflow-hidden ${
               connectionStatus === 'speaking'
                 ? 'shadow-[0_0_60px_rgba(168,85,247,0.6)] scale-110'
@@ -495,7 +517,15 @@ export default function VoiceOrbModal({ isOpen, onClose, onExportToChat }) {
             }`} />
             
             <span className="text-[10px] font-mono text-white font-extrabold mt-1.5 uppercase tracking-widest drop-shadow">
-              {connectionStatus === 'speaking' ? 'Interrupt' : connectionStatus === 'listening' ? 'Listening' : connectionStatus === 'thinking' ? 'Reasoning' : 'Tap to Speak'}
+              {connectionStatus === 'speaking' 
+                ? 'Interrupt' 
+                : (connectionStatus === 'listening' && transcript) 
+                ? 'Tap to Send' 
+                : connectionStatus === 'listening' 
+                ? 'Listening' 
+                : connectionStatus === 'thinking' 
+                ? 'Reasoning' 
+                : 'Tap to Speak'}
             </span>
           </div>
         </div>

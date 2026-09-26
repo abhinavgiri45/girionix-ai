@@ -409,158 +409,24 @@ export default function ChatView({
     } else {
       setIsListening(true);
       const userLocale = typeof navigator !== 'undefined' ? navigator.language : 'en-US';
+      const existingText = input ? input.trim() + ' ' : '';
       speech.startListening({
         lang: userLocale.startsWith('hi') ? 'hi-IN' : userLocale.includes('IN') ? 'en-IN' : 'en-US',
-        silenceTimeoutMs: 1300,
+        silenceTimeoutMs: 2500, // Natural 2.5s pause threshold so users are not cut off
         onResult: ({ transcript }) => {
-          if (transcript) setInput(transcript);
+          if (transcript) {
+            setInput(existingText + transcript);
+          }
         },
         onSpeechFinalized: (finalTranscript) => {
           speech.stopListening();
           setIsListening(false);
-          if (!finalTranscript) return;
-
-          // Clean and strip punctuation (e.g. browser trailing period "Clear chat.")
-          const cleanCmd = finalTranscript
-            .toLowerCase()
-            .replace(/[.,/#!$%^&*;:{}=\-_`~()?"'।]/g, ' ')
-            .replace(/\s+/g, ' ')
-            .trim();
-
-          // 1. Clear Chat Command
-          if (
-            cleanCmd === 'clear chat' || 
-            cleanCmd === 'clear all' || 
-            cleanCmd === 'delete chat' || 
-            cleanCmd === 'clear the chat' || 
-            cleanCmd === 'clear conversation' || 
-            cleanCmd === 'chat saaf karo' ||
-            cleanCmd === 'sab saaf karo'
-          ) {
-            handleClearChat();
-            speech.speak('Chat cleared.');
-            setInput('');
-            return;
+          if (finalTranscript && finalTranscript.trim()) {
+            setInput(existingText + finalTranscript.trim());
           }
-
-          // 2. New Chat Command
-          if (
-            cleanCmd === 'new chat' || 
-            cleanCmd === 'new session' || 
-            cleanCmd === 'start fresh' || 
-            cleanCmd === 'start a new chat' || 
-            cleanCmd === 'create new chat' || 
-            cleanCmd === 'naya chat'
-          ) {
-            onCreateNewSession();
-            speech.speak('Started a new chat session.');
-            setInput('');
-            return;
-          }
-
-          // 3. Stop Command
-          if (
-            cleanCmd === 'stop' || 
-            cleanCmd === 'stop speaking' || 
-            cleanCmd === 'cancel' || 
-            cleanCmd === 'be quiet' || 
-            cleanCmd === 'shut up' || 
-            cleanCmd === 'pause' || 
-            cleanCmd === 'ruko' || 
-            cleanCmd === 'chup ho jao' || 
-            cleanCmd === 'chup raho'
-          ) {
-            speech.stopSpeaking();
-            handleStop();
-            setInput('');
-            return;
-          }
-
-          // 4. Toggle Web Search
-          if (
-            cleanCmd === 'turn on web search' || 
-            cleanCmd === 'enable web search' || 
-            cleanCmd === 'turn web search on' || 
-            cleanCmd === 'web search on'
-          ) {
-            handleToggleWebSearch(true);
-            speech.speak('Web search enabled.');
-            setInput('');
-            return;
-          }
-          if (
-            cleanCmd === 'turn off web search' || 
-            cleanCmd === 'disable web search' || 
-            cleanCmd === 'turn web search off' || 
-            cleanCmd === 'web search off'
-          ) {
-            handleToggleWebSearch(false);
-            speech.speak('Web search disabled.');
-            setInput('');
-            return;
-          }
-
-          // 5. Toggle Deep Reasoning / Thinking
-          if (
-            cleanCmd === 'turn on thinking' || 
-            cleanCmd === 'enable thinking' || 
-            cleanCmd === 'turn on deep reasoning' || 
-            cleanCmd === 'enable deep reasoning'
-          ) {
-            handleToggleThinking(true);
-            speech.speak('Deep reasoning enabled.');
-            setInput('');
-            return;
-          }
-          if (
-            cleanCmd === 'turn off thinking' || 
-            cleanCmd === 'disable thinking' || 
-            cleanCmd === 'turn off deep reasoning' || 
-            cleanCmd === 'disable deep reasoning'
-          ) {
-            handleToggleThinking(false);
-            speech.speak('Deep reasoning disabled.');
-            setInput('');
-            return;
-          }
-
-          // 6. Modal / Interface triggers
-          if (cleanCmd === 'open voice orb' || cleanCmd === 'voice orb' || cleanCmd === 'voice mode' || cleanCmd === 'launch voice') {
-            setIsVoiceOrbOpen(true);
-            speech.speak('Opening Voice Orb.');
-            setInput('');
-            return;
-          }
-          if ((cleanCmd === 'open settings' || cleanCmd === 'settings' || cleanCmd === 'api settings') && onOpenSettings) {
-            onOpenSettings();
-            speech.speak('Opening API settings.');
-            setInput('');
-            return;
-          }
-
-          // 7. Search for ... Command
-          if (
-            cleanCmd.startsWith('web search ') || 
-            cleanCmd.startsWith('search web for ') || 
-            cleanCmd.startsWith('search the web for ') || 
-            cleanCmd.startsWith('search for ') || 
-            cleanCmd.startsWith('google ')
-          ) {
-            const query = cleanCmd.replace(/^(web search|search web for|search the web for|search for|google)\s+/i, '').trim();
-            if (query) {
-              handleToggleWebSearch(true);
-              setInput(query);
-              handleSend(query);
-              return;
-            }
-          }
-
-          // Voice input captured: auto-send
-          setInput(finalTranscript);
-          handleSend(finalTranscript);
         },
         onError: (err) => {
-          console.warn('Voice input notice:', err);
+          console.warn('Voice dictation notice:', err);
           speech.stopListening();
           setIsListening(false);
         },

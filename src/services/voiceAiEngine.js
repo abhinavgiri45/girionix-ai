@@ -58,6 +58,72 @@ export const voiceAiEngine = {
   },
 
   /**
+   * High-Precision Spoken Mathematical & Arithmetic Evaluator
+   */
+  evaluateSpokenMath(prompt, isHindi = false, isHinglish = false) {
+    if (!prompt) return null;
+    const p = prompt.toLowerCase().trim();
+
+    // 1. Percentage: "what is 20 percent of 500"
+    const pctMatch = p.match(/(?:what\s+is\s+)?(\d+(?:\.\d+)?)\s*(?:%|percent|pratishat)\s*(?:of|\*|ka)\s*(\d+(?:\.\d+)?)/i);
+    if (pctMatch) {
+      const pct = parseFloat(pctMatch[1]);
+      const base = parseFloat(pctMatch[2]);
+      const res = (pct / 100) * base;
+      if (isHindi) return `${base} का ${pct} प्रतिशत ${res} होता है।`;
+      if (isHinglish) return `${base} ka ${pct} percent ${res} hota hai.`;
+      return `${pct}% of ${base} is ${res}.`;
+    }
+
+    // 2. Square root: "square root of 144"
+    const sqrtMatch = p.match(/(?:square\s+root\s+of|sqrt\s+of|sqrt|vargmool)\s*(\d+(?:\.\d+)?)/i);
+    if (sqrtMatch) {
+      const val = parseFloat(sqrtMatch[1]);
+      const res = Math.sqrt(val);
+      if (isHindi) return `${val} का वर्गमूल ${res} है।`;
+      if (isHinglish) return `${val} ka square root ${res} hota hai.`;
+      return `The square root of ${val} is ${res}.`;
+    }
+
+    // 3. Power: "2 to the power of 8"
+    const powMatch = p.match(/(\d+(?:\.\d+)?)\s*(?:to\s+the\s+power\s+of|power|\^)\s*(\d+(?:\.\d+)?)/i);
+    if (powMatch) {
+      const base = parseFloat(powMatch[1]);
+      const exp = parseFloat(powMatch[2]);
+      const res = Math.pow(base, exp);
+      if (isHindi) return `${base} की घात ${exp} का मान ${res} है।`;
+      if (isHinglish) return `${base} power ${exp} equals ${res}.`;
+      return `${base} raised to the power of ${exp} is ${res}.`;
+    }
+
+    // 4. Arithmetic: "what is 15 plus 45", "100 divided by 4", "25 times 4"
+    let expr = p
+      .replace(/^(what\s+is|calculate|evaluate|find|batao|solve|kya\s+hota\s+hai)\s+/i, '')
+      .replace(/[?!.]/g, '')
+      .replace(/\bplus\b|\bjod\b/g, '+')
+      .replace(/\bminus\b|\bghata\b/g, '-')
+      .replace(/\b(times|multiplied\s+by|into|guna)\b/g, '*')
+      .replace(/\b(divided\s+by|over|bhaag)\b/g, '/')
+      .trim();
+
+    if (/^[\d\s\+\-\*\/\(\)\.]+$/.test(expr) && /[\+\-\*\/]/.test(expr)) {
+      try {
+        const cleanExp = expr.replace(/[^0-9\+\-\*\/\(\)\.]/g, '');
+        // eslint-disable-next-line no-new-func
+        const res = Function("'use strict'; return (" + cleanExp + ")")();
+        if (typeof res === 'number' && Number.isFinite(res)) {
+          const readable = Number.isInteger(res) ? res : Number(res.toFixed(4));
+          if (isHindi) return `${expr.replace(/\*/g, 'गुणा').replace(/\//g, 'भागा')} का उत्तर ${readable} है।`;
+          if (isHinglish) return `${expr.replace(/\*/g, 'into').replace(/\//g, 'by')} equals ${readable}.`;
+          return `The answer is ${readable}.`;
+        }
+      } catch (_) {}
+    }
+
+    return null;
+  },
+
+  /**
    * Authentic Human Instant Semantic Intelligence Brain (<5ms response)
    * Provides genuine, natural, warm, empathetic, and dynamic non-repeating voice conversation
    */
@@ -65,6 +131,69 @@ export const voiceAiEngine = {
     const p = (prompt || '').toLowerCase().trim();
     const isHindi = lang === 'hi-IN' || /[\u0900-\u097F]/.test(prompt);
     const isHinglish = lang === 'en-IN' || (!isHindi && /\b(kaise|kya|batao|karo|banao|namaste|kaha|kahan|desh|bharat|hai|ho|sunao|kaun|kisne|thik|arre|zara|meri|tera|tere|mujhe|tum|aap|accha|achha|bhai|yaar|gana|gaana|gao|kuch)\b/i.test(p));
+
+    // 0. Instant Arithmetic & Math Evaluation
+    const mathAnswer = this.evaluateSpokenMath(p, isHindi, isHinglish);
+    if (mathAnswer) return mathAnswer;
+
+    // 0.1 Real-time Date, Time, and Day
+    if (/\b(what time is it|current time|kya time hua hai|time kya hai|samay kya hai|kitne baje)\b/i.test(p)) {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      if (isHindi) return `अभी समय ${timeStr} हुआ है।`;
+      if (isHinglish) return `Abhi time ${timeStr} hua hai.`;
+      return `The current time is ${timeStr}.`;
+    }
+    if (/\b(what is today'?s date|today'?s date|current date|aaj ki tarikh|aaj konsi tarikh)\b/i.test(p)) {
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      if (isHindi) return `आज की तारीख ${dateStr} है।`;
+      if (isHinglish) return `Aaj ki date ${dateStr} hai.`;
+      return `Today is ${dateStr}.`;
+    }
+    if (/\b(what day is (it|today)|aaj konsa din hai|aaj ka din)\b/i.test(p)) {
+      const now = new Date();
+      const dayStr = now.toLocaleDateString('en-US', { weekday: 'long' });
+      if (isHindi) return `आज ${dayStr} है।`;
+      if (isHinglish) return `Aaj ${dayStr} hai.`;
+      return `Today is ${dayStr}.`;
+    }
+
+    // 0.2 World Capitals & Geography
+    const capitalMap = {
+      'india': 'New Delhi',
+      'bharat': 'New Delhi',
+      'france': 'Paris',
+      'japan': 'Tokyo',
+      'united states': 'Washington, D.C.',
+      'america': 'Washington, D.C.',
+      'usa': 'Washington, D.C.',
+      'united kingdom': 'London',
+      'uk': 'London',
+      'england': 'London',
+      'germany': 'Berlin',
+      'australia': 'Canberra',
+      'russia': 'Moscow',
+      'canada': 'Ottawa',
+      'china': 'Beijing',
+      'italy': 'Rome',
+      'spain': 'Madrid',
+      'brazil': 'Brasília',
+      'egypt': 'Cairo',
+      'south africa': 'Pretoria',
+      'nepal': 'Kathmandu',
+      'bangladesh': 'Dhaka',
+      'sri lanka': 'Sri Jayawardenepura Kotte',
+      'uae': 'Abu Dhabi'
+    };
+    for (const [country, capital] of Object.entries(capitalMap)) {
+      if (p.includes(`capital of ${country}`) || p.includes(`${country} ki rajdhani`) || p.includes(`${country} capital`)) {
+        const cName = country.charAt(0).toUpperCase() + country.slice(1);
+        if (isHindi) return `${cName} की राजधानी ${capital} है।`;
+        if (isHinglish) return `${cName} ki capital ${capital} hai.`;
+        return `The capital of ${cName} is ${capital}.`;
+      }
+    }
 
     // 1. Long-Form Essay, Speech, Story & Detailed Explanations (100+ Words)
     const isEssayOrLongForm = /\b(essay|nibandh|speech|bhashan|story|kahani|100[- ]word|200[- ]word|paragraph|detailed|explain in detail|recite an essay|write an essay|tell me a story|give a speech)\b/i.test(p) || /(निबंध|भाषण|कहानी|विस्तार से|100 शब्द|100 शब्दों|निबन्ध)/i.test(p);
@@ -528,26 +657,26 @@ export const voiceAiEngine = {
     // 13. Natural Human Conversation & Direct Question Resolution
     if (isHindi) {
       const conversationalHindi = [
-        `हाँ, बिल्कुल! ${prompt.replace(/[?!.]/g, '')} के बारे में मैं आपको बता सकता हूँ। यह एक बहुत ही महत्वपूर्ण विषय है जो सीधा और स्पष्ट तरीके से समझा जा सकता है।`,
-        `ज़रूर! इस विषय पर मुख्य बात यह है कि हमें इसके मूल सिद्धांतों और व्यावहारिक प्रभाव को समझना चाहिए।`,
-        `बिल्कुल! मैं आपकी बात समझ गया। आइए इसे सरल और रुचिकर तरीके से देखते हैं।`
+        `हाँ, मैं सुन रहा हूँ। आप इस बारे में विस्तार से क्या जानना चाहते हैं?`,
+        `ज़रूर! आइए इस पर बात करते हैं। आप कौन सा विशेष पहलू समझना चाहते हैं?`,
+        `बिल्कुल! मैं आपकी सहायता के लिए तैयार हूँ। आप जो भी पूछना चाहें, बेझिझक कहें।`
       ];
       return this.pickDiverse(conversationalHindi, 'conv_hi');
     }
 
     if (isHinglish) {
       const conversationalHinglish = [
-        `Haan bilkul! ${prompt.replace(/[?!.]/g, '')} ke baare mein baat karein toh yeh kaafi practical aur insightful concept hai.`,
-        `Arre bilkul, main samajh gaya! Iska main point yeh hai ki foundational logic aur practical application ko clear rakha jaye.`,
-        `Zaroor! Main ready hoon aapko easily explain karne ke liye. Let me know what specific detail you'd like next!`
+        `Haan bilkul! Main sun raha hoon. Is baare mein specifically aap kya jaan na chahte hain?`,
+        `Zaroor! Let's talk about it. Mujhe bataiye aapko iska kaunsa aspect explore karna hai.`,
+        `Batao bhai, main ready hoon. Aap jo bhi poochenge, main clearly explain kar dunga!`
       ];
       return this.pickDiverse(conversationalHinglish, 'conv_hing');
     }
 
     const conversationalEn = [
-      `Regarding "${prompt.replace(/[?!.]/g, '')}", the key concept centers on foundational clarity and practical understanding. It's a fascinating area with direct real-world applications.`,
-      `Certainly! Looking into "${prompt.replace(/[?!.]/g, '')}", the most important aspect is how the core mechanisms translate directly into tangible results and deeper understanding.`,
-      `I'd love to discuss "${prompt.replace(/[?!.]/g, '')}"! At its core, it brings together objective principles and creative execution in a really clear way.`
+      `I'm right here with you! Tell me a bit more about what you'd like to explore on this.`,
+      `Certainly! Let's dive into that. Which specific part would you like to focus on first?`,
+      `I understand! Feel free to ask any specific question about this, and I'll break it down clearly for you.`
     ];
     return this.pickDiverse(conversationalEn, 'conv_en');
   },
