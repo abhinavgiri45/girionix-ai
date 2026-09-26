@@ -109,6 +109,13 @@ export const openrouter = {
 
     // Tier 1: Real-time SSE streaming from Live Neural Gateway (GPT-OSS Reasoning Core)
     if (typeof fetch !== 'undefined' && (typeof navigator === 'undefined' || navigator.onLine !== false)) {
+      const tier1Ctrl = new AbortController();
+      let hasReceivedToken = false;
+      const tier1Timer = setTimeout(() => {
+        if (!hasReceivedToken) tier1Ctrl.abort();
+      }, 5000);
+      if (signal) signal.addEventListener('abort', () => tier1Ctrl.abort(), { once: true });
+
       try {
         const response = await fetch('https://text.pollinations.ai/openai', {
           method: 'POST',
@@ -121,7 +128,7 @@ export const openrouter = {
             stream: true,
             temperature: 0.7
           }),
-          signal
+          signal: tier1Ctrl.signal
         });
 
         if (response.ok && response.body) {
@@ -148,10 +155,18 @@ export const openrouter = {
                   const json = JSON.parse(trimmed.slice(6));
                   const delta = json.choices?.[0]?.delta;
                   if (delta?.reasoning) {
+                    if (!hasReceivedToken) {
+                      hasReceivedToken = true;
+                      clearTimeout(tier1Timer);
+                    }
                     accumulatedReasoning += delta.reasoning;
                     if (onReasoningChunk) onReasoningChunk(delta.reasoning, accumulatedReasoning);
                   }
                   if (delta?.content) {
+                    if (!hasReceivedToken) {
+                      hasReceivedToken = true;
+                      clearTimeout(tier1Timer);
+                    }
                     accumulatedContent += delta.content;
                     if (onChunk) onChunk(delta.content, accumulatedContent);
                   }
@@ -160,15 +175,18 @@ export const openrouter = {
             }
           }
 
-          if (accumulatedContent.trim()) {
+          clearTimeout(tier1Timer);
+          const finalResult = accumulatedContent.trim() || accumulatedReasoning.trim();
+          if (finalResult) {
             return {
-              content: accumulatedContent,
+              content: finalResult,
               reasoning: accumulatedReasoning,
               modelUsed: 'Girionix Frontier Neural Engine'
             };
           }
         }
       } catch (err) {
+        clearTimeout(tier1Timer);
         if (signal?.aborted) throw err;
         console.warn('Tier 1 neural stream notice:', err.message);
       }
@@ -248,6 +266,7 @@ export const openrouter = {
       const { localCodeSynthesizer } = await import('./localCodeSynthesizer.js');
       const { localDomainKnowledge } = await import('./localDomainKnowledge.js');
       const { localNeuralEngine } = await import('./localNeuralEngine.js');
+      const { localGenerativeEngine } = await import('./localGenerativeEngine.js');
 
       // 1. Math evaluation
       const mathAns = localNeuralEngine.tryEvaluateArithmetic(userPrompt);
@@ -284,6 +303,20 @@ export const openrouter = {
           await new Promise(r => setTimeout(r, 8));
         }
         return { content: domainAnswer, reasoning: '', modelUsed: 'Girionix Local Neural Engine' };
+      }
+
+      // 4. Universal Generative Knowledge (Essays, Biographies, Explanations, Letters, Creative)
+      const genAnswer = localGenerativeEngine.generateResponse(userPrompt);
+      if (genAnswer) {
+        const words = genAnswer.split(/(\s+)/);
+        let current = '';
+        for (const word of words) {
+          if (signal?.aborted) break;
+          current += word;
+          if (onChunk) onChunk(word, current);
+          await new Promise(r => setTimeout(r, 6));
+        }
+        return { content: genAnswer, reasoning: '', modelUsed: 'Girionix Sovereign Generative Engine' };
       }
     } catch (localErr) {
       console.warn('Local intelligence fallback notice:', localErr.message);

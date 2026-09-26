@@ -14,6 +14,7 @@
 
 import { universalApiEngine } from './universalApiEngine';
 import { storage } from './storage';
+import { localGenerativeEngine } from './localGenerativeEngine.js';
 
 export const voiceAiEngine = {
   /**
@@ -654,31 +655,8 @@ export const voiceAiEngine = {
       return "Quantum computing harnesses the principles of quantum mechanics, utilizing qubits in states of superposition and entanglement to solve complex computational problems exponentially faster than classical computers.";
     }
 
-    // 13. Natural Human Conversation & Direct Question Resolution
-    if (isHindi) {
-      const conversationalHindi = [
-        `हाँ, मैं सुन रहा हूँ। आप इस बारे में विस्तार से क्या जानना चाहते हैं?`,
-        `ज़रूर! आइए इस पर बात करते हैं। आप कौन सा विशेष पहलू समझना चाहते हैं?`,
-        `बिल्कुल! मैं आपकी सहायता के लिए तैयार हूँ। आप जो भी पूछना चाहें, बेझिझक कहें।`
-      ];
-      return this.pickDiverse(conversationalHindi, 'conv_hi');
-    }
-
-    if (isHinglish) {
-      const conversationalHinglish = [
-        `Haan bilkul! Main sun raha hoon. Is baare mein specifically aap kya jaan na chahte hain?`,
-        `Zaroor! Let's talk about it. Mujhe bataiye aapko iska kaunsa aspect explore karna hai.`,
-        `Batao bhai, main ready hoon. Aap jo bhi poochenge, main clearly explain kar dunga!`
-      ];
-      return this.pickDiverse(conversationalHinglish, 'conv_hing');
-    }
-
-    const conversationalEn = [
-      `I'm right here with you! Tell me a bit more about what you'd like to explore on this.`,
-      `Certainly! Let's dive into that. Which specific part would you like to focus on first?`,
-      `I understand! Feel free to ask any specific question about this, and I'll break it down clearly for you.`
-    ];
-    return this.pickDiverse(conversationalEn, 'conv_en');
+    // 13. High-Quality Dynamic Knowledge Resolution via Sovereign Generative Engine
+    return localGenerativeEngine.generateSpokenResponse(prompt, lang);
   },
 
   /**
@@ -835,7 +813,49 @@ ${lengthRule}
       }
     }
 
-    // Priority 2: Instant Intelligent Semantic Brain (<5ms response time, zero delay, completely accurate & warm)
+    // Priority 2.5: High-Speed Free Voice Gateway (when no custom API key is configured)
+    if (!directGeminiKey && !activeKey && (typeof fetch !== 'undefined') && (typeof navigator === 'undefined' || navigator.onLine !== false)) {
+      try {
+        const createTimeout = (ms) => {
+          try {
+            if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
+              return AbortSignal.timeout(ms);
+            }
+          } catch (_) {}
+          const ctrl = new AbortController();
+          setTimeout(() => ctrl.abort(), ms);
+          return ctrl.signal;
+        };
+
+        const fastRes = await fetch('https://text.pollinations.ai/openai', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: [
+              { role: 'system', content: 'You are Girionix Voice AI. Speak warmly and directly in 1 to 3 natural spoken sentences. Absolutely no markdown, no asterisks, no bullets, no lists.' },
+              ...context,
+              { role: 'user', content: prompt }
+            ],
+            model: 'openai-fast',
+            stream: false
+          }),
+          signal: signal || createTimeout(2800)
+        });
+
+        if (fastRes.ok) {
+          const fastData = await fastRes.json();
+          const fastContent = fastData.choices?.[0]?.message?.content;
+          if (fastContent && fastContent.trim()) {
+            const cleaned = this.cleanSpokenText(fastContent);
+            if (cleaned && cleaned.length > 2) return cleaned;
+          }
+        }
+      } catch (_) {
+        // Fall through immediately to semantic brain
+      }
+    }
+
+    // Priority 3: Instant Intelligent Semantic Brain (<5ms response time, zero delay, completely accurate & warm)
     return this.generateDynamicVoiceFallback(prompt, lang, chatTurns);
   }
 };
