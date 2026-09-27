@@ -348,40 +348,40 @@ export const universalApiEngine = {
 
     // 1. Gemini Direct
     if (config.providerId === 'google') {
-      if (requestedModelId === 'gemini-2.5-pro' || requestedModelId === 'girionix-pro') return 'gemini-2.5-pro';
-      if (requestedModelId === 'gemini-2.0-flash-thinking-exp') return 'gemini-2.0-flash-thinking-exp';
-      if (requestedModelId === 'gemini-2.5-flash' || requestedModelId === 'girionix-lite') return 'gemini-2.5-flash';
+      if (requestedModelId.includes('thinking') || requestedModelId.includes('r1') || requestedModelId.includes('o3-mini')) {
+        return 'gemini-2.0-flash-thinking-exp';
+      }
+      if (requestedModelId === 'gemini-2.5-flash' || requestedModelId === 'girionix-lite' || requestedModelId.includes('llama-3.1')) {
+        return 'gemini-2.5-flash';
+      }
       if (requestedModelId.startsWith('gemini-')) return requestedModelId;
-      return requestedModelId.includes('/') ? requestedModelId.split('/').pop() : requestedModelId;
+      return 'gemini-2.5-pro';
     }
 
     // 2. Groq Cloud Direct
     if (config.providerId === 'groq') {
-      if (requestedModelId === 'girionix-pro' || requestedModelId === 'girionix-universal-auto') return 'llama-3.3-70b-versatile';
-      if (requestedModelId === 'girionix-lite') return 'llama-3.1-8b-instant';
-      if (requestedModelId === 'girionix-codemaster-ultra') return 'qwen-2.5-coder-32b';
-      if (requestedModelId === 'girionix-mathx-olympiad') return 'deepseek-r1-distill-llama-70b';
-      if (requestedModelId.includes('llama')) return 'llama-3.3-70b-versatile';
-      return requestedModelId.includes('/') ? requestedModelId.split('/').pop() : requestedModelId;
+      if (requestedModelId.includes('coder') || requestedModelId.includes('qwen')) return 'qwen-2.5-coder-32b';
+      if (requestedModelId.includes('r1') || requestedModelId.includes('thinking') || requestedModelId.includes('o3')) return 'deepseek-r1-distill-llama-70b';
+      if (requestedModelId === 'girionix-lite' || requestedModelId.includes('flash') || requestedModelId.includes('8b')) return 'llama-3.1-8b-instant';
+      return 'llama-3.3-70b-versatile';
     }
 
-    // 3. DeepSeek Direct
+    // 3. DeepSeek Direct API (api.deepseek.com/v1)
     if (config.providerId === 'deepseek') {
-      if (requestedModelId === 'girionix-pro' || requestedModelId === 'girionix-mathx-olympiad' || requestedModelId.includes('r1')) return 'deepseek-reasoner';
+      if (requestedModelId.includes('r1') || requestedModelId.includes('reasoner')) return 'deepseek-reasoner';
       return 'deepseek-chat';
     }
 
     // 4. OpenAI Direct
     if (config.providerId === 'openai') {
-      if (requestedModelId === 'girionix-pro' || requestedModelId === 'girionix-universal-auto' || requestedModelId.includes('gpt-4o')) return 'gpt-4o';
-      if (requestedModelId === 'girionix-lite') return 'gpt-4o-mini';
-      if (requestedModelId === 'girionix-mathx-olympiad' || requestedModelId.includes('o3')) return 'o3-mini';
-      return requestedModelId.includes('/') ? requestedModelId.split('/').pop() : requestedModelId;
+      if (requestedModelId.includes('o3') || requestedModelId.includes('r1')) return 'o3-mini';
+      if (requestedModelId === 'girionix-lite' || requestedModelId.includes('flash') || requestedModelId.includes('mini')) return 'gpt-4o-mini';
+      return 'gpt-4o';
     }
 
     // 5. Anthropic Direct
     if (config.providerId === 'anthropic') {
-      if (requestedModelId === 'girionix-lite') return 'claude-3-5-haiku-20241022';
+      if (requestedModelId === 'girionix-lite' || requestedModelId.includes('flash') || requestedModelId.includes('haiku')) return 'claude-3-5-haiku-20241022';
       return 'claude-3-7-sonnet-20250219';
     }
 
@@ -390,55 +390,21 @@ export const universalApiEngine = {
       return requestedModelId.includes('/') ? requestedModelId.split('/').pop() : requestedModelId;
     }
 
-    // 7. OpenRouter (Default Universal Provider)
-    if (config.providerId === 'openrouter' && requestedModelId.startsWith('gemini-')) {
-      if (requestedModelId === 'gemini-2.5-pro') return 'google/gemini-2.5-pro';
-      if (requestedModelId === 'gemini-2.5-flash') return 'google/gemini-2.5-flash';
-      if (requestedModelId === 'gemini-2.0-flash-thinking-exp') return 'google/gemini-2.0-flash-thinking-exp';
-      if (requestedModelId === 'gemini-2.5-flash-thinking') return 'google/gemini-2.0-flash-thinking-exp:free';
-      if (requestedModelId === 'gemini-2.0-flash') return 'google/gemini-2.0-flash-001';
-      if (requestedModelId === 'gemini-1.5-pro') return 'google/gemini-pro-1.5';
-      if (requestedModelId === 'gemini-1.5-flash') return 'google/gemini-flash-1.5';
-      return `google/${requestedModelId}`;
+    // 7. OpenRouter (Universal Provider)
+    if (requestedModelId === 'girionix-pro' || requestedModelId === 'girionix-universal-auto') {
+      return 'google/gemini-2.5-pro';
     }
-
-    if (!config.autoUpgradeEnabled) {
-      if (requestedModelId === 'girionix-pro') return 'deepseek/deepseek-r1';
-      if (requestedModelId === 'girionix-lite') return 'google/gemini-2.5-flash';
-      return requestedModelId;
-    }
-
-    const registry = this.getDynamicRegistry() || {};
-
-    // Auto-Frontier / Universal Flagship
-    if (requestedModelId === 'girionix-universal-auto' || requestedModelId === 'girionix-pro') {
-      return registry.frontier?.currentId || 'deepseek/deepseek-r1';
-    }
-
-    // High-Speed / Visual Engine
     if (requestedModelId === 'girionix-lite') {
-      return registry.fast?.currentId || 'google/gemini-2.5-flash';
+      return 'google/gemini-2.5-flash';
     }
-
-    // Dedicated Coding Studio
-    if (requestedModelId === 'girionix-codemaster-ultra') {
-      return registry.coding?.currentId || 'qwen/qwen-2.5-coder-32b-instruct';
-    }
-
-    // Math Lab Olympiad
-    if (requestedModelId === 'girionix-mathx-olympiad' || requestedModelId === 'openai/o3-mini') {
-      return registry.math?.currentId || 'deepseek/deepseek-r1';
-    }
-
-    // Screenplay & Script Studio
-    if (requestedModelId === 'girionix-scriptmaster-cinema') {
-      return registry.script?.currentId || 'deepseek/deepseek-r1';
-    }
-
-    // Multimodal Omni
-    if (requestedModelId === 'openai/gpt-4o') {
-      return registry.multimodal?.currentId || 'google/gemini-2.5-flash';
-    }
+    if (requestedModelId === 'gemini-2.5-pro') return 'google/gemini-2.5-pro';
+    if (requestedModelId === 'gemini-2.5-flash') return 'google/gemini-2.5-flash';
+    if (requestedModelId === 'gemini-2.0-flash-thinking-exp') return 'google/gemini-2.0-flash-thinking-exp';
+    if (requestedModelId === 'gemini-2.5-flash-thinking') return 'google/gemini-2.0-flash-thinking-exp:free';
+    if (requestedModelId === 'gemini-2.0-flash') return 'google/gemini-2.0-flash-001';
+    if (requestedModelId === 'gemini-1.5-pro') return 'google/gemini-pro-1.5';
+    if (requestedModelId === 'gemini-1.5-flash') return 'google/gemini-flash-1.5';
+    if (requestedModelId.startsWith('gemini-')) return `google/${requestedModelId}`;
 
     return requestedModelId;
   }

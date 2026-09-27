@@ -413,7 +413,27 @@ Whenever asked about your identity, what model you are, which version you are ru
       }
     }
 
-    const finalSystemPrompt = `${GIRIONIX_SYSTEM_PROMPT}\n\n${baseSystem}${featureDirectives}${modelIdentityDirective}${needsMemory ? memoryDirective : ''}${revisionDirective}`;
+    // Model-specific specialization directive to elevate response quality
+    const lowerModel = (model || '').toLowerCase();
+    const lowerName = (activeModelName || '').toLowerCase();
+    let modelRoleDirective = '';
+    if (lowerModel.includes('coder') || lowerModel.includes('qwen') || lowerName.includes('codemaster')) {
+      modelRoleDirective = '\n\n[SPECIALIZATION - CODING ARCHITECT]: You are the CodeMaster engine. Provide complete, modular, battle-tested software engineering solutions with zero placeholders, full typing, modern design patterns, and asymptotic performance notes.';
+    } else if (lowerModel.includes('deepseek-chat') || lowerModel.includes('671b') || lowerName.includes('titan')) {
+      modelRoleDirective = '\n\n[SPECIALIZATION - TITAN 671B MOE]: You are the Titan 671B Mixture-of-Experts engine. Deliver massive depth, rigorous data tables with executable formulas (=SUM, =AVERAGE, =XLOOKUP), financial models, and comprehensive multi-variable analysis.';
+    } else if (lowerModel.includes('r1') || lowerModel.includes('reasoner') || lowerModel.includes('o3') || lowerName.includes('reasoner')) {
+      modelRoleDirective = '\n\n[SPECIALIZATION - DEEP STEM REASONER]: You are the Deep Reasoning engine. Break down complex mathematical proofs, physics derivations, and algorithmic puzzles with step-by-step logical rigor and KaTeX equations.';
+    } else if (lowerModel.includes('gpt-4o') || lowerModel.includes('omni') || lowerName.includes('omnivision')) {
+      modelRoleDirective = '\n\n[SPECIALIZATION - OMNIVISION & CREATIVE DIRECTOR]: You are the OmniVision engine. Deliver stunning visual compositions, slide deck outlines with hooks and speaker tracks, and creative storytelling.';
+    } else if (lowerModel.includes('ultra') || lowerModel.includes('2.5-pro') || lowerName.includes('ultra')) {
+      modelRoleDirective = '\n\n[SPECIALIZATION - ULTRA 2M CONTEXT]: You are the Ultra frontier engine. Provide exhaustive, multi-dimensional deep dives into long documents, contracts, research papers, and complex systems.';
+    } else if (lowerModel.includes('flash') || lowerModel.includes('lite') || lowerName.includes('lite') || lowerName.includes('flash')) {
+      modelRoleDirective = '\n\n[SPECIALIZATION - FAST & DIRECT]: You are the high-speed workhorse engine. Deliver crisp, punchy, immediate answers with zero fluff.';
+    } else {
+      modelRoleDirective = '\n\n[SPECIALIZATION - FLAGSHIP INTELLIGENCE]: You are the Girionix Pro flagship engine. Deliver balanced, polymathic excellence across coding, mathematics, executive communication, and creative strategy.';
+    }
+
+    const finalSystemPrompt = `${GIRIONIX_SYSTEM_PROMPT}\n\n${baseSystem}${featureDirectives}${modelIdentityDirective}${modelRoleDirective}${needsMemory ? memoryDirective : ''}${revisionDirective}`;
 
     const enrichedMessages = [
       { role: 'system', content: finalSystemPrompt },
@@ -582,8 +602,23 @@ Whenever asked about your identity, what model you are, which version you are ru
             'X-Title': 'Girionix AI Polymath Workstation',
           };
 
+          // Normalize candidate model according to active provider to prevent 404 / 400 Bad Request
+          let apiModel = candidateModel;
+          if (config.providerId === 'deepseek') {
+            apiModel = candidateModel.replace(/^deepseek\//, '');
+          } else if (config.providerId === 'groq') {
+            apiModel = candidateModel.replace(/^(meta-llama|qwen|deepseek|google|openai)\//, '');
+            if (apiModel.includes('llama-3.3-70b')) apiModel = 'llama-3.3-70b-versatile';
+            else if (apiModel.includes('llama-3.1-8b') || apiModel.includes('flash')) apiModel = 'llama-3.1-8b-instant';
+            else if (apiModel.includes('coder') || apiModel.includes('qwen')) apiModel = 'qwen-2.5-coder-32b';
+            else if (apiModel.includes('r1')) apiModel = 'deepseek-r1-distill-llama-70b';
+            else apiModel = 'llama-3.3-70b-versatile';
+          } else if (config.providerId === 'openai') {
+            apiModel = candidateModel.replace(/^openai\//, '');
+          }
+
           let requestBody = {
-            model: candidateModel,
+            model: apiModel,
             messages: enrichedMessages,
             temperature,
             max_tokens: maxTokens,
@@ -598,7 +633,7 @@ Whenever asked about your identity, what model you are, which version you are ru
               requestHeaders['dangerously-allow-browser'] = 'true';
             }
             requestBody = {
-              model: candidateModel,
+              model: apiModel,
               max_tokens: maxTokens || 4096,
               system: finalSystemPrompt,
               messages: cleanDialogue.map(m => ({
@@ -618,7 +653,7 @@ Whenever asked about your identity, what model you are, which version you are ru
             }
 
             // ONLY pass reasoning parameter to models that natively support reasoning (prevents 400 Bad Request on standard models)
-            const isReasoningModel = /r1|reason|o1|o3|thinking|qwq/i.test(candidateModel);
+            const isReasoningModel = /r1|reason|o1|o3|thinking|qwq/i.test(apiModel);
             if (useThinking && isReasoningModel && (config.providerId === 'openrouter' || config.providerId === 'deepseek')) {
               // OpenRouter requirement: ONLY ONE of effort or max_tokens can be specified
               requestBody.reasoning = {
@@ -652,6 +687,7 @@ Whenever asked about your identity, what model you are, which version you are ru
             const errorData = await response.json().catch(() => ({}));
             const errMsg = errorData.error?.message || errorData.message || `Status ${response.status}`;
             lastCloudError = errMsg;
+            lastHttpStatus = response.status;
             if (response.status === 402) {
               isZeroCreditAccount = true;
               console.warn(`OpenRouter model ${candidateModel} returned 402 (Zero Credits). Auto-switching to OpenRouter Free tier...`);
