@@ -22,11 +22,15 @@ import { storage } from '../../services/storage';
 import { openrouter } from '../../services/openrouter';
 import { universalApiEngine } from '../../services/universalApiEngine';
 import { geminiStudioEngine } from '../../services/geminiStudioEngine';
+import { giriOrbitBridge } from '../../services/giriOrbitBridge';
 
 export default function SettingsModal({ isOpen, onClose, onApiKeyUpdated }) {
+  const isNormalUser = !giriOrbitBridge.isOrbitMode();
   const [providerConfig, setProviderConfig] = useState(universalApiEngine.getProviderConfig());
   const [customBaseUrl, setCustomBaseUrl] = useState(providerConfig.baseUrl);
   const [apiKeyInput, setApiKeyInput] = useState(providerConfig.apiKey);
+  const [customModelId, setCustomModelId] = useState(() => storage.getCustomModelId());
+  const [customModelName, setCustomModelName] = useState(() => storage.getCustomModelName());
   const [showApiKey, setShowApiKey] = useState(false);
 
   const [userProfile, setUserProfile] = useState(() => storage.getUserProfile());
@@ -50,6 +54,8 @@ export default function SettingsModal({ isOpen, onClose, onApiKeyUpdated }) {
       setProviderConfig(cfg);
       setCustomBaseUrl(cfg.baseUrl);
       setApiKeyInput(cfg.apiKey);
+      setCustomModelId(storage.getCustomModelId());
+      setCustomModelName(storage.getCustomModelName());
       setSettings(storage.getSettings());
       setUserProfile(storage.getUserProfile());
       setVerificationStatus(null);
@@ -63,53 +69,53 @@ export default function SettingsModal({ isOpen, onClose, onApiKeyUpdated }) {
 
   const handleApiKeyChange = (val) => {
     setApiKeyInput(val);
-    const detected = universalApiEngine.detectProviderFromKey(val);
-    if (detected) {
-      if (!customBaseUrl || customBaseUrl.includes('openrouter.ai') || customBaseUrl.includes('generativelanguage.googleapis.com')) {
-        setCustomBaseUrl(detected.baseUrl);
-      }
-    }
   };
 
   const handleVerify = async () => {
     setVerificationStatus({ loading: true });
-    const detected = universalApiEngine.detectProviderFromKey(apiKeyInput);
-    const providerId = detected ? detected.providerId : 'custom';
-    const baseUrl = customBaseUrl || (detected ? detected.baseUrl : 'https://openrouter.ai/api/v1');
+    const baseUrl = customBaseUrl ? customBaseUrl.trim() : 'https://openrouter.ai/api/v1';
     const result = await openrouter.verifyKey(apiKeyInput, {
-      providerId,
+      providerId: 'custom',
       baseUrl
     });
     setVerificationStatus({ loading: false, ...result });
   };
 
   const handleSave = () => {
-    const trimmed = (apiKeyInput || '').trim();
-    const detected = universalApiEngine.detectProviderFromKey(trimmed);
-    const providerId = detected ? detected.providerId : (customBaseUrl ? 'custom' : 'openrouter');
-    const baseUrl = customBaseUrl ? customBaseUrl.trim() : (detected ? detected.baseUrl : 'https://openrouter.ai/api/v1');
+    if (isNormalUser) {
+      const trimmedKey = (apiKeyInput || '').trim();
+      const trimmedModelId = (customModelId || '').trim();
+      const trimmedModelName = (customModelName || '').trim();
+      const trimmedBaseUrl = (customBaseUrl || '').trim();
 
-    universalApiEngine.saveProviderConfig({
-      providerId,
-      baseUrl,
-      apiKey: trimmed,
-      autoUpgradeEnabled: true
-    });
+      storage.setCustomModelId(trimmedModelId);
+      storage.setCustomModelName(trimmedModelName);
+      storage.setApiKey(trimmedKey);
 
-    storage.setApiKey(trimmed);
-    if (providerId === 'google' || trimmed.startsWith('AIzaSy')) {
-      geminiStudioEngine.setApiKey(trimmed);
-      try {
-        localStorage.setItem('girionix_gemini_api_key', trimmed);
-      } catch (_) {}
+      universalApiEngine.saveProviderConfig({
+        providerId: trimmedBaseUrl ? 'custom' : 'openrouter',
+        baseUrl: trimmedBaseUrl || 'https://openrouter.ai/api/v1',
+        apiKey: trimmedKey,
+        autoUpgradeEnabled: false
+      });
+
+      if (trimmedKey.startsWith('AIzaSy')) {
+        geminiStudioEngine.setApiKey(trimmedKey);
+        try {
+          localStorage.setItem('girionix_gemini_api_key', trimmedKey);
+        } catch (_) {}
+      }
+
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('girionix:key-updated'));
+        window.dispatchEvent(new Event('storage'));
+        window.dispatchEvent(new CustomEvent('girionix:custom-model-updated', {
+          detail: { customModelId: trimmedModelId, customModelName: trimmedModelName }
+        }));
+      }
+
+      if (onApiKeyUpdated) onApiKeyUpdated(trimmedKey);
     }
-
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new Event('girionix:key-updated'));
-      window.dispatchEvent(new Event('storage'));
-    }
-
-    if (onApiKeyUpdated) onApiKeyUpdated(trimmed);
 
     try {
       localStorage.setItem('girionix_always_direct_chat', alwaysDirectChat ? 'true' : 'false');
@@ -145,11 +151,13 @@ export default function SettingsModal({ isOpen, onClose, onApiKeyUpdated }) {
               <h2 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
                 <span>Settings</span>
                 <span className="px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 text-[10px] font-mono border border-cyan-500/30">
-                  Custom API
+                  {isNormalUser ? 'Custom Model' : 'Workspace'}
                 </span>
               </h2>
               <p className="text-xs text-gray-400">
-                Configure your custom AI endpoint, user profile, and speech settings.
+                {isNormalUser 
+                  ? 'Configure your custom model endpoint, user profile, and speech settings.'
+                  : 'Configure user profile and speech preferences for your workspace.'}
               </p>
             </div>
           </div>
@@ -237,121 +245,136 @@ export default function SettingsModal({ isOpen, onClose, onApiKeyUpdated }) {
             </div>
           </div>
 
-          {/* 1. CUSTOM API */}
-          <div className="p-5 rounded-2xl bg-gradient-to-b from-cyan-950/30 to-black/60 border border-cyan-500/30 space-y-4 shadow-xl">
-            <div className="flex items-center justify-between border-b border-white/10 pb-3">
-              <div className="flex items-center gap-2">
-                <Key className="w-4 h-4 text-cyan-400" />
-                <span className="text-sm font-bold text-white">Custom API</span>
+          {/* 1. CUSTOM MODEL (NORMAL USERS ONLY) */}
+          {isNormalUser ? (
+            <div className="p-5 rounded-2xl bg-gradient-to-b from-purple-950/20 to-black/60 border border-purple-500/30 space-y-4 shadow-xl">
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <div className="flex items-center gap-2">
+                  <Cpu className="w-4 h-4 text-purple-400" />
+                  <span className="text-sm font-bold text-white">Custom Model</span>
+                </div>
+                <span className="text-[10px] font-mono text-purple-300 bg-purple-500/10 px-2.5 py-0.5 rounded-full border border-purple-500/30 flex items-center gap-1 font-semibold">
+                  <Sparkles className="w-2.5 h-2.5" />
+                  Normal User Feature
+                </span>
               </div>
-              <span className="text-[10px] font-mono text-cyan-300 bg-cyan-500/10 px-2.5 py-0.5 rounded-full border border-cyan-500/30 flex items-center gap-1">
-                <Lock className="w-2.5 h-2.5" />
-                Encrypted & Direct
-              </span>
-            </div>
 
-            <p className="text-xs text-gray-300 font-sans leading-relaxed">
-              Configure your Custom API key and endpoint. Supports <strong>OpenRouter</strong>, <strong>Google Gemini</strong>, <strong>Groq</strong>, <strong>DeepSeek</strong>, <strong>Anthropic</strong>, <strong>OpenAI</strong>, or any OpenAI-compatible local/remote endpoint.
-            </p>
+              <p className="text-xs text-gray-300 font-sans leading-relaxed">
+                Connect your own custom AI model directly into Girionix AI. Configure your model ID, API key, and optional OpenAI-compatible endpoint. Once saved, activate it via <strong>⚙️ Custom Model</strong> in the model menu.
+              </p>
 
-            {/* Custom API Key */}
-            <div className="space-y-1.5 font-mono text-xs">
-              <div className="flex justify-between items-center">
+              {/* Model Friendly Name */}
+              <div className="space-y-1.5 font-mono text-xs">
                 <label className="text-gray-300 font-bold flex items-center gap-1.5">
-                  <span>Custom API Key / Bearer Token:</span>
+                  <span>Custom Model Friendly Name:</span>
                 </label>
+                <input
+                  type="text"
+                  value={customModelName}
+                  onChange={(e) => setCustomModelName(e.target.value)}
+                  placeholder="e.g. My Claude 3.5 Sonnet, Local Llama 70B, Custom DeepSeek"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-black/80 border border-white/15 text-white text-xs font-mono focus:border-purple-400 focus:outline-none transition-colors"
+                />
+              </div>
+
+              {/* Model ID */}
+              <div className="space-y-1.5 font-mono text-xs">
+                <label className="text-gray-300 font-bold flex items-center gap-1.5">
+                  <span>Custom Model ID / Identifier:</span>
+                </label>
+                <input
+                  type="text"
+                  value={customModelId}
+                  onChange={(e) => setCustomModelId(e.target.value)}
+                  placeholder="e.g. anthropic/claude-3.5-sonnet, deepseek/deepseek-chat, mistralai/mistral-large"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-black/80 border border-white/15 text-cyan-300 text-xs font-mono focus:border-cyan-400 focus:outline-none transition-colors"
+                />
+                <p className="text-[10px] text-gray-500 font-sans">
+                  The exact model identifier required by OpenRouter or your custom OpenAI-compatible endpoint.
+                </p>
+              </div>
+
+              {/* API Key */}
+              <div className="space-y-1.5 font-mono text-xs">
+                <div className="flex justify-between items-center">
+                  <label className="text-gray-300 font-bold flex items-center gap-1.5">
+                    <Key className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>API Key / Bearer Token:</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowApiKey(!showApiKey)}
+                    className="text-[11px] text-cyan-400 hover:text-cyan-300 font-sans cursor-pointer flex items-center gap-1 transition-colors"
+                  >
+                    {showApiKey ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                    <span>{showApiKey ? 'Hide Key' : 'Show Key'}</span>
+                  </button>
+                </div>
+                <input
+                  type={showApiKey ? 'text' : 'password'}
+                  value={apiKeyInput}
+                  onChange={(e) => handleApiKeyChange(e.target.value)}
+                  placeholder="sk-or-v1-..., sk-..., or custom bearer token"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-black/80 border border-white/15 text-white text-xs font-mono focus:border-cyan-400 focus:outline-none transition-colors"
+                />
+              </div>
+
+              {/* Custom Base URL Endpoint */}
+              <div className="space-y-1.5 font-mono text-xs">
+                <label className="text-gray-300 font-bold flex items-center gap-1.5">
+                  <Globe className="w-3.5 h-3.5 text-purple-400" />
+                  <span>Custom Base Endpoint URL (Optional):</span>
+                </label>
+                <input
+                  type="text"
+                  value={customBaseUrl}
+                  onChange={(e) => setCustomBaseUrl(e.target.value)}
+                  placeholder="https://openrouter.ai/api/v1 (or local Ollama/LM Studio URL)"
+                  className="w-full px-3.5 py-2 rounded-xl bg-black/80 border border-white/15 text-purple-300 text-xs font-mono focus:border-purple-400 focus:outline-none transition-colors"
+                />
+                <p className="text-[10px] text-gray-500 font-sans">
+                  Defaults to OpenRouter (<code className="text-gray-400">https://openrouter.ai/api/v1</code>). Can also be configured for local endpoints (e.g. <code className="text-gray-400">http://localhost:11434/v1</code>).
+                </p>
+              </div>
+
+              {/* Test Connection Button */}
+              <div className="pt-2 border-t border-white/10 flex items-center justify-between">
                 <button
                   type="button"
-                  onClick={() => setShowApiKey(!showApiKey)}
-                  className="text-[11px] text-cyan-400 hover:text-cyan-300 font-sans cursor-pointer flex items-center gap-1 transition-colors"
+                  onClick={handleVerify}
+                  disabled={verificationStatus?.loading || !apiKeyInput?.trim()}
+                  className="px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-40 text-cyan-400 hover:text-cyan-300 border border-white/10 flex items-center gap-1.5 cursor-pointer text-xs font-mono transition-all"
                 >
-                  {showApiKey ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                  <span>{showApiKey ? 'Hide Key' : 'Show Key'}</span>
+                  {verificationStatus?.loading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />}
+                  <span>Test Connection</span>
                 </button>
               </div>
-              <input
-                type={showApiKey ? 'text' : 'password'}
-                value={apiKeyInput}
-                onChange={(e) => handleApiKeyChange(e.target.value)}
-                placeholder="sk-..., AIzaSy..., gsk_..., or custom token"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-black/80 border border-white/15 text-white text-xs font-mono focus:border-cyan-400 focus:outline-none transition-colors"
-              />
 
-              {/* Live Provider Auto-Detection Badge */}
-              {(() => {
-                const detected = universalApiEngine.detectProviderFromKey(apiKeyInput);
-                if (detected) {
-                  return (
-                    <div className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 flex items-center justify-between text-[11px] font-sans">
-                      <span className="flex items-center gap-1.5 font-medium">
-                        <Sparkles className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
-                        Detected Provider: <strong>{detected.name}</strong>
-                      </span>
-                      <span className="text-[10px] font-mono text-cyan-400/80 bg-cyan-950/60 px-2 py-0.5 rounded-md border border-cyan-500/20">
-                        Auto-Routed
-                      </span>
-                    </div>
-                  );
-                }
-                return null;
-              })()}
-            </div>
-
-            {/* Custom Base URL Input */}
-            <div className="space-y-1.5 font-mono text-xs">
-              <label className="text-gray-300 font-bold">Custom Base Endpoint URL (Optional):</label>
-              <input
-                type="text"
-                value={customBaseUrl}
-                onChange={(e) => setCustomBaseUrl(e.target.value)}
-                placeholder="https://openrouter.ai/api/v1 (or custom OpenAI-compatible endpoint)"
-                className="w-full px-3.5 py-2 rounded-xl bg-black/80 border border-white/15 text-cyan-300 text-xs font-mono focus:border-cyan-400 focus:outline-none transition-colors"
-              />
-              <p className="text-[10px] text-gray-500 font-sans">
-                Defaults to OpenRouter (<code className="text-gray-400">https://openrouter.ai/api/v1</code>) or your provider's native endpoint. Can also be set to local servers (e.g. Ollama <code className="text-gray-400">http://localhost:11434/v1</code>).
-              </p>
-            </div>
-
-            {/* Test Connection Button */}
-            <div className="pt-2 border-t border-white/10 flex items-center justify-between">
-              <button
-                type="button"
-                onClick={handleVerify}
-                disabled={verificationStatus?.loading || !apiKeyInput?.trim()}
-                className="px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-40 text-cyan-400 hover:text-cyan-300 border border-white/10 flex items-center gap-1.5 cursor-pointer text-xs font-mono transition-all"
-              >
-                {verificationStatus?.loading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />}
-                <span>Test Connection</span>
-              </button>
-            </div>
-
-            {/* Verification Result Feedback */}
-            {verificationStatus && (
-              <div className={`p-3.5 rounded-xl text-xs font-mono space-y-1.5 ${
-                verificationStatus.valid 
-                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' 
-                  : 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
-              }`}>
-                <div className="flex items-center gap-2 font-bold">
-                  {verificationStatus.valid ? <Check className="w-4 h-4 text-emerald-400" /> : <X className="w-4 h-4 text-rose-400" />}
-                  <span>{verificationStatus.valid ? `✅ ${verificationStatus.label || 'Connection Valid'} — Ready for inference` : `⚠️ ${verificationStatus.message}`}</span>
-                </div>
-                {verificationStatus.valid && (verificationStatus.usage !== undefined || verificationStatus.limit !== undefined) && (
-                  <div className="text-[11px] text-gray-300 font-sans pl-6 space-y-0.5 pt-1 border-t border-emerald-500/20">
-                    {verificationStatus.usage !== undefined && (
-                      <div>Usage on key: <span className="font-mono text-emerald-300 font-bold">${typeof verificationStatus.usage === 'number' ? verificationStatus.usage.toFixed(4) : verificationStatus.usage}</span></div>
-                    )}
-                    {verificationStatus.limit && (
-                      <div>Credit limit: <span className="font-mono text-cyan-300 font-bold">${verificationStatus.limit}</span></div>
-                    )}
-                    {verificationStatus.isFreeTier && (
-                      <div className="text-amber-300 font-medium">Account Tier: Free Tier (Use :free models if credit is $0)</div>
-                    )}
+              {/* Verification Result Feedback */}
+              {verificationStatus && (
+                <div className={`p-3.5 rounded-xl text-xs font-mono space-y-1.5 ${
+                  verificationStatus.valid 
+                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' 
+                    : 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
+                }`}>
+                  <div className="flex items-center gap-2 font-bold">
+                    {verificationStatus.valid ? <Check className="w-4 h-4 text-emerald-400" /> : <X className="w-4 h-4 text-rose-400" />}
+                    <span>{verificationStatus.valid ? `✅ ${verificationStatus.label || 'Connection Valid'} — Ready for inference` : `⚠️ ${verificationStatus.message}`}</span>
                   </div>
-                )}
-              </div>
-            )}
-          </div>
+                  {verificationStatus.valid && (verificationStatus.usage !== undefined || verificationStatus.limit !== undefined) && (
+                    <div className="text-[11px] text-gray-300 font-sans pl-6 space-y-0.5 pt-1 border-t border-emerald-500/20">
+                      {verificationStatus.usage !== undefined && (
+                        <div>Usage on key: <span className="font-mono text-emerald-300 font-bold">${typeof verificationStatus.usage === 'number' ? verificationStatus.usage.toFixed(4) : verificationStatus.usage}</span></div>
+                      )}
+                      {verificationStatus.limit && (
+                        <div>Credit limit: <span className="font-mono text-cyan-300 font-bold">${verificationStatus.limit}</span></div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          ) : null}
 
           {/* 3. STARTUP & WORKSPACE ROUTING PREFERENCE */}
           <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 space-y-3">

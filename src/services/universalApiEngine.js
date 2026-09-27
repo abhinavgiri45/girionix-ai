@@ -171,10 +171,12 @@ export const universalApiEngine = {
         localStorage.setItem(STORAGE_KEYS.CUSTOM_API_KEY, trimmedKey);
         storage.setApiKey(trimmedKey);
 
-        const detected = this.detectProviderFromKey(trimmedKey);
-        if (detected) {
-          finalProviderId = detected.providerId;
-          finalBaseUrl = detected.baseUrl;
+        if (!finalProviderId && !finalBaseUrl) {
+          const detected = this.detectProviderFromKey(trimmedKey);
+          if (detected) {
+            finalProviderId = detected.providerId;
+            finalBaseUrl = detected.baseUrl;
+          }
         }
       }
 
@@ -344,6 +346,11 @@ export const universalApiEngine = {
    * Resolve any model alias to the latest auto-upgraded target ID
    */
   resolveTargetModel(requestedModelId) {
+    if (requestedModelId === 'custom-model') {
+      const customId = storage.getCustomModelId();
+      return customId || 'deepseek/deepseek-chat';
+    }
+
     const config = this.getProviderConfig();
 
     // 1. Gemini Direct

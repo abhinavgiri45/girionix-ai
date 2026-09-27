@@ -664,6 +664,28 @@ export const storage = {
     } catch (_) {}
   },
 
+  getCustomModelId: () => {
+    try {
+      return (safeGetItem('girionix_custom_model_id') || '').trim();
+    } catch (_) { return ''; }
+  },
+  setCustomModelId: (id) => {
+    safeSetItem('girionix_custom_model_id', (id || '').trim());
+    try {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('girionix:custom-model-updated', { detail: { customModelId: id } }));
+      }
+    } catch (_) {}
+  },
+  getCustomModelName: () => {
+    try {
+      return (safeGetItem('girionix_custom_model_name') || '').trim();
+    } catch (_) { return ''; }
+  },
+  setCustomModelName: (name) => {
+    safeSetItem('girionix_custom_model_name', (name || '').trim());
+  },
+
   getWebSearchEnabled: () => {
     const val = safeGetItem(KEYS.WEB_SEARCH_ENABLED);
     return val === null ? true : val === 'true';

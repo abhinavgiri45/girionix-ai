@@ -533,7 +533,8 @@ Whenever asked about your identity, what model you are, which version you are ru
       }
     }
 
-    if (config.providerId === 'google') {
+    if (model !== 'custom-model') {
+      if (config.providerId === 'google') {
       ['gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro', 'gemini-1.5-flash'].forEach(m => {
         if (!candidateModels.includes(m)) candidateModels.push(m);
       });
@@ -572,6 +573,7 @@ Whenever asked about your identity, what model you are, which version you are ru
       openRouterCascade.forEach(m => {
         if (!candidateModels.includes(m)) candidateModels.push(m);
       });
+    }
     }
 
     let lastCloudError = null;

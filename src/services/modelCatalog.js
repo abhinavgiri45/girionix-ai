@@ -204,6 +204,14 @@ export function getModelDisplayName(modelOrId, context = 'chat') {
   if (id === 'girionix-lite') {
     return '🌱 Girionix Lite';
   }
+  if (id === 'custom-model') {
+    try {
+      const customName = typeof window !== 'undefined' ? (localStorage.getItem('girionix_custom_model_name') || localStorage.getItem('girionix_custom_model_id')) : '';
+      return customName ? `⚙️ Custom: ${customName}` : '⚙️ Custom Model';
+    } catch (_) {
+      return '⚙️ Custom Model';
+    }
+  }
 
   const found = findModelById(id);
   return found?.name || id;
@@ -420,7 +428,37 @@ export function getDedicatedStudioModel(tabId) {
   };
 }
 
+export const CUSTOM_MODEL_DEFINITION = {
+  id: "custom-model",
+  name: "⚙️ Custom Model",
+  provider: "Custom Model Endpoint",
+  category: "custom",
+  tag: "User-Defined Custom Model Endpoint",
+  badgeColor: "purple",
+  description: "User-defined custom model configured in Settings.",
+  contextWindow: 128000,
+  speed: "⚡ Dynamic Velocity",
+  pricing: "Custom",
+  supportsReasoning: true,
+  supportsVision: true,
+  isCustom: true
+};
+
 export function findModelById(id) {
   if (!id) return AI_MODELS[0];
+  if (id === 'custom-model') {
+    try {
+      const customId = typeof window !== 'undefined' ? (localStorage.getItem('girionix_custom_model_id') || '').trim() : '';
+      const customName = typeof window !== 'undefined' ? (localStorage.getItem('girionix_custom_model_name') || '').trim() : '';
+      return {
+        ...CUSTOM_MODEL_DEFINITION,
+        name: customName ? `⚙️ ${customName}` : (customId ? `⚙️ ${customId}` : '⚙️ Custom Model'),
+        tag: customId ? `Custom Endpoint: ${customId}` : 'Configured in Settings',
+        description: customId ? `Custom model endpoint: ${customId}` : 'Enter your custom model ID in Settings (⚙️)'
+      };
+    } catch (_) {
+      return CUSTOM_MODEL_DEFINITION;
+    }
+  }
   return AI_MODELS.find(m => m.id === id) || AI_MODELS[0];
 }

@@ -17,7 +17,7 @@ import OrbitWorkstationView from './components/orbit/OrbitWorkstationView';
 import MobileBottomNav from './components/layout/MobileBottomNav';
 import SettingsModal from './components/settings/SettingsModal';
 
-import { AI_MODELS } from './services/modelCatalog';
+import { AI_MODELS, findModelById } from './services/modelCatalog';
 import { storage } from './services/storage';
 import { updateService } from './services/updateService';
 import { giriOrbitBridge } from './services/giriOrbitBridge';
@@ -38,6 +38,9 @@ export default function App() {
       if (proModel) return proModel;
     }
     const savedModelId = storage.getActiveModelId();
+    if (savedModelId === 'custom-model') {
+      return findModelById('custom-model');
+    }
     const found = AI_MODELS.find(m => m.id === savedModelId);
     return found || AI_MODELS[0];
   });
@@ -55,14 +58,23 @@ export default function App() {
     const handleModelSync = (e) => {
       const modelId = e.detail?.modelId;
       if (modelId && (!activeModel || activeModel.id !== modelId)) {
-        const matched = AI_MODELS.find(m => m.id === modelId);
+        const matched = findModelById(modelId);
         if (matched) {
           setActiveModel(matched);
         }
       }
     };
+    const handleCustomModelUpdate = () => {
+      if (activeModel?.id === 'custom-model') {
+        setActiveModel(findModelById('custom-model'));
+      }
+    };
     window.addEventListener('girionix:model-sync', handleModelSync);
-    return () => window.removeEventListener('girionix:model-sync', handleModelSync);
+    window.addEventListener('girionix:custom-model-updated', handleCustomModelUpdate);
+    return () => {
+      window.removeEventListener('girionix:model-sync', handleModelSync);
+      window.removeEventListener('girionix:custom-model-updated', handleCustomModelUpdate);
+    };
   }, [activeModel]);
 
   // Restore deep link URL cleanly if redirected via 404 handler

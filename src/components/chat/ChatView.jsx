@@ -58,7 +58,8 @@ import { openrouter } from '../../services/openrouter';
 import { imageGenerator } from '../../services/imageGenerator';
 import { speech } from '../../services/speech';
 import { storage, PERSONAS } from '../../services/storage';
-import { AI_MODELS, getModelDisplayName } from '../../services/modelCatalog';
+import { AI_MODELS, getModelDisplayName, findModelById } from '../../services/modelCatalog';
+import { giriOrbitBridge } from '../../services/giriOrbitBridge';
 import { localNeuralEngine } from '../../services/localNeuralEngine';
 import { universalApiEngine } from '../../services/universalApiEngine';
 import { conversationMemory } from '../../services/conversationMemory';
@@ -91,6 +92,7 @@ export default function ChatView({
   const [isStreaming, setIsStreaming] = useState(false);
   const [useThinking, setUseThinking] = useState(() => storage.getDeepReasoningEnabled());
   const [webSearchEnabled, setWebSearchEnabled] = useState(() => storage.getWebSearchEnabled());
+  const isNormalUser = !giriOrbitBridge.isOrbitMode();
 
   const handleToggleWebSearch = (enabled) => {
     setWebSearchEnabled(enabled);
@@ -168,14 +170,23 @@ export default function ChatView({
     const handleModelSync = (e) => {
       const modelId = e.detail?.modelId;
       if (modelId && (!activeModel || activeModel.id !== modelId)) {
-        const matched = AI_MODELS.find(m => m.id === modelId);
+        const matched = findModelById(modelId);
         if (matched) {
           setActiveModel(matched);
         }
       }
     };
+    const handleCustomModelUpdate = () => {
+      if (activeModel?.id === 'custom-model') {
+        setActiveModel(findModelById('custom-model'));
+      }
+    };
     window.addEventListener('girionix:model-sync', handleModelSync);
-    return () => window.removeEventListener('girionix:model-sync', handleModelSync);
+    window.addEventListener('girionix:custom-model-updated', handleCustomModelUpdate);
+    return () => {
+      window.removeEventListener('girionix:model-sync', handleModelSync);
+      window.removeEventListener('girionix:custom-model-updated', handleCustomModelUpdate);
+    };
   }, [activeModel, setActiveModel]);
 
 
@@ -1103,6 +1114,42 @@ Whenever asked about your identity, what model you are, which version you are ru
                             </button>
                           );
                         })}
+
+                        {isNormalUser && (
+                          <div className="pt-1 mt-1 border-t border-white/10">
+                            {(() => {
+                              const customModelObj = findModelById('custom-model');
+                              const isSelected = activeModel?.id === 'custom-model';
+                              return (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveModel(customModelObj);
+                                    storage.setActiveModelId('custom-model');
+                                    setIsEngineDropdownOpen(false);
+                                    setModelToast(`⚙️ Active: ${customModelObj.name}`);
+                                    setTimeout(() => setModelToast(null), 2500);
+                                  }}
+                                  className={`w-full text-left p-2 rounded-xl flex items-center justify-between text-xs transition-all cursor-pointer ${
+                                    isSelected 
+                                      ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40' 
+                                      : 'text-purple-300 hover:bg-purple-500/10 border border-purple-500/20'
+                                  }`}
+                                >
+                                  <div className="flex flex-col min-w-0 pr-2">
+                                    <span className="font-bold text-white text-xs flex items-center gap-1.5">
+                                      <span>{customModelObj.name}</span>
+                                      <span className="text-[9px] font-mono px-1.5 py-0.2 bg-purple-500/20 text-purple-300 rounded border border-purple-500/30">Normal User</span>
+                                    </span>
+                                    <span className="text-[10px] text-gray-400 truncate">{customModelObj.tag || 'Configured in Settings (⚙️)'}</span>
+                                  </div>
+                                  {isSelected && <Check className="w-3.5 h-3.5 text-purple-400 shrink-0" />}
+                                </button>
+                              );
+                            })()}
+                          </div>
+                        )}
                       </div>
 
                       <div className="pt-1.5 border-t border-white/10 shrink-0">
