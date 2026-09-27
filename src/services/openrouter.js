@@ -495,14 +495,21 @@ Whenever asked about your identity, what model you are, which version you are ru
     }
 
     // Build ordered candidate model list tailored to the active provider
+    let effectiveTargetModelId = targetModelId;
+    if (!useThinking && effectiveTargetModelId) {
+      if (effectiveTargetModelId === 'deepseek/deepseek-r1') effectiveTargetModelId = 'deepseek/deepseek-chat';
+      else if (effectiveTargetModelId === 'deepseek-reasoner') effectiveTargetModelId = 'deepseek-chat';
+      else if (effectiveTargetModelId === 'gemini-2.0-flash-thinking-exp') effectiveTargetModelId = 'gemini-2.5-flash';
+    }
+
     const candidateModels = [];
-    if (targetModelId) {
-      if ((userApiKey || masterKey) && targetModelId.endsWith(':free')) {
-        const paidVersion = targetModelId.replace(/:free$/, '');
+    if (effectiveTargetModelId) {
+      if ((userApiKey || masterKey) && effectiveTargetModelId.endsWith(':free')) {
+        const paidVersion = effectiveTargetModelId.replace(/:free$/, '');
         candidateModels.push(paidVersion);
-        candidateModels.push(targetModelId);
+        candidateModels.push(effectiveTargetModelId);
       } else {
-        candidateModels.push(targetModelId);
+        candidateModels.push(effectiveTargetModelId);
       }
     }
 

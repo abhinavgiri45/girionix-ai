@@ -11,21 +11,61 @@ import {
   Copy, 
   Share2, 
   ExternalLink, 
-  RefreshCw,
-  Layers,
-  ChevronRight,
-  Shield,
-  Zap,
-  Mic,
-  MicOff,
-  FileCode,
-  FileSpreadsheet,
-  Trash2,
-  BookOpen
+  RefreshCw, 
+  Layers, 
+  ChevronRight, 
+  ChevronDown, 
+  Shield, 
+  Zap, 
+  Mic, 
+  MicOff, 
+  FileCode, 
+  FileSpreadsheet, 
+  Trash2, 
+  BookOpen, 
+  X 
 } from 'lucide-react';
 import { giriOrbitBridge, ORBIT_TOOLS, detectToolFromPrompt, normalizeToolName } from '../../services/giriOrbitBridge';
 import { storage } from '../../services/storage';
 import { openrouter } from '../../services/openrouter';
+
+export const ORBIT_AVAILABLE_MODELS = [
+  {
+    id: 'girionix-pro',
+    name: '⚡ Girionix Pro',
+    tag: 'Flagship Office • Balanced Speed & Reasoning',
+    badge: 'Flagship',
+    color: 'cyan'
+  },
+  {
+    id: 'gemini-2.5-pro',
+    name: '⚡ Girionix Ultra',
+    tag: '2M Long Documents • Deep Legal & RFP Analysis',
+    badge: '2M Context',
+    color: 'purple'
+  },
+  {
+    id: 'deepseek/deepseek-chat',
+    name: '⚡ Girionix Titan 671B',
+    tag: '671B MoE • High-Density Spreadsheets & Models',
+    badge: '671B MoE',
+    color: 'blue'
+  },
+  {
+    id: 'qwen/qwen-2.5-coder-32b-instruct',
+    name: '⚡ Girionix CodeMaster',
+    tag: 'Spreadsheet Formulas & Automation Scripts',
+    badge: 'Formulas',
+    color: 'emerald'
+  },
+  {
+    id: 'openai/gpt-4o',
+    name: '⚡ Girionix OmniVision',
+    tag: 'Executive Slide Decks & Visual Storytelling',
+    badge: 'Visual Decks',
+    color: 'pink'
+  }
+];
 
 export default function OrbitWorkstationView() {
   const [activeTool, setActiveTool] = useState(() => {
@@ -42,6 +82,38 @@ export default function OrbitWorkstationView() {
 
   const [isAutoDetectMode, setIsAutoDetectMode] = useState(true);
   const [copiedLink, setCopiedLink] = useState(false);
+
+  const [selectedOrbitModel, setSelectedOrbitModel] = useState(() => {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const saved = localStorage.getItem('girionix_orbit_model');
+        if (saved && ORBIT_AVAILABLE_MODELS.some(m => m.id === saved)) return saved;
+      }
+    } catch (_) {}
+    return 'girionix-pro';
+  });
+  const [showModelSelector, setShowModelSelector] = useState(false);
+  const modelSelectorRef = useRef(null);
+
+  const handleSelectOrbitModel = (modelId) => {
+    setSelectedOrbitModel(modelId);
+    setShowModelSelector(false);
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('girionix_orbit_model', modelId);
+      }
+    } catch (_) {}
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (modelSelectorRef.current && !modelSelectorRef.current.contains(e.target)) {
+        setShowModelSelector(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleSelectTool = (toolId) => {
     setActiveTool(toolId);
@@ -193,6 +265,8 @@ export default function OrbitWorkstationView() {
       giriOrbitBridge.orbitContext.activeTool = targetTool;
     }
 
+    const activeModelObj = ORBIT_AVAILABLE_MODELS.find(m => m.id === selectedOrbitModel) || ORBIT_AVAILABLE_MODELS[0];
+
     const userMessage = {
       id: 'orbit-msg-' + Date.now(),
       role: 'user',
@@ -206,6 +280,7 @@ export default function OrbitWorkstationView() {
       id: assistantId,
       role: 'assistant',
       tool: targetTool,
+      modelUsed: activeModelObj.name,
       autoDetected: Boolean(shouldAutoSwitch && detected.confidence !== 'none' && detected.confidence !== 'neutral'),
       detectionReason: detected.reason,
       content: '',
@@ -223,10 +298,19 @@ export default function OrbitWorkstationView() {
 
     try {
       const toolObj = ORBIT_TOOLS[targetTool.toUpperCase()] || ORBIT_TOOLS.DRIFT;
+      
+      let activeDocContext = '';
+      if (orbitContext.documentTitle) {
+        activeDocContext += `\nACTIVE DOCUMENT: "${orbitContext.documentTitle}".`;
+      }
+      if (orbitContext.selectedContent) {
+        activeDocContext += `\nUSER SELECTED CONTENT / CELLS IN WORKSPACE:\n"""\n${orbitContext.selectedContent}\n"""\n(PRIORITY: When the user asks to summarize, calculate, transform, or inspect selected items, apply logic directly to this selection).`;
+      }
+
       const systemDirective = giriOrbitBridge.buildOrbitSystemDirective(targetTool, shouldAutoSwitch) +
         `\n\nOPERATOR: Working in Giri Orbit for ${orbitContext.operatorName || 'Orbit Workspace Member'}.` +
-        `\nACTIVE DOCUMENT: "${orbitContext.documentTitle || 'Untitled'}".` +
-        `\nMODEL ENGINE: Girionix Pro Enterprise Office Core (⚡ Girionix Pro). Provide high-density, beautifully structured enterprise-grade deliverables with clean tables, formatted headings, and formulas where applicable.`;
+        activeDocContext +
+        `\nMODEL ENGINE: ${activeModelObj.name} (${activeModelObj.tag}). Provide high-density, executive-grade deliverables with clean markdown tables, executable formulas, formatted headings, and zero conversational filler.`;
 
       const apiDialogue = messages.slice(-10).map(m => ({
         role: m.role,
@@ -239,10 +323,10 @@ export default function OrbitWorkstationView() {
           ...apiDialogue,
           { role: 'user', content: promptToSend.trim() }
         ],
-        model: 'girionix-pro',
-        modelName: '⚡ Girionix Pro',
-        temperature: 0.5,
-        useThinking: false,
+        model: selectedOrbitModel,
+        modelName: activeModelObj.name,
+        temperature: 0.35,
+        useThinking: selectedOrbitModel === 'girionix-pro' ? false : undefined,
         signal: abortControllerRef.current.signal,
         onChunk: (chunk, fullContent) => {
           setSessions(prev => prev.map(s => s.id === activeSessionId ? {
@@ -340,27 +424,63 @@ export default function OrbitWorkstationView() {
   };
 
   const toolConfig = ORBIT_TOOLS[activeTool.toUpperCase()] || ORBIT_TOOLS.DRIFT;
+  const activeModelObj = ORBIT_AVAILABLE_MODELS.find(m => m.id === selectedOrbitModel) || ORBIT_AVAILABLE_MODELS[0];
 
   const toolDirectives = {
     drift: [
       { label: 'Executive Memorandum', prompt: 'Draft a comprehensive executive briefing memo on Q3 operational milestones with action items and key stakeholders for Giri Drift.' },
       { label: 'Standard Operating Procedure (SOP)', prompt: 'Create a formal Standard Operating Procedure document with step-by-step phases, prerequisites, and quality assurance gates.' },
-      { label: 'Client Contract Addendum', prompt: 'Draft a professional enterprise service level agreement (SLA) contract addendum with liability, uptime guarantees, and remediation clauses.' }
+      { label: 'Client Contract Addendum', prompt: 'Draft a professional enterprise service level agreement (SLA) contract addendum with liability, uptime guarantees, and remediation clauses.' },
+      { label: 'Strategic RFP Proposal', prompt: 'Draft an executive enterprise RFP proposal responding to technical compliance, architectural scale, and implementation timeline requirements.' },
+      { label: 'Meeting Minutes & Tracker', prompt: 'Structure executive meeting minutes with attendee list, major decisions logged, milestone deadlines, and accountable owner tables.' }
     ],
     axis: [
       { label: '4-Quarter Financial Model', prompt: 'Generate an enterprise financial projection spreadsheet table for 4 quarters with Revenue, OPEX, Gross Profit, EBITDA, and growth formulas.' },
       { label: 'Department Budget Tracker', prompt: 'Build a department budget variance model with Planned Budget, Actual Spend, Variance (%), and conditional status flags.' },
-      { label: 'Unit Economics Matrix', prompt: 'Create a SaaS unit economics spreadsheet with CAC, LTV, Payback Period, Churn Rate, and ARPU sensitivity formulas.' }
+      { label: 'Unit Economics Matrix', prompt: 'Create a SaaS unit economics spreadsheet with CAC, LTV, Payback Period, Churn Rate, and ARPU sensitivity formulas.' },
+      { label: 'Inventory Reorder & EOQ', prompt: 'Generate a supply chain inventory matrix with Safety Stock, Reorder Point, EOQ calculations, and lead time modeling.' },
+      { label: 'DCF Valuation Model', prompt: 'Draft a Discounted Cash Flow valuation table with Free Cash Flow forecasts, Terminal Value, WACC discount rate, and Enterprise Value formulas.' }
     ],
     kinetic: [
-      { label: 'Executive Board Deck', prompt: 'Create a 4-slide executive board presentation deck outline on strategic expansion with vision, market traction, and financial roadmap for Giri Kinetic.' },
+      { label: 'Executive Board Deck', prompt: 'Create a 5-slide executive board presentation deck outline on strategic expansion with vision, market traction, and financial roadmap for Giri Kinetic.' },
       { label: 'Product Launch Keynote', prompt: 'Create a 5-slide keynote presentation outline for a major tech product reveal with hook, architecture, demo flow, and call to action.' },
-      { label: 'Quarterly All-Hands', prompt: 'Draft a 4-slide company all-hands presentation celebrating team wins, KPI achievements, and next-quarter objectives.' }
+      { label: 'Quarterly All-Hands', prompt: 'Draft a 4-slide company all-hands presentation celebrating team wins, KPI achievements, and next-quarter objectives.' },
+      { label: 'Investor Pitch Deck', prompt: 'Synthesize a 6-slide investor pitch deck covering Problem, Solution, Market TAM, Business Model, Moat, and Capital Ask.' },
+      { label: 'Technical Architecture Walkthrough', prompt: 'Structure a 4-slide deep technical architecture briefing covering microservices, latency SLAs, zero-trust security, and failover.' }
     ],
     aegis: [
       { label: 'Cryptographic Audit Seal', prompt: 'Synthesize an enterprise cryptographic audit addendum and legal compliance verification stamp for an official PDF document.' },
       { label: 'Zero-Trust Security Verification', prompt: 'Draft a formal Zero-Knowledge encryption verification declaration and document authenticity seal.' },
-      { label: 'GDPR / SOC-2 Compliance Note', prompt: 'Generate an official regulatory compliance attestation note certifying data privacy, retention, and non-disclosure standards.' }
+      { label: 'GDPR / SOC-2 Compliance Note', prompt: 'Generate an official regulatory compliance attestation note certifying data privacy, retention, and non-disclosure standards.' },
+      { label: 'Mutual NDA Agreement', prompt: 'Draft a mutual non-disclosure agreement (NDA) protecting proprietary intellectual property, trade secrets, and governing law.' },
+      { label: 'Vendor Risk Assessment', prompt: 'Construct an enterprise vendor cybersecurity risk assessment matrix with score weightings, SOC-2 certifications, and incident protocols.' }
+    ]
+  };
+
+  const quickActionChips = {
+    drift: [
+      { label: '✨ Formalize Tone', prompt: 'Rewrite and elevate the tone of the current document to be crisp, authoritative, and boardroom-ready.' },
+      { label: '📋 Action Items', prompt: 'Extract all action items, owners, and target completion deadlines into a clean summary table.' },
+      { label: '📝 Executive Summary', prompt: 'Condense this document into a high-impact, 3-paragraph executive briefing for leadership.' },
+      { label: '🔍 Audit Review', prompt: 'Review this text for clarity, ambiguities, legal liabilities, and structural weaknesses.' }
+    ],
+    axis: [
+      { label: '🧮 Add SUM/AVG Formulas', prompt: 'Add executable formulas (=SUM, =AVERAGE, =GROWTH) for all numeric rows and totals in this spreadsheet.' },
+      { label: '📊 12-Month Forecast', prompt: 'Extend this data into a 12-month forward financial model with 15% compounded MoM growth.' },
+      { label: '📈 Variance Analysis', prompt: 'Calculate dollar variance and percent delta between Budget and Actual columns with status flags.' },
+      { label: '🏷️ Format Table', prompt: 'Restructure this raw data into a pristine markdown spreadsheet with right-aligned currencies and clean headers.' }
+    ],
+    kinetic: [
+      { label: '🎯 5-Slide Outline', prompt: 'Structure this topic into an impactful 5-slide keynote presentation with strong titles and bulleted points.' },
+      { label: '🎙️ Verbatim Speaker Track', prompt: 'Draft verbatim executive speaker notes with pauses, emphasis, and rhetorical transitions for every slide.' },
+      { label: '🎨 Visual Compositions', prompt: 'Provide art direction, diagram layouts, and focal visual mockups for each presentation slide.' },
+      { label: '⚡ Hook Slide', prompt: 'Draft 3 compelling opening hook slides designed to immediately capture investor or board attention.' }
+    ],
+    aegis: [
+      { label: '🛡️ Audit Stamp', prompt: 'Generate an official Giri Aegis cryptographic verification stamp with SHA-256 hash placeholder and sign-off.' },
+      { label: '⚖️ Liability Clause', prompt: 'Draft an enforceable limitation of liability and indemnification clause for this enterprise agreement.' },
+      { label: '🔐 Zero-Trust Attestation', prompt: 'Add a formal cryptographic integrity and end-to-end encryption compliance disclosure statement.' },
+      { label: '🖋️ Signature Block', prompt: 'Format a dual-party executive digital execution block with signatory titles, dates, and verification IDs.' }
     ]
   };
 
@@ -379,10 +499,66 @@ export default function OrbitWorkstationView() {
                 <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30">
                   DEDICATED CO-PILOT
                 </span>
-                <span className="hidden sm:inline-flex text-[10px] font-mono px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 font-semibold items-center gap-1">
-                  <Zap className="w-3 h-3 text-purple-400" />
-                  Girionix Pro
-                </span>
+                {/* Interactive Orbit Model Selector */}
+                <div className="relative inline-block" ref={modelSelectorRef}>
+                  <button
+                    type="button"
+                    onClick={() => setShowModelSelector(!showModelSelector)}
+                    className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-purple-500/20 hover:bg-purple-500/30 text-purple-200 border border-purple-500/30 text-[10px] font-mono font-semibold transition-all cursor-pointer shadow-sm"
+                    title="Switch Giri Orbit Engine Model"
+                  >
+                    <Zap className="w-3 h-3 text-purple-400" />
+                    <span className="font-bold">{activeModelObj.name}</span>
+                    <span className="hidden md:inline px-1 py-0.2 rounded bg-purple-400/20 text-purple-300 text-[9px]">
+                      {activeModelObj.badge}
+                    </span>
+                    <ChevronDown className={`w-2.5 h-2.5 text-purple-400 transition-transform ${showModelSelector ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {showModelSelector && (
+                    <div className="absolute left-0 mt-1.5 w-72 rounded-2xl bg-[#090C19] border border-cyan-500/30 shadow-2xl p-1.5 z-50 animate-fadeIn backdrop-blur-xl">
+                      <div className="px-2.5 py-1 text-[10px] font-mono text-cyan-400 font-bold uppercase tracking-wider border-b border-white/10 mb-1 flex items-center justify-between">
+                        <span>Girionix Orbit Models</span>
+                        <span className="text-gray-400">Enterprise</span>
+                      </div>
+                      <div className="space-y-1">
+                        {ORBIT_AVAILABLE_MODELS.map((model) => {
+                          const isSelected = selectedOrbitModel === model.id;
+                          return (
+                            <button
+                              key={model.id}
+                              onClick={() => handleSelectOrbitModel(model.id)}
+                              className={`w-full text-left p-2 rounded-xl text-xs transition-all flex items-start gap-2 cursor-pointer ${
+                                isSelected
+                                  ? 'bg-cyan-500/20 text-white border border-cyan-500/40 font-bold'
+                                  : 'text-gray-300 hover:text-white hover:bg-white/[0.06]'
+                              }`}
+                            >
+                              <div className="mt-0.5 shrink-0">
+                                {isSelected ? (
+                                  <Check className="w-3.5 h-3.5 text-cyan-400" />
+                                ) : (
+                                  <div className="w-3.5 h-3.5 rounded-full border border-gray-600" />
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between gap-1">
+                                  <span className="truncate">{model.name}</span>
+                                  <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-white/10 text-cyan-300 shrink-0">
+                                    {model.badge}
+                                  </span>
+                                </div>
+                                <div className="text-[10px] text-gray-400 font-normal leading-tight mt-0.5">
+                                  {model.tag}
+                                </div>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="text-[10px] font-mono text-gray-400 leading-none">
                 Official Office Suite AI • Drift • Axis • Kinetic • Aegis
@@ -568,7 +744,7 @@ export default function OrbitWorkstationView() {
                     className={`flex flex-col ${isAssistant ? 'items-start' : 'items-end'} animate-fadeIn`}
                   >
                     <div className="flex items-center gap-2 mb-1 px-1 text-[11px] font-mono text-gray-400">
-                      <span>{isAssistant ? `✦ ${msgTool.name} Co-Pilot (Girionix Pro)` : 'You'}</span>
+                      <span>{isAssistant ? `✦ ${msgTool.name} Co-Pilot (${m.modelUsed || activeModelObj.name})` : 'You'}</span>
                       <span>•</span>
                       <span>{m.timestamp}</span>
                       {isAssistant && m.autoDetected && (
@@ -586,11 +762,11 @@ export default function OrbitWorkstationView() {
                           : 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-medium shadow-sm'
                       }`}
                     >
-                      {/* Active Crafting Indicator for Girionix Pro */}
+                      {/* Active Crafting Indicator for Active Model */}
                       {isAssistant && m.isStreaming && !m.content && (
                         <div className="flex items-center gap-2 text-cyan-400 font-mono text-xs py-1 animate-pulse">
                           <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-                          <span>Girionix Pro is crafting your {msgTool.name} deliverable...</span>
+                          <span>{activeModelObj.name} is crafting your {msgTool.name} deliverable...</span>
                         </div>
                       )}
 
@@ -657,6 +833,51 @@ export default function OrbitWorkstationView() {
 
           {/* Bottom Prompt Input Dock */}
           <div className="sticky bottom-0 pt-2 pb-3 bg-[#070912]/90 backdrop-blur-xl border-t border-white/10 w-full">
+            {/* Active Document & Selected Content Context Banner */}
+            {(orbitContext.documentTitle || orbitContext.selectedContent) && (
+              <div className="mb-2 px-3 py-1.5 rounded-xl bg-cyan-950/40 border border-cyan-500/30 flex items-center justify-between text-xs text-cyan-200 animate-fadeIn shadow-sm">
+                <div className="flex items-center gap-2 truncate">
+                  <FileText className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                  <span className="font-semibold text-white truncate">
+                    {orbitContext.documentTitle || 'Current Document'}
+                  </span>
+                  {orbitContext.selectedContent && (
+                    <span className="text-[11px] text-cyan-300/80 font-mono truncate max-w-xs sm:max-w-sm">
+                      • Selected: "{orbitContext.selectedContent.slice(0, 45)}..."
+                    </span>
+                  )}
+                </div>
+                {orbitContext.selectedContent && (
+                  <button
+                    onClick={() => setOrbitContext(prev => ({ ...prev, selectedContent: null }))}
+                    className="text-[10px] text-gray-400 hover:text-white ml-2 shrink-0 cursor-pointer flex items-center gap-1 bg-white/5 hover:bg-white/10 px-2 py-0.5 rounded-md transition-colors"
+                    title="Clear selected text context"
+                  >
+                    <span>Clear</span>
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Quick Co-Pilot Action Chips */}
+            <div className="mb-2 flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
+              {(quickActionChips[activeTool] || quickActionChips.drift).map((chip, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    setInput(chip.prompt);
+                    handleSend(chip.prompt);
+                  }}
+                  disabled={isStreaming}
+                  className="shrink-0 px-2.5 py-1 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-cyan-500/40 text-gray-300 hover:text-cyan-200 text-[11px] font-medium transition-all cursor-pointer flex items-center gap-1 shadow-sm disabled:opacity-40"
+                  title={chip.prompt}
+                >
+                  <span>{chip.label}</span>
+                </button>
+              ))}
+            </div>
+
             {/* Real-time Dynamic Tool Auto-Identification Chip */}
             {liveDetection && liveDetection.confidence !== 'none' && liveDetection.confidence !== 'neutral' && (
               <div className="mb-2 px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyan-950/40 via-purple-950/30 to-blue-950/40 border border-cyan-500/30 flex items-center justify-between text-xs text-cyan-200 animate-fadeIn">
@@ -737,7 +958,10 @@ export default function OrbitWorkstationView() {
             <div className="flex items-center justify-between px-2 pt-1.5 text-[10px] font-mono text-gray-500">
               <div className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-                <span>Girionix Pro Office Engine</span>
+                <span className="text-gray-300 font-semibold">{activeModelObj.name} Engine</span>
+                <span className="px-1.5 py-0.2 rounded bg-white/5 text-cyan-300 border border-white/10 text-[9px]">
+                  {activeModelObj.badge}
+                </span>
                 {isAutoDetectMode && (
                   <span className="px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center gap-1">
                     <Sparkles className="w-2.5 h-2.5 text-purple-400" />
