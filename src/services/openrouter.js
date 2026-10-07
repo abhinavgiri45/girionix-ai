@@ -115,7 +115,7 @@ export const openrouter = {
       let hasReceivedToken = false;
       const tier1Timer = setTimeout(() => {
         if (!hasReceivedToken) tier1Ctrl.abort();
-      }, 5000);
+      }, 10000);
       if (signal) signal.addEventListener('abort', () => tier1Ctrl.abort(), { once: true });
 
       try {
@@ -760,20 +760,62 @@ Whenever asked about your identity, what model you are, which version you are ru
       }
     }
 
-    // Fallback: If user had an active key configured but cloud endpoints returned an error, notify user with exact error detail
+    // Fallback: If user had an active key configured but cloud endpoints returned an error, notify user with exact actionable instructions
     if (userApiKey || masterKey) {
       let specificNotice = '';
       if (lastHttpStatus === 401) {
         specificNotice = `⚠️ **API Key Authentication Failed (HTTP 401)**\n\nThe provided API key was rejected by **${config.providerName || config.providerId}**.\n*Detail: ${lastCloudError || 'Invalid API Key'}*\n\n👉 **Please update your API key in Settings (⚙️).**`;
       } else if (lastHttpStatus === 402) {
-        specificNotice = `⚠️ **Insufficient Balance / Credits (HTTP 402)**\n\nYour account on **${config.providerName || config.providerId}** has 0 credits or has reached its spend limit.\n*Detail: ${lastCloudError || 'Payment required'}*\n\n👉 **Top up your balance on [OpenRouter](https://openrouter.ai/credits) or switch to a free model.**`;
+        specificNotice = `⚠️ **Insufficient Balance / Credits on OpenRouter (HTTP 402)**
+
+Your OpenRouter API key is valid, but your OpenRouter account balance is **\\$0.00**.
+*Detail: ${lastCloudError || 'Insufficient credits. This account never purchased credits.'}*
+
+💡 **How to solve this (Choose One):**
+
+1. **Option 1 (100% Free Forever — Recommended):**
+   Use a **Google Gemini API Key** directly from [Google AI Studio](https://aistudio.google.com/app/apikey).
+   - **Zero cost & No credit card required**
+   - Free 15 requests/minute with full 2M context window
+   - Powers all Girionix frontier models instantly
+   - Simply copy your key (starts with AIzaSy...), open **Settings (⚙️)**, paste it, and save.
+
+2. **Option 2 (Add Credits to OpenRouter):**
+   If you prefer using OpenRouter, deposit credits at [openrouter.ai/settings/credits](https://openrouter.ai/settings/credits) (\\$5 minimum deposit) to activate paid frontier models.`;
       } else if (lastHttpStatus === 429) {
         specificNotice = `⚠️ **Rate Limit Exceeded (HTTP 429)**\n\nToo many requests to **${config.providerName || config.providerId}**.\n*Detail: ${lastCloudError || 'Rate limit reached'}*`;
       } else {
         specificNotice = `⚠️ **Cloud API Notice (${config.providerName || config.providerId})**\n\n*${lastCloudError || 'Unable to complete cloud inference request with candidate models.'}*\n\n👉 **Check your API key in Settings (⚙️).**`;
       }
 
-      if (onChunk) onChunk(specificNotice + '\n\n---\n\n*Connecting to Girionix Frontier Neural Engine:*\n\n', specificNotice + '\n\n---\n\n*Connecting to Girionix Frontier Neural Engine:*\n\n');
+      if (onChunk) onChunk(specificNotice, specificNotice);
+
+      // Attempt resilient free neural fallback underneath the notice
+      try {
+        let fallbackAcc = '';
+        const fallbackRes = await this.streamFreeNeuralAI({
+          messages: enrichedMessages,
+          model,
+          modelName: activeModelName,
+          onChunk: (chunk, acc) => {
+            fallbackAcc = acc;
+            if (onChunk) onChunk(chunk, `${specificNotice}\n\n---\n\n${acc}`);
+          },
+          onReasoningChunk,
+          signal
+        });
+        if (fallbackRes?.content) {
+          return {
+            content: `${specificNotice}\n\n---\n\n${fallbackRes.content}`,
+            reasoning: fallbackRes.reasoning || '',
+            modelUsed: activeModelName
+          };
+        }
+      } catch (fbErr) {
+        console.warn('Fallback stream notice:', fbErr?.message);
+      }
+
+      return { content: specificNotice, reasoning: '', modelUsed: activeModelName };
     }
 
     return this.streamFreeNeuralAI({ messages: enrichedMessages, model, modelName: activeModelName, onChunk, onReasoningChunk, signal });
