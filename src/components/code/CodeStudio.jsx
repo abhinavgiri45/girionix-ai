@@ -617,7 +617,7 @@ ${activeFile.content}
 \`\`\``;
 
       let modelId = selectedGirionixModel;
-      if (modelId === 'girionix-pro' || modelId === 'girionix-local-core') {
+      if (modelId === 'girionix-pro') {
         modelId = 'qwen/qwen-2.5-coder-32b-instruct';
       }
 

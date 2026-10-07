@@ -414,6 +414,7 @@ ${cleanSnippet}
    * Builds an explicit memory directive to inject into system prompt for cloud LLMs
    */
   buildMemoryDirective(messages = [], userName = '') {
+    const turns = this.getValidTurns(messages);
     const memory = this.extractSessionMemory(messages, userName);
     const profile = storage.getUserProfile();
     const activeName = (profile.name && profile.name !== 'Orbit User') ? profile.name : (userName && userName !== 'Orbit User' ? userName : (memory.userName !== 'Orbit User' ? memory.userName : 'Friend'));

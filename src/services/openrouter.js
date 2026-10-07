@@ -348,22 +348,6 @@ export const openrouter = {
     // Resolve active model display name
     const activeModelName = modelName || getModelDisplayName(model);
 
-    // 100% On-Device Physical Local Neural Engine execution
-    if (model === 'girionix-local-core') {
-      const userPrompt = messages.filter(m => m.role !== 'system').pop()?.content || '';
-      const text = await localNeuralEngine.streamLocalResponse({
-        prompt: userPrompt,
-        history: messages,
-        onToken: (fullText, token) => {
-          if (onChunk) onChunk(token, fullText);
-        },
-        onReasoning: (reasoning) => {
-          if (onReasoningChunk) onReasoningChunk(reasoning, reasoning);
-        }
-      });
-      return { content: text, reasoning: '', modelUsed: activeModelName };
-    }
-
     const config = universalApiEngine.getProviderConfig();
     const masterKey = storage.getApiKey();
     const userApiKey = config.apiKey || masterKey;

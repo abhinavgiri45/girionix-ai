@@ -11,7 +11,6 @@ import ScratchpadModal from './components/common/ScratchpadModal';
 import DownloadAppsModal from './components/common/DownloadAppsModal';
 import ProAppStatusModal from './components/common/ProAppStatusModal';
 import UpdateModal from './components/common/UpdateModal';
-import LocalNeuralModal from './components/common/LocalNeuralModal';
 import ChatView from './components/chat/ChatView';
 import OrbitWorkstationView from './components/orbit/OrbitWorkstationView';
 import MobileBottomNav from './components/layout/MobileBottomNav';
@@ -132,7 +131,6 @@ export default function App() {
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
   const [isProStatusOpen, setIsProStatusOpen] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
-  const [isLocalModalOpen, setIsLocalModalOpen] = useState(false);
   const [hasAvailableUpdate, setHasAvailableUpdate] = useState(false);
   const [isScratchpadOpen, setIsScratchpadOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
@@ -415,7 +413,6 @@ export default function App() {
           onOpenProStatus={() => setIsProStatusOpen(true)}
           onOpenScratchpad={() => setIsScratchpadOpen(true)}
           onOpenUpdates={() => setIsUpdateModalOpen(true)}
-          onOpenLocalEngine={() => setIsLocalModalOpen(true)}
           onNewChat={handleCreateNewSession}
           onToggleSidebar={() => setIsSidebarCollapsed(prev => !prev)}
           userName={userName}
@@ -475,7 +472,6 @@ export default function App() {
           setPinnedItems(updated);
           storage.savePinnedItems(updated);
         }}
-        onOpenLocalEngine={() => setIsLocalModalOpen(true)}
       />
 
       {/* Introducing Girionix AI Landing & Announcement Page */}
@@ -519,16 +515,6 @@ export default function App() {
         }}
       />
 
-      {/* 100% On-Device Local Neural Core Hardware Audit & Launcher Modal */}
-      <LocalNeuralModal
-        isOpen={isLocalModalOpen}
-        onClose={() => setIsLocalModalOpen(false)}
-        activeModel={activeModel}
-        onActivateLocalModel={() => {
-          const localModel = AI_MODELS.find(m => m.id === 'girionix-local-core') || AI_MODELS[0];
-          setActiveModel(localModel);
-        }}
-      />
 
       {/* AI Smart Scratchpad Modal (Ctrl+J) */}
       <ScratchpadModal

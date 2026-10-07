@@ -107,11 +107,11 @@ export default function FreeKeyModal({ isOpen, onClose, onKeySaved }) {
     setHasExistingKey(false);
     setStatus({ 
       type: 'info', 
-      text: 'Gemini API key removed. Switched back to Sovereign On-Device Local Core.' 
+      text: 'Gemini API key removed. Switched back to Girionix Pro.' 
     });
 
     if (onKeySaved) {
-      onKeySaved('', 'girionix-local-core');
+      onKeySaved('', 'girionix-pro');
     }
 
     setTimeout(() => {
