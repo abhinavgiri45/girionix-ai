@@ -128,4 +128,4 @@ The native Android app version is fully integrated in the [`/android`](./android
 ---
 
 ## 📄 License
-This project is licensed under the MIT License.
+This project is licensed under the License.
