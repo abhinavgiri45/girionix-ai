@@ -69,13 +69,26 @@ export default function SettingsModal({ isOpen, onClose, onApiKeyUpdated }) {
 
   const handleApiKeyChange = (val) => {
     setApiKeyInput(val);
+    const trimmed = (val || '').trim();
+    if (trimmed.startsWith('freellmapi-') || trimmed.startsWith('flm-')) {
+      if (!customBaseUrl || customBaseUrl.includes('openrouter.ai')) {
+        setCustomBaseUrl('http://localhost:3001/v1');
+      }
+      if (!customModelId || customModelId === 'deepseek/deepseek-chat') {
+        setCustomModelId('auto');
+      }
+      if (!customModelName) {
+        setCustomModelName('FreeLLMAPI Unified');
+      }
+    }
   };
 
   const handleVerify = async () => {
     setVerificationStatus({ loading: true });
-    const baseUrl = customBaseUrl ? customBaseUrl.trim() : 'https://openrouter.ai/api/v1';
+    const isFreeLlm = apiKeyInput?.trim().startsWith('freellmapi-') || customBaseUrl?.includes('3001');
+    const baseUrl = customBaseUrl ? customBaseUrl.trim() : (isFreeLlm ? 'http://localhost:3001/v1' : 'https://openrouter.ai/api/v1');
     const result = await openrouter.verifyKey(apiKeyInput, {
-      providerId: 'custom',
+      providerId: isFreeLlm ? 'freellmapi' : 'custom',
       baseUrl
     });
     setVerificationStatus({ loading: false, ...result });
@@ -92,9 +105,16 @@ export default function SettingsModal({ isOpen, onClose, onApiKeyUpdated }) {
       storage.setCustomModelName(trimmedModelName);
       storage.setApiKey(trimmedKey);
 
+      const isFreeLlm = trimmedKey.startsWith('freellmapi-') || trimmedKey.startsWith('flm-') || trimmedBaseUrl.includes('3001');
+      if (isFreeLlm) {
+        storage.setFreeLlmApiConfig(trimmedKey, trimmedBaseUrl || 'http://localhost:3001/v1');
+      }
+
+      const providerId = isFreeLlm ? 'freellmapi' : (trimmedBaseUrl ? 'custom' : 'openrouter');
+
       universalApiEngine.saveProviderConfig({
-        providerId: trimmedBaseUrl ? 'custom' : 'openrouter',
-        baseUrl: trimmedBaseUrl || 'https://openrouter.ai/api/v1',
+        providerId,
+        baseUrl: trimmedBaseUrl || (isFreeLlm ? 'http://localhost:3001/v1' : 'https://openrouter.ai/api/v1'),
         apiKey: trimmedKey,
         autoUpgradeEnabled: false
       });
@@ -262,6 +282,49 @@ export default function SettingsModal({ isOpen, onClose, onApiKeyUpdated }) {
               <p className="text-xs text-gray-300 font-sans leading-relaxed">
                 Connect your own custom AI model directly into Girionix AI. Configure your model ID, API key, and optional OpenAI-compatible endpoint. Once saved, activate it via <strong>⚙️ Custom Model</strong> in the model menu.
               </p>
+
+              {/* Provider Quick Presets */}
+              <div className="flex flex-wrap items-center gap-2 p-2.5 rounded-xl bg-white/[0.03] border border-white/10">
+                <span className="text-[10px] font-mono text-gray-400 font-bold">1-Click Presets:</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCustomModelName('FreeLLMAPI Unified');
+                    setCustomModelId('auto');
+                    setCustomBaseUrl('http://localhost:3001/v1');
+                    if (!apiKeyInput) setApiKeyInput(storage.getFreeLlmApiKey() || '');
+                  }}
+                  className="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 text-[11px] font-mono flex items-center gap-1.5 cursor-pointer transition-all"
+                  title="Connect to FreeLLMAPI (https://freellmapi.co/) running on port 3001"
+                >
+                  <Sparkles className="w-3 h-3 text-emerald-400" />
+                  <span>⚡ FreeLLMAPI (freellmapi.co)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCustomModelName('OpenRouter DeepSeek');
+                    setCustomModelId('deepseek/deepseek-chat');
+                    setCustomBaseUrl('https://openrouter.ai/api/v1');
+                  }}
+                  className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 text-[11px] font-mono flex items-center gap-1 cursor-pointer transition-all"
+                >
+                  <Globe className="w-3 h-3 text-cyan-400" />
+                  <span>OpenRouter</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCustomModelName('Local Ollama');
+                    setCustomModelId('llama3');
+                    setCustomBaseUrl('http://localhost:11434/v1');
+                  }}
+                  className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 text-[11px] font-mono flex items-center gap-1 cursor-pointer transition-all"
+                >
+                  <Cpu className="w-3 h-3 text-purple-400" />
+                  <span>Local Ollama</span>
+                </button>
+              </div>
 
               {/* Model Friendly Name */}
               <div className="space-y-1.5 font-mono text-xs">

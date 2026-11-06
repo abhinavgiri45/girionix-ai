@@ -43,6 +43,20 @@ const getEnvVar = (keys) => {
   return '';
 };
 
+const DEFAULT_FREELLMAPI_KEY = getEnvVar([
+  'VITE_FREELLMAPI_API_KEY',
+  'FREELLMAPI_API_KEY',
+  'VITE_FREELLMAPI_KEY',
+  'FREELLMAPI_KEY'
+]);
+
+const DEFAULT_FREELLMAPI_BASE_URL = getEnvVar([
+  'VITE_FREELLMAPI_BASE_URL',
+  'FREELLMAPI_BASE_URL',
+  'VITE_FREELLMAPI_URL',
+  'FREELLMAPI_URL'
+]) || 'http://localhost:3001/v1';
+
 const DEFAULT_OPENROUTER_KEY = getEnvVar([
   'VITE_OPENROUTER_API_KEY',
   'OPENROUTER_API_KEY',
@@ -396,6 +410,7 @@ export const storage = {
     } catch (_) {}
 
     // 4. Fallback to Environment Variables (Vite client-side)
+    if (DEFAULT_FREELLMAPI_KEY) return DEFAULT_FREELLMAPI_KEY;
     if (DEFAULT_OPENROUTER_KEY) return DEFAULT_OPENROUTER_KEY;
     if (DEFAULT_GEMINI_KEY) return DEFAULT_GEMINI_KEY;
     if (DEFAULT_GROQ_KEY) return DEFAULT_GROQ_KEY;
@@ -403,6 +418,19 @@ export const storage = {
     if (DEFAULT_OPENAI_KEY) return DEFAULT_OPENAI_KEY;
     if (DEFAULT_ANTHROPIC_KEY) return DEFAULT_ANTHROPIC_KEY;
     return '';
+  },
+
+  getFreeLlmApiKey: () => {
+    return safeGetItem('girionix_freellmapi_key') || DEFAULT_FREELLMAPI_KEY || '';
+  },
+
+  getFreeLlmApiBaseUrl: () => {
+    return safeGetItem('girionix_freellmapi_base_url') || DEFAULT_FREELLMAPI_BASE_URL || 'http://localhost:3001/v1';
+  },
+
+  setFreeLlmApiConfig: (key, baseUrl) => {
+    if (key !== undefined) safeSetItem('girionix_freellmapi_key', (key || '').trim());
+    if (baseUrl !== undefined) safeSetItem('girionix_freellmapi_base_url', (baseUrl || '').trim());
   },
 
   getOpenRouterKey: () => {

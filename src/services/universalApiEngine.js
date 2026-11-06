@@ -78,6 +78,7 @@ export const DEFAULT_MODEL_FAMILIES = {
 };
 
 export const SUPPORTED_PROVIDERS = [
+  { id: 'freellmapi', name: 'FreeLLMAPI (freellmapi.co — 34 Free Providers Unified)', defaultBaseUrl: 'http://localhost:3001/v1', defaultPlaceholder: 'freellmapi-... (or local key)' },
   { id: 'openrouter', name: 'OpenRouter (Universal All-in-One)', defaultBaseUrl: 'https://openrouter.ai/api/v1', defaultPlaceholder: 'sk-or-v1-...' },
   { id: 'custom', name: 'Custom OpenAI-Compatible Endpoint (Ollama / Local / LM Studio)', defaultBaseUrl: 'http://localhost:11434/v1', defaultPlaceholder: 'API Key (or leave blank for local)' },
   { id: 'groq', name: 'Groq Cloud (Ultra-Fast 500+ tok/s)', defaultBaseUrl: 'https://api.groq.com/openai/v1', defaultPlaceholder: 'gsk_...' },
@@ -94,6 +95,13 @@ export const universalApiEngine = {
   detectProviderFromKey(key) {
     if (!key || typeof key !== 'string') return null;
     const k = key.trim();
+    if (k.startsWith('freellmapi-') || k.startsWith('flm-')) {
+      const defaultBase = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_FREELLMAPI_BASE_URL) || 
+                          (typeof process !== 'undefined' && process.env?.VITE_FREELLMAPI_BASE_URL) || 
+                          storage.getFreeLlmApiBaseUrl() || 
+                          'http://localhost:3001/v1';
+      return { providerId: 'freellmapi', baseUrl: defaultBase, name: 'FreeLLMAPI (freellmapi.co)' };
+    }
     if (k.startsWith('AIzaSy')) {
       return { providerId: 'google', baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai', name: 'Google AI Studio (Gemini)' };
     }
@@ -352,6 +360,15 @@ export const universalApiEngine = {
     }
 
     const config = this.getProviderConfig();
+
+    // 0. FreeLLMAPI Direct (freellmapi.co — 34 free providers router)
+    if (config.providerId === 'freellmapi') {
+      if (requestedModelId.includes('coder') || requestedModelId.includes('qwen')) return 'auto:coding';
+      if (requestedModelId.includes('reason') || requestedModelId.includes('r1') || requestedModelId.includes('o3')) return 'auto:reasoning';
+      if (requestedModelId.includes('flash') || requestedModelId.includes('lite') || requestedModelId.includes('fast')) return 'auto:fast';
+      if (requestedModelId === 'girionix-pro' || requestedModelId === 'girionix-universal-auto') return 'auto';
+      return requestedModelId || 'auto';
+    }
 
     // 1. Gemini Direct
     if (config.providerId === 'google') {

@@ -38,7 +38,10 @@ export const openrouter = {
         return await geminiStudioEngine.verifyApiKey(key);
       }
 
-      if (config.providerId === 'openrouter') {
+      if (config.providerId === 'freellmapi') {
+        endpoint = `${config.baseUrl || 'http://localhost:3001/v1'}/models`;
+        if (key) headers['Authorization'] = `Bearer ${key}`;
+      } else if (config.providerId === 'openrouter') {
         endpoint = 'https://openrouter.ai/api/v1/auth/key';
         if (key) headers['Authorization'] = `Bearer ${key}`;
       } else if (config.providerId === 'groq') {
@@ -536,6 +539,10 @@ Whenever asked about your identity, what model you are, which version you are ru
       });
     } else if (config.providerId === 'anthropic') {
       ['claude-3-7-sonnet-20250219', 'claude-3-5-haiku-20241022'].forEach(m => {
+        if (!candidateModels.includes(m)) candidateModels.push(m);
+      });
+    } else if (config.providerId === 'freellmapi') {
+      ['auto', 'auto:smart', 'auto:fast', 'auto:reasoning', 'auto:coding'].forEach(m => {
         if (!candidateModels.includes(m)) candidateModels.push(m);
       });
     } else if (config.providerId === 'openrouter') {
