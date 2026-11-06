@@ -78,7 +78,7 @@ export const DEFAULT_MODEL_FAMILIES = {
 };
 
 export const SUPPORTED_PROVIDERS = [
-  { id: 'freellmapi', name: 'FreeLLMAPI (freellmapi.co — 34 Free Providers Unified)', defaultBaseUrl: 'http://localhost:3001/v1', defaultPlaceholder: 'freellmapi-... (or local key)' },
+  { id: 'freellmapi', name: 'FreeLLMAPI (freellmapi.co — 34 Free Providers Unified)', defaultBaseUrl: 'http://localhost:31415/v1', defaultPlaceholder: 'freellmapi-... (or local key)' },
   { id: 'openrouter', name: 'OpenRouter (Universal All-in-One)', defaultBaseUrl: 'https://openrouter.ai/api/v1', defaultPlaceholder: 'sk-or-v1-...' },
   { id: 'custom', name: 'Custom OpenAI-Compatible Endpoint (Ollama / Local / LM Studio)', defaultBaseUrl: 'http://localhost:11434/v1', defaultPlaceholder: 'API Key (or leave blank for local)' },
   { id: 'groq', name: 'Groq Cloud (Ultra-Fast 500+ tok/s)', defaultBaseUrl: 'https://api.groq.com/openai/v1', defaultPlaceholder: 'gsk_...' },
@@ -99,7 +99,7 @@ export const universalApiEngine = {
       const defaultBase = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_FREELLMAPI_BASE_URL) || 
                           (typeof process !== 'undefined' && process.env?.VITE_FREELLMAPI_BASE_URL) || 
                           storage.getFreeLlmApiBaseUrl() || 
-                          'http://localhost:3001/v1';
+                          'http://localhost:31415/v1';
       return { providerId: 'freellmapi', baseUrl: defaultBase, name: 'FreeLLMAPI (freellmapi.co)' };
     }
     if (k.startsWith('AIzaSy')) {
@@ -159,7 +159,7 @@ export const universalApiEngine = {
       return {
         providerId: 'freellmapi',
         providerName: 'FreeLLMAPI (freellmapi.co — 34 Free Providers Unified)',
-        baseUrl: 'http://localhost:3001/v1',
+        baseUrl: 'http://localhost:31415/v1',
         apiKey: storage.getApiKey(),
         autoUpgradeEnabled: true
       };

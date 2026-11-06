@@ -55,7 +55,7 @@ const DEFAULT_FREELLMAPI_BASE_URL = getEnvVar([
   'FREELLMAPI_BASE_URL',
   'VITE_FREELLMAPI_URL',
   'FREELLMAPI_URL'
-]) || 'http://localhost:3001/v1';
+]) || 'http://localhost:31415/v1';
 
 const DEFAULT_OPENROUTER_KEY = getEnvVar([
   'VITE_OPENROUTER_API_KEY',
@@ -425,7 +425,7 @@ export const storage = {
   },
 
   getFreeLlmApiBaseUrl: () => {
-    return safeGetItem('girionix_freellmapi_base_url') || DEFAULT_FREELLMAPI_BASE_URL || 'http://localhost:3001/v1';
+    return safeGetItem('girionix_freellmapi_base_url') || DEFAULT_FREELLMAPI_BASE_URL || 'http://localhost:31415/v1';
   },
 
   setFreeLlmApiConfig: (key, baseUrl) => {
@@ -482,7 +482,7 @@ export const storage = {
         safeRemoveItem('girionix_gemini_api_key');
         if (trimmed.startsWith('freellmapi-') || trimmed.startsWith('flm-')) {
           safeSetItem('girionix_universal_provider', 'freellmapi');
-          safeSetItem('girionix_custom_base_url', DEFAULT_FREELLMAPI_BASE_URL || 'http://localhost:3001/v1');
+          safeSetItem('girionix_custom_base_url', DEFAULT_FREELLMAPI_BASE_URL || 'http://localhost:31415/v1');
           safeSetItem('girionix_freellmapi_key', trimmed);
         } else if (trimmed.startsWith('sk-or-')) {
           safeSetItem('girionix_universal_provider', 'openrouter');

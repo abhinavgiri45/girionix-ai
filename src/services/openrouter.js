@@ -39,7 +39,7 @@ export const openrouter = {
       }
 
       if (config.providerId === 'freellmapi') {
-        endpoint = `${config.baseUrl || 'http://localhost:3001/v1'}/models`;
+        endpoint = `${config.baseUrl || 'http://localhost:31415/v1'}/models`;
         if (key) headers['Authorization'] = `Bearer ${key}`;
       } else if (config.providerId === 'openrouter') {
         endpoint = 'https://openrouter.ai/api/v1/auth/key';
@@ -771,14 +771,14 @@ Whenever asked about your identity, what model you are, which version you are ru
     if (userApiKey || masterKey) {
       let specificNotice = '';
       if (config.providerId === 'freellmapi' && (!lastHttpStatus || lastHttpStatus === 0 || lastCloudError?.includes('fetch') || lastCloudError?.includes('Failed') || lastCloudError?.includes('connect'))) {
-        specificNotice = `⚠️ **FreeLLMAPI Gateway Notice (http://localhost:3001)**
+        specificNotice = `⚠️ **FreeLLMAPI Gateway Notice (http://localhost:31415)**
 
 Girionix AI is configured to use **FreeLLMAPI (https://freellmapi.co/)** as your primary AI engine.
 
 💡 **To start your FreeLLMAPI router:**
 1. Open your **Downloads folder** and double-click **FreeLLMAPI-Setup.exe** (already downloaded on your PC).
 2. Or run Docker: curl -fsSL https://freellmapi.co/install.sh | bash
-3. Once FreeLLMAPI starts on **http://localhost:3001**, Girionix AI will instantly stream responses from 600+ free models across 34 providers!`;
+3. Once FreeLLMAPI starts on **http://localhost:31415**, Girionix AI will instantly stream responses from 600+ free models across 34 providers!`;
       } else if (lastHttpStatus === 401) {
         specificNotice = `⚠️ **API Key Authentication Failed (HTTP 401)**\n\nThe provided API key was rejected by **${config.providerName || config.providerId}**.\n*Detail: ${lastCloudError || 'Invalid API Key'}*\n\n👉 **Please update your API key in Settings (⚙️).**`;
       } else if (lastHttpStatus === 402) {

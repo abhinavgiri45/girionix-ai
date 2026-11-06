@@ -72,7 +72,7 @@ export default function SettingsModal({ isOpen, onClose, onApiKeyUpdated }) {
     const trimmed = (val || '').trim();
     if (trimmed.startsWith('freellmapi-') || trimmed.startsWith('flm-')) {
       if (!customBaseUrl || customBaseUrl.includes('openrouter.ai')) {
-        setCustomBaseUrl('http://localhost:3001/v1');
+        setCustomBaseUrl('http://localhost:31415/v1');
       }
       if (!customModelId || customModelId === 'deepseek/deepseek-chat') {
         setCustomModelId('auto');
@@ -85,8 +85,8 @@ export default function SettingsModal({ isOpen, onClose, onApiKeyUpdated }) {
 
   const handleVerify = async () => {
     setVerificationStatus({ loading: true });
-    const isFreeLlm = apiKeyInput?.trim().startsWith('freellmapi-') || customBaseUrl?.includes('3001');
-    const baseUrl = customBaseUrl ? customBaseUrl.trim() : (isFreeLlm ? 'http://localhost:3001/v1' : 'https://openrouter.ai/api/v1');
+    const isFreeLlm = apiKeyInput?.trim().startsWith('freellmapi-') || (customBaseUrl?.includes('31415') || customBaseUrl?.includes('3001'));
+    const baseUrl = customBaseUrl ? customBaseUrl.trim() : (isFreeLlm ? 'http://localhost:31415/v1' : 'https://openrouter.ai/api/v1');
     const result = await openrouter.verifyKey(apiKeyInput, {
       providerId: isFreeLlm ? 'freellmapi' : 'custom',
       baseUrl
@@ -105,16 +105,16 @@ export default function SettingsModal({ isOpen, onClose, onApiKeyUpdated }) {
       storage.setCustomModelName(trimmedModelName);
       storage.setApiKey(trimmedKey);
 
-      const isFreeLlm = trimmedKey.startsWith('freellmapi-') || trimmedKey.startsWith('flm-') || trimmedBaseUrl.includes('3001');
+      const isFreeLlm = trimmedKey.startsWith('freellmapi-') || trimmedKey.startsWith('flm-') || (trimmedBaseUrl.includes('31415') || trimmedBaseUrl.includes('3001'));
       if (isFreeLlm) {
-        storage.setFreeLlmApiConfig(trimmedKey, trimmedBaseUrl || 'http://localhost:3001/v1');
+        storage.setFreeLlmApiConfig(trimmedKey, trimmedBaseUrl || 'http://localhost:31415/v1');
       }
 
       const providerId = isFreeLlm ? 'freellmapi' : (trimmedBaseUrl ? 'custom' : 'freellmapi');
 
       universalApiEngine.saveProviderConfig({
         providerId,
-        baseUrl: trimmedBaseUrl || 'http://localhost:3001/v1',
+        baseUrl: trimmedBaseUrl || 'http://localhost:31415/v1',
         apiKey: trimmedKey,
         autoUpgradeEnabled: false
       });
@@ -291,11 +291,11 @@ export default function SettingsModal({ isOpen, onClose, onApiKeyUpdated }) {
                   onClick={() => {
                     setCustomModelName('FreeLLMAPI Unified');
                     setCustomModelId('auto');
-                    setCustomBaseUrl('http://localhost:3001/v1');
+                    setCustomBaseUrl('http://localhost:31415/v1');
                     if (!apiKeyInput) setApiKeyInput(storage.getFreeLlmApiKey() || '');
                   }}
                   className="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 text-[11px] font-mono flex items-center gap-1.5 cursor-pointer transition-all"
-                  title="Connect to FreeLLMAPI (https://freellmapi.co/) running on port 3001"
+                  title="Connect to FreeLLMAPI (https://freellmapi.co/) running on port 31415"
                 >
                   <Sparkles className="w-3 h-3 text-emerald-400" />
                   <span>⚡ FreeLLMAPI (freellmapi.co)</span>
@@ -392,7 +392,7 @@ export default function SettingsModal({ isOpen, onClose, onApiKeyUpdated }) {
                   type="text"
                   value={customBaseUrl}
                   onChange={(e) => setCustomBaseUrl(e.target.value)}
-                  placeholder="http://localhost:3001/v1 (FreeLLMAPI) or custom API URL"
+                  placeholder="http://localhost:31415/v1 (FreeLLMAPI) or custom API URL"
                   className="w-full px-3.5 py-2 rounded-xl bg-black/80 border border-white/15 text-purple-300 text-xs font-mono focus:border-purple-400 focus:outline-none transition-colors"
                 />
                 <p className="text-[10px] text-gray-500 font-sans">
