@@ -480,7 +480,11 @@ export const storage = {
       } else {
         // If user configured OpenRouter or other provider, clear obsolete Gemini direct key so it never hijacks routing
         safeRemoveItem('girionix_gemini_api_key');
-        if (trimmed.startsWith('sk-or-')) {
+        if (trimmed.startsWith('freellmapi-') || trimmed.startsWith('flm-')) {
+          safeSetItem('girionix_universal_provider', 'freellmapi');
+          safeSetItem('girionix_custom_base_url', DEFAULT_FREELLMAPI_BASE_URL || 'http://localhost:3001/v1');
+          safeSetItem('girionix_freellmapi_key', trimmed);
+        } else if (trimmed.startsWith('sk-or-')) {
           safeSetItem('girionix_universal_provider', 'openrouter');
           safeSetItem('girionix_custom_base_url', 'https://openrouter.ai/api/v1');
         } else if (trimmed.startsWith('gsk_')) {

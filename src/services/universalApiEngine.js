@@ -145,7 +145,7 @@ export const universalApiEngine = {
         }
       }
 
-      if (!providerId) providerId = 'openrouter';
+      if (!providerId) providerId = 'freellmapi';
       const provider = SUPPORTED_PROVIDERS.find(p => p.id === providerId) || SUPPORTED_PROVIDERS[0];
 
       return {
@@ -157,9 +157,9 @@ export const universalApiEngine = {
       };
     } catch (_) {
       return {
-        providerId: 'openrouter',
-        providerName: 'OpenRouter (Universal All-in-One)',
-        baseUrl: 'https://openrouter.ai/api/v1',
+        providerId: 'freellmapi',
+        providerName: 'FreeLLMAPI (freellmapi.co — 34 Free Providers Unified)',
+        baseUrl: 'http://localhost:3001/v1',
         apiKey: storage.getApiKey(),
         autoUpgradeEnabled: true
       };
@@ -362,12 +362,12 @@ export const universalApiEngine = {
     const config = this.getProviderConfig();
 
     // 0. FreeLLMAPI Direct (freellmapi.co — 34 free providers router)
-    if (config.providerId === 'freellmapi') {
-      if (requestedModelId.includes('coder') || requestedModelId.includes('qwen')) return 'auto:coding';
-      if (requestedModelId.includes('reason') || requestedModelId.includes('r1') || requestedModelId.includes('o3')) return 'auto:reasoning';
-      if (requestedModelId.includes('flash') || requestedModelId.includes('lite') || requestedModelId.includes('fast')) return 'auto:fast';
-      if (requestedModelId === 'girionix-pro' || requestedModelId === 'girionix-universal-auto') return 'auto';
-      return requestedModelId || 'auto';
+    if (config.providerId === 'freellmapi' || !config.providerId) {
+      if (requestedModelId.includes('coder') || requestedModelId.includes('qwen') || requestedModelId.includes('code')) return 'auto:coding';
+      if (requestedModelId.includes('reason') || requestedModelId.includes('r1') || requestedModelId.includes('o3') || requestedModelId.includes('logic')) return 'auto:reasoning';
+      if (requestedModelId.includes('flash') || requestedModelId.includes('lite') || requestedModelId.includes('fast') || requestedModelId.includes('turbo')) return 'auto:fast';
+      if (requestedModelId === 'girionix-pro' || requestedModelId === 'girionix-universal-auto' || requestedModelId.includes('ultra') || requestedModelId.includes('titan') || requestedModelId.includes('omni')) return 'auto:smart';
+      return 'auto';
     }
 
     // 1. Gemini Direct

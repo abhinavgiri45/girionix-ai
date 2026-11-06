@@ -541,7 +541,7 @@ Whenever asked about your identity, what model you are, which version you are ru
       ['claude-3-7-sonnet-20250219', 'claude-3-5-haiku-20241022'].forEach(m => {
         if (!candidateModels.includes(m)) candidateModels.push(m);
       });
-    } else if (config.providerId === 'freellmapi') {
+    } else if (config.providerId === 'freellmapi' || !config.providerId) {
       ['auto', 'auto:smart', 'auto:fast', 'auto:reasoning', 'auto:coding'].forEach(m => {
         if (!candidateModels.includes(m)) candidateModels.push(m);
       });
@@ -770,7 +770,16 @@ Whenever asked about your identity, what model you are, which version you are ru
     // Fallback: If user had an active key configured but cloud endpoints returned an error, notify user with exact actionable instructions
     if (userApiKey || masterKey) {
       let specificNotice = '';
-      if (lastHttpStatus === 401) {
+      if (config.providerId === 'freellmapi' && (!lastHttpStatus || lastHttpStatus === 0 || lastCloudError?.includes('fetch') || lastCloudError?.includes('Failed') || lastCloudError?.includes('connect'))) {
+        specificNotice = `⚠️ **FreeLLMAPI Gateway Notice (http://localhost:3001)**
+
+Girionix AI is configured to use **FreeLLMAPI (https://freellmapi.co/)** as your primary AI engine.
+
+💡 **To start your FreeLLMAPI router:**
+1. Open your **Downloads folder** and double-click **FreeLLMAPI-Setup.exe** (already downloaded on your PC).
+2. Or run Docker: curl -fsSL https://freellmapi.co/install.sh | bash
+3. Once FreeLLMAPI starts on **http://localhost:3001**, Girionix AI will instantly stream responses from 600+ free models across 34 providers!`;
+      } else if (lastHttpStatus === 401) {
         specificNotice = `⚠️ **API Key Authentication Failed (HTTP 401)**\n\nThe provided API key was rejected by **${config.providerName || config.providerId}**.\n*Detail: ${lastCloudError || 'Invalid API Key'}*\n\n👉 **Please update your API key in Settings (⚙️).**`;
       } else if (lastHttpStatus === 402) {
         specificNotice = `⚠️ **Insufficient Balance / Credits on OpenRouter (HTTP 402)**

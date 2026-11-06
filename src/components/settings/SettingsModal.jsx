@@ -110,11 +110,11 @@ export default function SettingsModal({ isOpen, onClose, onApiKeyUpdated }) {
         storage.setFreeLlmApiConfig(trimmedKey, trimmedBaseUrl || 'http://localhost:3001/v1');
       }
 
-      const providerId = isFreeLlm ? 'freellmapi' : (trimmedBaseUrl ? 'custom' : 'openrouter');
+      const providerId = isFreeLlm ? 'freellmapi' : (trimmedBaseUrl ? 'custom' : 'freellmapi');
 
       universalApiEngine.saveProviderConfig({
         providerId,
-        baseUrl: trimmedBaseUrl || (isFreeLlm ? 'http://localhost:3001/v1' : 'https://openrouter.ai/api/v1'),
+        baseUrl: trimmedBaseUrl || 'http://localhost:3001/v1',
         apiKey: trimmedKey,
         autoUpgradeEnabled: false
       });
@@ -392,7 +392,7 @@ export default function SettingsModal({ isOpen, onClose, onApiKeyUpdated }) {
                   type="text"
                   value={customBaseUrl}
                   onChange={(e) => setCustomBaseUrl(e.target.value)}
-                  placeholder="https://openrouter.ai/api/v1 (or local Ollama/LM Studio URL)"
+                  placeholder="http://localhost:3001/v1 (FreeLLMAPI) or custom API URL"
                   className="w-full px-3.5 py-2 rounded-xl bg-black/80 border border-white/15 text-purple-300 text-xs font-mono focus:border-purple-400 focus:outline-none transition-colors"
                 />
                 <p className="text-[10px] text-gray-500 font-sans">
